@@ -1,0 +1,11 @@
+{
+  "name": "workshop-submission-app",
+  "version": "1.0.0",
+  "description": "Workshop idea submission and results tracking system",
+  "scripts": {
+    "build": "echo 'No build step required for static HTML'",
+    "start": "echo 'Static files served directly'"
+  },
+  "devDependencies": {},
+  "dependencies": {}
+}
