@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Workshop idea submission and results tracking system",
   "scripts": {
-    "build": "echo 'No build step required for static HTML'",
+    "build": "mkdir -p dist && cp *.html dist/ && cp staticwebapp.config.json dist/",
     "start": "echo 'Static files served directly'"
   },
   "devDependencies": {},
