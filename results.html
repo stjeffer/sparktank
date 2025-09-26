@@ -488,7 +488,7 @@
                     console.log('Calling URL:', `${this.apiBase}/getSubmissions`);
                     
                     // Use existing Submit function which now handles GET requests
-                    const response = await fetch(`${this.apiBase}/Submit`, {
+                    const response = await fetch(`${this.apiBase}/getSubmissions`, {
                         method: 'GET',
                         headers: {
                             'Content-Type': 'application/json'
