@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Workshop Results Dashboard</title>
+    <title>Microsoft AI Innovation Workshop - Results</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
     <style>
         * {
@@ -33,30 +33,15 @@
             font-weight: 600;
         }
         
-        .stats-bar {
+        .stats-dashboard {
             display: grid;
-            grid-template-columns: 1fr 300px 250px;
+            grid-template-columns: 200px 1fr 300px;
             gap: 30px;
             margin-bottom: 30px;
             max-width: 1400px;
             margin-left: auto;
             margin-right: auto;
             align-items: start;
-        }
-        
-        .counter-section {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
-        
-        .stat-card {
-            background: rgba(255,255,255,0.95);
-            padding: 24px;
-            border-radius: 8px;
-            text-align: center;
-            box-shadow: 0 4px 16px rgba(0,0,0,0.1);
-            border-left: 4px solid #0078d4;
         }
         
         .counter-card {
@@ -144,10 +129,6 @@
             background: #106ebe;
             box-shadow: 0 4px 12px rgba(0,120,212,0.4);
             transform: translateY(-1px);
-        }
-        
-        .control-btn:active {
-            transform: translateY(0px);
         }
         
         .refresh-btn {
@@ -395,22 +376,27 @@
             color: #a4262c;
             border: 1px solid #a4262c;
         }
+
+        @media (max-width: 1200px) {
+            .stats-dashboard {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+        }
     </style>
 </head>
 <body>
-    <div class="connection-status" id="connectionStatus">🟢 Connected</div>
+    <div class="connection-status" id="connectionStatus">🟢 Live</div>
     
     <div class="header">
-        <h1>🚀 Workshop Results Dashboard</h1>
+        <h1>Microsoft AI Innovation Workshop</h1>
         <p id="lastUpdated">Loading submissions...</p>
     </div>
     
-    <div class="stats-bar" id="statsBar">
-        <div class="counter-section">
-            <div class="counter-card">
-                <div class="counter-number" id="totalTeams">0</div>
-                <div class="counter-label">Teams Submitted</div>
-            </div>
+    <div class="stats-dashboard">
+        <div class="counter-card">
+            <div class="counter-number" id="totalTeams">0</div>
+            <div class="counter-label">Teams Submitted</div>
         </div>
         
         <div class="chart-card">
@@ -448,7 +434,7 @@
     </div>
 
     <script>
-        class ResultsDashboard {
+        class MicrosoftWorkshopDashboard {
             constructor() {
                 this.apiBase = 'https://submission-api-faedcdh5frapftdk.westus2-01.azurewebsites.net/api';
                 this.submissions = [];
@@ -456,17 +442,119 @@
                 this.highlightedCard = null;
                 this.autoRefreshInterval = null;
                 
+                // Chart instances
+                this.sparklineChart = null;
+                this.donutChart = null;
+                
+                // Data for sparkline
+                this.readinessHistory = [];
+                this.timeLabels = [];
+                
                 this.init();
             }
 
             init() {
-                this.loadSubmissions(true); // Initial load treated as manual
+                this.initializeCharts();
+                this.loadSubmissions(true);
                 this.startAutoRefresh();
                 this.setupEventListeners();
             }
 
+            initializeCharts() {
+                // Initialize Sparkline Chart
+                const sparklineCtx = document.getElementById('readinessSparkline').getContext('2d');
+                this.sparklineChart = new Chart(sparklineCtx, {
+                    type: 'line',
+                    data: {
+                        labels: [],
+                        datasets: [{
+                            data: [],
+                            borderColor: '#0078d4',
+                            backgroundColor: 'rgba(0, 120, 212, 0.1)',
+                            borderWidth: 2,
+                            fill: true,
+                            tension: 0.4,
+                            pointRadius: 0,
+                            pointHoverRadius: 4
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                mode: 'index',
+                                intersect: false,
+                                callbacks: {
+                                    title: (context) => `Time: ${context[0].label}`,
+                                    label: (context) => `Avg Readiness: ${context.parsed.y.toFixed(1)}`
+                                }
+                            }
+                        },
+                        scales: {
+                            x: { display: false },
+                            y: {
+                                display: false,
+                                min: 1,
+                                max: 5
+                            }
+                        }
+                    }
+                });
+
+                // Initialize Donut Chart
+                const donutCtx = document.getElementById('avatarDonut').getContext('2d');
+                this.donutChart = new Chart(donutCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: [],
+                        datasets: [{
+                            data: [],
+                            backgroundColor: [
+                                '#0078d4', '#107c10', '#d83b01', '#5c2d91', 
+                                '#e81123', '#00bcf2', '#ffb900', '#8764b8'
+                            ],
+                            borderWidth: 2,
+                            borderColor: '#ffffff'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    padding: 8,
+                                    font: { size: 10 },
+                                    generateLabels: (chart) => {
+                                        const data = chart.data;
+                                        if (!data.datasets[0].emoji) return [];
+                                        return data.labels.map((label, i) => ({
+                                            text: `${data.datasets[0].emoji[i]} ${label}`,
+                                            fillStyle: data.datasets[0].backgroundColor[i]
+                                        }));
+                                    }
+                                }
+                            },
+                            tooltip: {
+                                callbacks: {
+                                    label: (context) => {
+                                        const label = context.label;
+                                        const value = context.parsed;
+                                        const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                        const percentage = ((value / total) * 100).toFixed(1);
+                                        return `${label}: ${value} teams (${percentage}%)`;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
             setupEventListeners() {
-                // Auto-refresh every 30 seconds
                 document.addEventListener('visibilitychange', () => {
                     if (!document.hidden) {
                         this.loadSubmissions();
@@ -475,44 +563,56 @@
             }
 
             startAutoRefresh() {
-                // Refresh every 15 seconds
                 this.autoRefreshInterval = setInterval(() => {
                     this.loadSubmissions();
                 }, 15000);
             }
 
-            async loadSubmissions() {
+            async loadSubmissions(isManualRefresh = false) {
                 try {
-                    this.updateConnectionStatus('connecting');
+                    if (isManualRefresh) {
+                        this.updateConnectionStatus('connecting');
+                    }
+                    
                     console.log('Loading submissions...');
                     console.log('Calling URL:', `${this.apiBase}/getSubmissions`);
                     
-                    // Use existing Submit function which now handles GET requests
                     const response = await fetch(`${this.apiBase}/getSubmissions`, {
                         method: 'GET',
                         headers: {
                             'Content-Type': 'application/json'
                         }
                     });
-                    
+
                     console.log('Response status:', response.status);
-                    console.log('Response headers:', response.headers);
 
                     if (!response.ok) {
-                        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                        const errorText = await response.text();
+                        console.error('Response error details:', errorText);
+                        throw new Error(`HTTP ${response.status}: ${errorText}`);
                     }
 
                     const data = await response.json();
                     console.log('Loaded submissions:', data);
                     
-                    this.submissions = data.submissions || [];
-                    this.filterTodaysSubmissions();
-                    this.updateStats();
-                    this.renderSubmissions();
+                    const newSubmissionsCount = data.submissions ? data.submissions.length : 0;
+                    const currentSubmissionsCount = this.submissions.length;
+                    
+                    if (isManualRefresh || newSubmissionsCount !== currentSubmissionsCount || this.hasDataChanged(data.submissions)) {
+                        this.submissions = data.submissions || [];
+                        this.filterTodaysSubmissions();
+                        this.updateVisualizations();
+                        this.renderSubmissions();
+                        
+                        console.log(`${isManualRefresh ? 'Manual' : 'Auto'} refresh: ${newSubmissionsCount} submissions`);
+                    }
+                    
                     this.updateConnectionStatus('connected');
                     
                     const lastUpdated = document.getElementById('lastUpdated');
-                    lastUpdated.textContent = `Last updated: ${new Date().toLocaleTimeString()}`;
+                    if (lastUpdated) {
+                        lastUpdated.textContent = `Last updated: ${new Date().toLocaleTimeString()}`;
+                    }
                     
                 } catch (error) {
                     console.error('Error loading submissions:', error);
@@ -530,38 +630,117 @@
                 console.log(`Filtered to ${this.submissions.length} submissions from today`);
             }
 
-            updateStats() {
+            updateVisualizations() {
+                this.updateCounter();
+                this.updateSparkline();
+                this.updateDonutChart();
+            }
+
+            updateCounter() {
                 const totalTeams = this.submissions.length;
-                document.getElementById('totalTeams').textContent = totalTeams;
-
-                if (totalTeams === 0) {
-                    document.getElementById('avgReadiness').textContent = '-';
-                    document.getElementById('topAvatar').textContent = '-';
-                    return;
+                const totalElement = document.getElementById('totalTeams');
+                
+                if (totalElement && totalElement.textContent !== totalTeams.toString()) {
+                    const currentValue = parseInt(totalElement.textContent) || 0;
+                    
+                    if (totalTeams > currentValue) {
+                        // Animate counter up
+                        const animateUp = () => {
+                            const current = parseInt(totalElement.textContent);
+                            if (current < totalTeams) {
+                                totalElement.textContent = current + 1;
+                                totalElement.style.transform = 'scale(1.1)';
+                                setTimeout(() => {
+                                    totalElement.style.transform = 'scale(1)';
+                                }, 100);
+                                setTimeout(animateUp, 100);
+                            }
+                        };
+                        animateUp();
+                    } else {
+                        totalElement.textContent = totalTeams;
+                    }
                 }
+            }
 
-                // Calculate average readiness score
+            updateSparkline() {
                 const readinessScores = this.submissions
                     .map(s => s.sentiment?.overallReadinessScore)
                     .filter(score => typeof score === 'number');
                     
                 const avgReadiness = readinessScores.length > 0 
-                    ? (readinessScores.reduce((a, b) => a + b, 0) / readinessScores.length).toFixed(1)
-                    : '-';
-                document.getElementById('avgReadiness').textContent = avgReadiness;
+                    ? readinessScores.reduce((a, b) => a + b, 0) / readinessScores.length
+                    : 0;
 
-                // Find most popular avatar
+                const now = new Date();
+                const timeLabel = now.toLocaleTimeString('en-US', { 
+                    hour12: false, 
+                    hour: '2-digit', 
+                    minute: '2-digit' 
+                });
+
+                this.readinessHistory.push(avgReadiness);
+                this.timeLabels.push(timeLabel);
+
+                if (this.readinessHistory.length > 20) {
+                    this.readinessHistory.shift();
+                    this.timeLabels.shift();
+                }
+
+                this.sparklineChart.data.labels = [...this.timeLabels];
+                this.sparklineChart.data.datasets[0].data = [...this.readinessHistory];
+                this.sparklineChart.update('none');
+
+                const noDataElement = document.getElementById('sparklineNoData');
+                if (noDataElement) {
+                    noDataElement.style.display = this.readinessHistory.length === 0 ? 'flex' : 'none';
+                }
+            }
+
+            updateDonutChart() {
                 const avatarCounts = {};
-                this.submissions.forEach(s => {
-                    if (s.avatar?.emoji) {
-                        avatarCounts[s.avatar.emoji] = (avatarCounts[s.avatar.emoji] || 0) + 1;
+                const avatarEmojis = {};
+                
+                this.submissions.forEach(submission => {
+                    if (submission.avatar?.name) {
+                        const name = submission.avatar.name;
+                        avatarCounts[name] = (avatarCounts[name] || 0) + 1;
+                        avatarEmojis[name] = submission.avatar.emoji || '👥';
                     }
                 });
+
+                const labels = Object.keys(avatarCounts);
+                const data = Object.values(avatarCounts);
+                const emojis = labels.map(label => avatarEmojis[label]);
+
+                this.donutChart.data.labels = labels;
+                this.donutChart.data.datasets[0].data = data;
+                this.donutChart.data.datasets[0].emoji = emojis;
+                this.donutChart.update();
+
+                const noDataElement = document.getElementById('donutNoData');
+                if (noDataElement) {
+                    noDataElement.style.display = labels.length === 0 ? 'flex' : 'none';
+                }
+            }
+
+            hasDataChanged(newSubmissions) {
+                if (!newSubmissions || newSubmissions.length !== this.submissions.length) {
+                    return true;
+                }
                 
-                const topAvatar = Object.keys(avatarCounts).length > 0
-                    ? Object.keys(avatarCounts).reduce((a, b) => avatarCounts[a] > avatarCounts[b] ? a : b)
-                    : '-';
-                document.getElementById('topAvatar').textContent = topAvatar;
+                for (let i = 0; i < newSubmissions.length; i++) {
+                    const newSub = newSubmissions[i];
+                    const currentSub = this.submissions[i];
+                    
+                    if (!currentSub || 
+                        newSub.id !== currentSub.id || 
+                        newSub.timestamp !== currentSub.timestamp) {
+                        return true;
+                    }
+                }
+                
+                return false;
             }
 
             renderSubmissions() {
@@ -579,7 +758,6 @@
 
                 let teamsGrid = document.getElementById('teamsGrid');
                 
-                // Create grid if it doesn't exist
                 if (!teamsGrid) {
                     teamsGrid = document.createElement('div');
                     teamsGrid.className = 'teams-grid';
@@ -588,11 +766,8 @@
                     content.appendChild(teamsGrid);
                 }
 
-                // Get current cards
                 const existingCards = Array.from(teamsGrid.children);
-                const currentSubmissionIds = this.submissions.map(s => s.id);
                 
-                // Remove cards for submissions that no longer exist
                 existingCards.forEach(card => {
                     const cardIndex = parseInt(card.dataset.index);
                     if (cardIndex >= this.submissions.length) {
@@ -600,30 +775,24 @@
                     }
                 });
 
-                // Update or create cards for each submission
                 this.submissions.forEach((submission, index) => {
                     let existingCard = teamsGrid.querySelector(`[data-index="${index}"]`);
                     
                     if (existingCard) {
-                        // Update existing card only if needed
                         const existingTeamName = existingCard.querySelector('.team-name').textContent;
                         if (existingTeamName !== submission.teamName) {
-                            // Replace card if team name changed (different submission at this index)
                             const newCard = this.createTeamCard(submission, index);
                             teamsGrid.replaceChild(newCard, existingCard);
                         } else {
-                            // Update timestamp only
                             const timeElement = existingCard.querySelector('.team-meta span');
                             if (timeElement) {
                                 timeElement.textContent = `🕒 ${this.getTimeAgo(submission.timestamp)}`;
                             }
                         }
                     } else {
-                        // Create new card for new submission
                         const newCard = this.createTeamCard(submission, index);
                         teamsGrid.appendChild(newCard);
                         
-                        // Add animation for new cards
                         newCard.style.opacity = '0';
                         newCard.style.transform = 'translateY(20px)';
                         setTimeout(() => {
@@ -700,156 +869,7 @@
                 const expandIndicator = card.querySelector('.expand-indicator');
                 
                 if (this.expandedCard === index) {
-                    // Collapse current card
                     useCase.classList.remove('visible');
                     card.classList.remove('expanded');
                     expandIndicator.textContent = '⬇️';
                     this.expandedCard = null;
-                } else {
-                    // Collapse previously expanded card
-                    if (this.expandedCard !== null) {
-                        const prevCard = document.querySelector(`[data-index="${this.expandedCard}"]`);
-                        const prevUseCase = document.getElementById(`usecase-${this.expandedCard}`);
-                        const prevIndicator = prevCard.querySelector('.expand-indicator');
-                        
-                        prevUseCase.classList.remove('visible');
-                        prevCard.classList.remove('expanded');
-                        prevIndicator.textContent = '⬇️';
-                    }
-                    
-                    // Expand current card
-                    useCase.classList.add('visible');
-                    card.classList.add('expanded');
-                    expandIndicator.textContent = '⬆️';
-                    this.expandedCard = index;
-                    
-                    // Scroll to card
-                    setTimeout(() => {
-                        card.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    }, 300);
-                }
-            }
-
-            pickRandomTeam() {
-                if (this.submissions.length === 0) {
-                    alert('No teams to pick from yet!');
-                    return;
-                }
-
-                // Clear previous highlight
-                if (this.highlightedCard !== null) {
-                    const prevCard = document.querySelector(`[data-index="${this.highlightedCard}"]`);
-                    if (prevCard) {
-                        prevCard.classList.remove('highlighted');
-                    }
-                }
-
-                // Pick random team
-                const randomIndex = Math.floor(Math.random() * this.submissions.length);
-                const randomTeam = this.submissions[randomIndex];
-                
-                // Highlight the card
-                const card = document.querySelector(`[data-index="${randomIndex}"]`);
-                if (card) {
-                    card.classList.add('highlighted');
-                    this.highlightedCard = randomIndex;
-                    
-                    // Expand the card automatically
-                    this.toggleCard(card, randomIndex);
-                    
-                    // Scroll to the card
-                    setTimeout(() => {
-                        card.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    }, 500);
-                }
-
-                // Show alert with team name
-                setTimeout(() => {
-                    alert(`🎉 Selected for Show & Tell: ${randomTeam.teamName} (${randomTeam.avatar?.name || 'Team'})!`);
-                }, 1000);
-            }
-
-            formatPreference(value) {
-                const mappings = {
-                    'gradual': 'Start small and test gradually',
-                    'pilot': 'Pilot with specific team first',
-                    'immediate': 'Roll out organization-wide',
-                    'research': 'Need more research',
-                    'accuracy': 'Ensuring accuracy & reliability',
-                    'efficiency': 'Speed & efficiency gains',
-                    'learning': 'Learning & experimentation',
-                    'oversight': 'Maintaining human oversight',
-                    'long': '6+ months of planning',
-                    'medium': '3-6 months development',
-                    'short': 'Start within 30 days',
-                    'immediate': 'Begin next week'
-                };
-                return mappings[value] || value;
-            }
-
-            getTimeAgo(timestamp) {
-                if (!timestamp) return 'Unknown time';
-                
-                const now = new Date();
-                const submissionTime = new Date(timestamp);
-                const diffMs = now - submissionTime;
-                const diffMins = Math.floor(diffMs / 60000);
-                
-                if (diffMins < 1) return 'Just now';
-                if (diffMins < 60) return `${diffMins}m ago`;
-                
-                const diffHours = Math.floor(diffMins / 60);
-                if (diffHours < 24) return `${diffHours}h ago`;
-                
-                return submissionTime.toLocaleDateString();
-            }
-
-            updateConnectionStatus(status) {
-                const statusElement = document.getElementById('connectionStatus');
-                statusElement.className = `connection-status ${status}`;
-                
-                switch(status) {
-                    case 'connected':
-                        statusElement.innerHTML = '🟢 Live';
-                        break;
-                    case 'connecting':
-                        statusElement.innerHTML = '🟡 Updating...';
-                        break;
-                    case 'disconnected':
-                        statusElement.innerHTML = '🔴 Offline';
-                        break;
-                }
-            }
-
-            showError(message) {
-                const content = document.getElementById('content');
-                content.innerHTML = `
-                    <div class="error">
-                        <h3>Connection Error</h3>
-                        <p>${message}</p>
-                        <button class="control-btn" onclick="dashboard.loadSubmissions()" style="margin-top: 15px;">
-                            Try Again
-                        </button>
-                    </div>
-                `;
-            }
-        }
-
-        // Initialize dashboard when page loads
-        let dashboard;
-        document.addEventListener('DOMContentLoaded', () => {
-            dashboard = new ResultsDashboard();
-        });
-
-        // Handle online/offline events
-        window.addEventListener('online', () => {
-            dashboard.updateConnectionStatus('connected');
-            dashboard.loadSubmissions();
-        });
-
-        window.addEventListener('offline', () => {
-            dashboard.updateConnectionStatus('disconnected');
-        });
-    </script>
-</body>
-</html>
