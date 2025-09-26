@@ -342,7 +342,7 @@
     </div>
     
     <div class="controls">
-        <button class="control-btn refresh-btn" onclick="dashboard.loadSubmissions()">
+        <button class="control-btn refresh-btn" onclick="dashboard.loadSubmissions(true)">
             🔄 Refresh Data
         </button>
         <button class="control-btn random-btn" onclick="dashboard.pickRandomTeam()">
@@ -367,7 +367,7 @@
             }
 
             init() {
-                this.loadSubmissions();
+                this.loadSubmissions(true); // Initial load treated as manual
                 this.startAutoRefresh();
                 this.setupEventListeners();
             }
@@ -392,14 +392,18 @@
                 try {
                     this.updateConnectionStatus('connecting');
                     console.log('Loading submissions...');
+                    console.log('Calling URL:', `${this.apiBase}/getSubmissions`);
                     
-                    // Use existing getSubmissions function
-                    const response = await fetch(`${this.apiBase}/getSubmissions`, {
+                    // Use existing Submit function which now handles GET requests
+                    const response = await fetch(`${this.apiBase}/Submit`, {
                         method: 'GET',
                         headers: {
                             'Content-Type': 'application/json'
                         }
                     });
+                    
+                    console.log('Response status:', response.status);
+                    console.log('Response headers:', response.headers);
 
                     if (!response.ok) {
                         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
@@ -480,6 +484,14 @@
                     return;
                 }
 
+                // Check if this is the first render or if we need to preserve state
+                const existingGrid = document.getElementById('teamsGrid');
+                const shouldPreserveState = existingGrid !== null;
+                
+                // Store current expanded and highlighted states
+                let preservedExpandedCard = this.expandedCard;
+                let preservedHighlightedCard = this.highlightedCard;
+                
                 const teamsGrid = document.createElement('div');
                 teamsGrid.className = 'teams-grid';
                 teamsGrid.id = 'teamsGrid';
@@ -491,6 +503,32 @@
 
                 content.innerHTML = '';
                 content.appendChild(teamsGrid);
+                
+                // Restore expanded state after rendering
+                if (shouldPreserveState && preservedExpandedCard !== null && preservedExpandedCard < this.submissions.length) {
+                    const cardToExpand = document.querySelector(`[data-index="${preservedExpandedCard}"]`);
+                    if (cardToExpand) {
+                        // Restore expanded state without triggering the toggle animation
+                        const useCase = document.getElementById(`usecase-${preservedExpandedCard}`);
+                        const expandIndicator = cardToExpand.querySelector('.expand-indicator');
+                        
+                        if (useCase && expandIndicator) {
+                            useCase.classList.add('visible');
+                            cardToExpand.classList.add('expanded');
+                            expandIndicator.textContent = '⬆️';
+                            this.expandedCard = preservedExpandedCard;
+                        }
+                    }
+                }
+                
+                // Restore highlighted state
+                if (shouldPreserveState && preservedHighlightedCard !== null && preservedHighlightedCard < this.submissions.length) {
+                    const cardToHighlight = document.querySelector(`[data-index="${preservedHighlightedCard}"]`);
+                    if (cardToHighlight) {
+                        cardToHighlight.classList.add('highlighted');
+                        this.highlightedCard = preservedHighlightedCard;
+                    }
+                }
             }
 
             createTeamCard(submission, index) {
