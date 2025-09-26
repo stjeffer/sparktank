@@ -484,51 +484,62 @@
                     return;
                 }
 
-                // Check if this is the first render or if we need to preserve state
-                const existingGrid = document.getElementById('teamsGrid');
-                const shouldPreserveState = existingGrid !== null;
+                let teamsGrid = document.getElementById('teamsGrid');
                 
-                // Store current expanded and highlighted states
-                let preservedExpandedCard = this.expandedCard;
-                let preservedHighlightedCard = this.highlightedCard;
-                
-                const teamsGrid = document.createElement('div');
-                teamsGrid.className = 'teams-grid';
-                teamsGrid.id = 'teamsGrid';
+                // Create grid if it doesn't exist
+                if (!teamsGrid) {
+                    teamsGrid = document.createElement('div');
+                    teamsGrid.className = 'teams-grid';
+                    teamsGrid.id = 'teamsGrid';
+                    content.innerHTML = '';
+                    content.appendChild(teamsGrid);
+                }
 
-                this.submissions.forEach((submission, index) => {
-                    const card = this.createTeamCard(submission, index);
-                    teamsGrid.appendChild(card);
+                // Get current cards
+                const existingCards = Array.from(teamsGrid.children);
+                const currentSubmissionIds = this.submissions.map(s => s.id);
+                
+                // Remove cards for submissions that no longer exist
+                existingCards.forEach(card => {
+                    const cardIndex = parseInt(card.dataset.index);
+                    if (cardIndex >= this.submissions.length) {
+                        card.remove();
+                    }
                 });
 
-                content.innerHTML = '';
-                content.appendChild(teamsGrid);
-                
-                // Restore expanded state after rendering
-                if (shouldPreserveState && preservedExpandedCard !== null && preservedExpandedCard < this.submissions.length) {
-                    const cardToExpand = document.querySelector(`[data-index="${preservedExpandedCard}"]`);
-                    if (cardToExpand) {
-                        // Restore expanded state without triggering the toggle animation
-                        const useCase = document.getElementById(`usecase-${preservedExpandedCard}`);
-                        const expandIndicator = cardToExpand.querySelector('.expand-indicator');
-                        
-                        if (useCase && expandIndicator) {
-                            useCase.classList.add('visible');
-                            cardToExpand.classList.add('expanded');
-                            expandIndicator.textContent = '⬆️';
-                            this.expandedCard = preservedExpandedCard;
+                // Update or create cards for each submission
+                this.submissions.forEach((submission, index) => {
+                    let existingCard = teamsGrid.querySelector(`[data-index="${index}"]`);
+                    
+                    if (existingCard) {
+                        // Update existing card only if needed
+                        const existingTeamName = existingCard.querySelector('.team-name').textContent;
+                        if (existingTeamName !== submission.teamName) {
+                            // Replace card if team name changed (different submission at this index)
+                            const newCard = this.createTeamCard(submission, index);
+                            teamsGrid.replaceChild(newCard, existingCard);
+                        } else {
+                            // Update timestamp only
+                            const timeElement = existingCard.querySelector('.team-meta span');
+                            if (timeElement) {
+                                timeElement.textContent = `🕒 ${this.getTimeAgo(submission.timestamp)}`;
+                            }
                         }
+                    } else {
+                        // Create new card for new submission
+                        const newCard = this.createTeamCard(submission, index);
+                        teamsGrid.appendChild(newCard);
+                        
+                        // Add animation for new cards
+                        newCard.style.opacity = '0';
+                        newCard.style.transform = 'translateY(20px)';
+                        setTimeout(() => {
+                            newCard.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+                            newCard.style.opacity = '1';
+                            newCard.style.transform = 'translateY(0)';
+                        }, 100);
                     }
-                }
-                
-                // Restore highlighted state
-                if (shouldPreserveState && preservedHighlightedCard !== null && preservedHighlightedCard < this.submissions.length) {
-                    const cardToHighlight = document.querySelector(`[data-index="${preservedHighlightedCard}"]`);
-                    if (cardToHighlight) {
-                        cardToHighlight.classList.add('highlighted');
-                        this.highlightedCard = preservedHighlightedCard;
-                    }
-                }
+                });
             }
 
             createTeamCard(submission, index) {
