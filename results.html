@@ -873,3 +873,148 @@
                     card.classList.remove('expanded');
                     expandIndicator.textContent = '⬇️';
                     this.expandedCard = null;
+                } else {
+                    if (this.expandedCard !== null) {
+                        const prevCard = document.querySelector(`[data-index="${this.expandedCard}"]`);
+                        const prevUseCase = document.getElementById(`usecase-${this.expandedCard}`);
+                        const prevIndicator = prevCard?.querySelector('.expand-indicator');
+                        
+                        if (prevUseCase) prevUseCase.classList.remove('visible');
+                        if (prevCard) prevCard.classList.remove('expanded');
+                        if (prevIndicator) prevIndicator.textContent = '⬇️';
+                    }
+                    
+                    useCase.classList.add('visible');
+                    card.classList.add('expanded');
+                    expandIndicator.textContent = '⬆️';
+                    this.expandedCard = index;
+                    
+                    setTimeout(() => {
+                        card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }, 300);
+                }
+            }
+
+            pickRandomTeam() {
+                if (this.submissions.length === 0) {
+                    alert('No teams to pick from yet!');
+                    return;
+                }
+
+                if (this.highlightedCard !== null) {
+                    const prevCard = document.querySelector(`[data-index="${this.highlightedCard}"]`);
+                    if (prevCard) {
+                        prevCard.classList.remove('highlighted');
+                    }
+                }
+
+                const randomIndex = Math.floor(Math.random() * this.submissions.length);
+                const randomTeam = this.submissions[randomIndex];
+                
+                const card = document.querySelector(`[data-index="${randomIndex}"]`);
+                if (card) {
+                    card.classList.add('highlighted');
+                    this.highlightedCard = randomIndex;
+                    
+                    this.toggleCard(card, randomIndex);
+                    
+                    setTimeout(() => {
+                        card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }, 500);
+                }
+
+                setTimeout(() => {
+                    alert(`Selected for Show & Tell: ${randomTeam.teamName} (${randomTeam.avatar?.name || 'Team'})!`);
+                }, 1000);
+            }
+
+            formatPreference(value) {
+                const mappings = {
+                    'gradual': 'Start small and test gradually',
+                    'pilot': 'Pilot with specific team first',
+                    'immediate': 'Roll out organization-wide',
+                    'research': 'Need more research',
+                    'accuracy': 'Ensuring accuracy & reliability',
+                    'efficiency': 'Speed & efficiency gains',
+                    'learning': 'Learning & experimentation',
+                    'oversight': 'Maintaining human oversight',
+                    'long': '6+ months of planning',
+                    'medium': '3-6 months development',
+                    'short': 'Start within 30 days',
+                    'immediate': 'Begin next week'
+                };
+                return mappings[value] || value;
+            }
+
+            getTimeAgo(timestamp) {
+                if (!timestamp) return 'Unknown time';
+                
+                const now = new Date();
+                const submissionTime = new Date(timestamp);
+                const diffMs = now - submissionTime;
+                const diffMins = Math.floor(diffMs / 60000);
+                
+                if (diffMins < 1) return 'Just now';
+                if (diffMins < 60) return `${diffMins}m ago`;
+                
+                const diffHours = Math.floor(diffMins / 60);
+                if (diffHours < 24) return `${diffHours}h ago`;
+                
+                return submissionTime.toLocaleDateString();
+            }
+
+            updateConnectionStatus(status) {
+                const statusElement = document.getElementById('connectionStatus');
+                if (!statusElement) return;
+                
+                statusElement.className = `connection-status ${status}`;
+                
+                switch(status) {
+                    case 'connected':
+                        statusElement.innerHTML = '🟢 Live';
+                        break;
+                    case 'connecting':
+                        statusElement.innerHTML = '🟡 Updating...';
+                        break;
+                    case 'disconnected':
+                        statusElement.innerHTML = '🔴 Offline';
+                        break;
+                }
+            }
+
+            showError(message) {
+                const content = document.getElementById('content');
+                content.innerHTML = `
+                    <div class="error">
+                        <h3>Connection Error</h3>
+                        <p>${message}</p>
+                        <button class="control-btn" onclick="dashboard.loadSubmissions(true)" style="margin-top: 15px;">
+                            Try Again
+                        </button>
+                    </div>
+                `;
+            }
+        }
+
+        // Initialize dashboard when page loads
+        let dashboard;
+        document.addEventListener('DOMContentLoaded', () => {
+            dashboard = new MicrosoftWorkshopDashboard();
+        });
+
+        // Handle online/offline events
+        window.addEventListener('online', () => {
+            if (dashboard) {
+                dashboard.updateConnectionStatus('connected');
+                dashboard.loadSubmissions();
+            }
+        });
+
+        window.addEventListener('offline', () => {
+            if (dashboard) {
+                dashboard.updateConnectionStatus('disconnected');
+            }
+        });
+    </script>
+</body>
+</html>
