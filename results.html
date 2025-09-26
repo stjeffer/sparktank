@@ -664,36 +664,39 @@
             }
 
             updateSparkline() {
-                const readinessScores = this.submissions
-                    .map(s => s.sentiment?.overallReadinessScore)
-                    .filter(score => typeof score === 'number');
-                    
-                const avgReadiness = readinessScores.length > 0 
-                    ? readinessScores.reduce((a, b) => a + b, 0) / readinessScores.length
-                    : 0;
-
-                const now = new Date();
-                const timeLabel = now.toLocaleTimeString('en-US', { 
-                    hour12: false, 
-                    hour: '2-digit', 
-                    minute: '2-digit' 
+                // For each submission, calculate a running average of readiness scores
+                const dataPoints = [];
+                const timePoints = [];
+                
+                // Sort submissions by timestamp to show trend over time
+                const sortedSubmissions = [...this.submissions].sort((a, b) => 
+                    new Date(a.timestamp) - new Date(b.timestamp)
+                );
+                
+                let runningTotal = 0;
+                let count = 0;
+                
+                sortedSubmissions.forEach((submission, index) => {
+                    if (submission.sentiment?.overallReadinessScore) {
+                        runningTotal += submission.sentiment.overallReadinessScore;
+                        count++;
+                        
+                        const avgReadiness = runningTotal / count;
+                        dataPoints.push(avgReadiness);
+                        
+                        // Use submission number instead of time for better visualization
+                        timePoints.push(`Team ${index + 1}`);
+                    }
                 });
 
-                this.readinessHistory.push(avgReadiness);
-                this.timeLabels.push(timeLabel);
-
-                if (this.readinessHistory.length > 20) {
-                    this.readinessHistory.shift();
-                    this.timeLabels.shift();
-                }
-
-                this.sparklineChart.data.labels = [...this.timeLabels];
-                this.sparklineChart.data.datasets[0].data = [...this.readinessHistory];
+                // Update chart with submission-based data points
+                this.sparklineChart.data.labels = timePoints;
+                this.sparklineChart.data.datasets[0].data = dataPoints;
                 this.sparklineChart.update('none');
 
                 const noDataElement = document.getElementById('sparklineNoData');
                 if (noDataElement) {
-                    noDataElement.style.display = this.readinessHistory.length === 0 ? 'flex' : 'none';
+                    noDataElement.style.display = dataPoints.length === 0 ? 'flex' : 'none';
                 }
             }
 
