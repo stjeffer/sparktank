@@ -393,8 +393,8 @@
                     this.updateConnectionStatus('connecting');
                     console.log('Loading submissions...');
                     
-                    // For now, we'll create a retrieve function endpoint
-                    const response = await fetch(`${this.apiBase}/Retrieve`, {
+                    // Use existing getSubmissions function
+                    const response = await fetch(`${this.apiBase}/getSubmissions`, {
                         method: 'GET',
                         headers: {
                             'Content-Type': 'application/json'
