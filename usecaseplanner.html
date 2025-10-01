@@ -853,20 +853,38 @@
                     const outcomeId = `outcome-${Date.now()}`;
                     objective.outcomes.push({
                         id: outcomeId,
-                        description: '',
-                        measurable: false,
-                        metric: '',
-                        targetValue: ''
+                        description: ''
                     });
-                    this.renderObjectives();
+                    
+                    // Only re-render this specific objective's outcomes, not the whole form
+                    this.renderSingleObjectiveOutcomes(objectiveId);
                 }
+            }
+
+            renderSingleObjectiveOutcomes(objectiveId) {
+                const objective = this.data.objectives.find(o => o.id === objectiveId);
+                if (!objective) return;
+                
+                const outcomesContainer = document.getElementById(`outcomes-${objectiveId}`);
+                if (!outcomesContainer) return;
+                
+                outcomesContainer.innerHTML = objective.outcomes.map(outcome => `
+                    <div class="outcome-item">
+                        <input type="text" value="${outcome.description}" 
+                               onchange="planningTool.updateOutcome('${objectiveId}', '${outcome.id}', this.value)"
+                               onblur="planningTool.updateOutcome('${objectiveId}', '${outcome.id}', this.value)"
+                               placeholder="e.g., 30% reduction in response time"
+                               style="flex: 1; border: none; background: transparent;">
+                        <button class="btn-icon btn-remove" onclick="planningTool.removeOutcome('${objectiveId}', '${outcome.id}')">✕</button>
+                    </div>
+                `).join('');
             }
 
             removeOutcome(objectiveId, outcomeId) {
                 const objective = this.data.objectives.find(o => o.id === objectiveId);
                 if (objective) {
                     objective.outcomes = objective.outcomes.filter(out => out.id !== outcomeId);
-                    this.renderObjectives();
+                    this.renderSingleObjectiveOutcomes(objectiveId);
                 }
             }
 
@@ -1191,40 +1209,46 @@
 
                 // Draw lines
                 const lineStyles = {
-                    operational: {color: '#323130', width: 2, dash: '5,0'},
-                    strategic: {color: '#8a8886', width: 2, dash: '10,5'},
-                    transformational: {color: '#605e5c', width: 2, dash: '2,5'},
-                    combined: {color: '#0078d4', width: 3, dash: '5,0'}
+                    operational: {color: '#323130', width: 3, dash: '0'},
+                    strategic: {color: '#8a8886', width: 3, dash: '8,4'},
+                    transformational: {color: '#605e5c', width: 3, dash: '4,4'},
+                    combined: {color: '#0078d4', width: 4, dash: '0'}
                 };
 
-                // Operational
-                svg.append('path')
-                    .datum(valueByType.operational)
-                    .attr('fill', 'none')
-                    .attr('stroke', lineStyles.operational.color)
-                    .attr('stroke-width', lineStyles.operational.width)
-                    .attr('stroke-dasharray', lineStyles.operational.dash)
-                    .attr('d', line);
+                // Operational (solid black line)
+                if (valueByType.operational.some(v => v > 0)) {
+                    svg.append('path')
+                        .datum(valueByType.operational)
+                        .attr('fill', 'none')
+                        .attr('stroke', lineStyles.operational.color)
+                        .attr('stroke-width', lineStyles.operational.width)
+                        .attr('stroke-dasharray', lineStyles.operational.dash)
+                        .attr('d', line);
+                }
 
-                // Strategic
-                svg.append('path')
-                    .datum(valueByType.strategic)
-                    .attr('fill', 'none')
-                    .attr('stroke', lineStyles.strategic.color)
-                    .attr('stroke-width', lineStyles.strategic.width)
-                    .attr('stroke-dasharray', lineStyles.strategic.dash)
-                    .attr('d', line);
+                // Strategic (dashed gray line)
+                if (valueByType.strategic.some(v => v > 0)) {
+                    svg.append('path')
+                        .datum(valueByType.strategic)
+                        .attr('fill', 'none')
+                        .attr('stroke', lineStyles.strategic.color)
+                        .attr('stroke-width', lineStyles.strategic.width)
+                        .attr('stroke-dasharray', lineStyles.strategic.dash)
+                        .attr('d', line);
+                }
 
-                // Transformational
-                svg.append('path')
-                    .datum(valueByType.transformational)
-                    .attr('fill', 'none')
-                    .attr('stroke', lineStyles.transformational.color)
-                    .attr('stroke-width', lineStyles.transformational.width)
-                    .attr('stroke-dasharray', lineStyles.transformational.dash)
-                    .attr('d', line);
+                // Transformational (dotted line)
+                if (valueByType.transformational.some(v => v > 0)) {
+                    svg.append('path')
+                        .datum(valueByType.transformational)
+                        .attr('fill', 'none')
+                        .attr('stroke', lineStyles.transformational.color)
+                        .attr('stroke-width', lineStyles.transformational.width)
+                        .attr('stroke-dasharray', lineStyles.transformational.dash)
+                        .attr('d', line);
+                }
 
-                // Combined
+                // Combined (thick blue line - always shown)
                 svg.append('path')
                     .datum(combinedValue)
                     .attr('fill', 'none')
