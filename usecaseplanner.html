@@ -1,0 +1,1247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Microsoft AI Use Case Planning</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0078d4 0%, #106ebe 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #323130;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: #0078d4;
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+        
+        .progress-bar {
+            display: flex;
+            background: #f3f2f1;
+            border-bottom: 1px solid #edebe9;
+        }
+        
+        .progress-step {
+            flex: 1;
+            padding: 20px;
+            text-align: center;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #605e5c;
+            border-bottom: 3px solid transparent;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .progress-step.active {
+            color: #0078d4;
+            border-bottom-color: #0078d4;
+            background: white;
+        }
+        
+        .progress-step.completed {
+            color: #107c10;
+            background: #dff6dd;
+        }
+        
+        .content {
+            padding: 40px;
+        }
+        
+        .section {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        .section.active {
+            display: block;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .section-title {
+            font-size: 1.8rem;
+            font-weight: 600;
+            color: #0078d4;
+            margin-bottom: 10px;
+        }
+        
+        .section-description {
+            color: #605e5c;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+        
+        .form-group {
+            margin-bottom: 25px;
+        }
+        
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #323130;
+        }
+        
+        input[type="text"],
+        input[type="number"],
+        select,
+        textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #8a8886;
+            border-radius: 4px;
+            font-size: 1rem;
+            font-family: 'Segoe UI', sans-serif;
+            transition: border-color 0.3s;
+        }
+        
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #0078d4;
+        }
+        
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+        
+        .btn {
+            background: #0078d4;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 1rem;
+            font-weight: 600;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: 'Segoe UI', sans-serif;
+        }
+        
+        .btn:hover {
+            background: #106ebe;
+            transform: translateY(-1px);
+        }
+        
+        .btn-secondary {
+            background: #8a8886;
+        }
+        
+        .btn-secondary:hover {
+            background: #605e5c;
+        }
+        
+        .btn-success {
+            background: #107c10;
+        }
+        
+        .btn-success:hover {
+            background: #0e6e0e;
+        }
+        
+        .btn-ai {
+            background: #5c2d91;
+        }
+        
+        .btn-ai:hover {
+            background: #4a237a;
+        }
+        
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+            justify-content: flex-end;
+        }
+        
+        .stakeholder-card,
+        .objective-card,
+        .value-milestone-card {
+            background: #f8f9fa;
+            border: 1px solid #edebe9;
+            border-radius: 6px;
+            padding: 20px;
+            margin-bottom: 15px;
+            position: relative;
+        }
+        
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .card-title {
+            font-weight: 600;
+            color: #0078d4;
+            font-size: 1.1rem;
+        }
+        
+        .card-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .btn-icon {
+            background: transparent;
+            border: none;
+            color: #605e5c;
+            font-size: 1.2rem;
+            cursor: pointer;
+            padding: 5px 10px;
+        }
+        
+        .btn-icon:hover {
+            color: #323130;
+        }
+        
+        .btn-remove {
+            color: #a4262c;
+        }
+        
+        .btn-remove:hover {
+            color: #8d1f28;
+        }
+        
+        .add-button {
+            width: 100%;
+            padding: 15px;
+            border: 2px dashed #8a8886;
+            background: white;
+            color: #0078d4;
+            font-weight: 600;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .add-button:hover {
+            border-color: #0078d4;
+            background: #f3f2f1;
+        }
+        
+        .radio-group {
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .radio-option {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .radio-option input[type="radio"] {
+            width: auto;
+        }
+        
+        .outcomes-list {
+            margin-top: 15px;
+            padding-left: 20px;
+        }
+        
+        .outcome-item {
+            background: white;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .chart-container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #edebe9;
+            margin: 20px 0;
+        }
+        
+        .value-timeline-chart {
+            width: 100%;
+            height: 400px;
+        }
+        
+        .ai-insights {
+            background: linear-gradient(135deg, #5c2d91, #8764b8);
+            color: white;
+            padding: 30px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        
+        .insight-card {
+            background: rgba(255,255,255,0.1);
+            padding: 20px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+        }
+        
+        .insight-title {
+            font-weight: 600;
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .loading.active {
+            display: block;
+        }
+        
+        .spinner {
+            border: 3px solid #f3f2f1;
+            border-top: 3px solid #0078d4;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .timeline-legend {
+            display: flex;
+            gap: 30px;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .legend-line {
+            width: 40px;
+            height: 3px;
+        }
+        
+        .line-operational { background: #323130; }
+        .line-strategic { background: #8a8886; }
+        .line-transformational { background: #605e5c; }
+        .line-combined { background: #0078d4; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>AI Use Case Planning Tool</h1>
+            <p>Build a comprehensive strategy for your AI initiative</p>
+        </div>
+        
+        <div class="progress-bar">
+            <div class="progress-step active" data-step="1">1. Select Team</div>
+            <div class="progress-step" data-step="2">2. Stakeholders</div>
+            <div class="progress-step" data-step="3">3. Objectives</div>
+            <div class="progress-step" data-step="4">4. Value Timeline</div>
+            <div class="progress-step" data-step="5">5. Insights</div>
+        </div>
+        
+        <div class="content">
+            <!-- Section 1: Team Selection -->
+            <div class="section active" id="section-1">
+                <h2 class="section-title">Select Your Team</h2>
+                <p class="section-description">Choose the team whose use case you want to develop further.</p>
+                
+                <div class="form-group">
+                    <label for="teamSelect">Team Name</label>
+                    <select id="teamSelect">
+                        <option value="">Loading teams...</option>
+                    </select>
+                </div>
+                
+                <div id="useCasePreview" style="display:none;">
+                    <div class="form-group">
+                        <label>Original Use Case</label>
+                        <div style="background: #f8f9fa; padding: 15px; border-radius: 6px; border-left: 4px solid #0078d4;">
+                            <p id="useCaseText"></p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="button-group">
+                    <button class="btn" onclick="planningTool.nextSection()">Continue</button>
+                </div>
+            </div>
+            
+            <!-- Section 2: Stakeholders -->
+            <div class="section" id="section-2">
+                <h2 class="section-title">Identify Stakeholders</h2>
+                <p class="section-description">Map out who will be involved with or affected by this AI use case.</p>
+                
+                <div id="stakeholdersList"></div>
+                
+                <button class="add-button" onclick="planningTool.addStakeholder()">
+                    + Add Stakeholder
+                </button>
+                
+                <div class="button-group">
+                    <button class="btn btn-ai" onclick="planningTool.suggestStakeholders()">
+                        AI Suggest Stakeholders
+                    </button>
+                    <button class="btn btn-secondary" onclick="planningTool.previousSection()">Back</button>
+                    <button class="btn" onclick="planningTool.nextSection()">Continue</button>
+                </div>
+            </div>
+            
+            <!-- Section 3: Objectives Wizard -->
+            <div class="section" id="section-3">
+                <h2 class="section-title">Define Objectives & Outcomes</h2>
+                <p class="section-description">What do you want to achieve with this AI use case?</p>
+                
+                <div id="objectivesList"></div>
+                
+                <button class="add-button" onclick="planningTool.addObjective()">
+                    + Add Objective
+                </button>
+                
+                <div class="button-group">
+                    <button class="btn btn-secondary" onclick="planningTool.previousSection()">Back</button>
+                    <button class="btn" onclick="planningTool.nextSection()">Continue</button>
+                </div>
+            </div>
+            
+            <!-- Section 4: Value Timeline -->
+            <div class="section" id="section-4">
+                <h2 class="section-title">Value Realization Timeline</h2>
+                <p class="section-description">Map when value will be realized and who will experience it.</p>
+                
+                <div id="valueMilestonesList"></div>
+                
+                <button class="add-button" onclick="planningTool.addValueMilestone()">
+                    + Add Value Milestone
+                </button>
+                
+                <div class="chart-container">
+                    <h3 style="margin-bottom: 20px;">Value Realization Over Time</h3>
+                    <div class="timeline-legend">
+                        <div class="legend-item">
+                            <div class="legend-line line-operational"></div>
+                            <span>Operational Value</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-line line-strategic"></div>
+                            <span>Strategic Value</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-line line-transformational"></div>
+                            <span>Transformational Value</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-line line-combined"></div>
+                            <span>Combined Value</span>
+                        </div>
+                    </div>
+                    <div id="valueChart" class="value-timeline-chart"></div>
+                </div>
+                
+                <div class="button-group">
+                    <button class="btn btn-secondary" onclick="planningTool.previousSection()">Back</button>
+                    <button class="btn btn-success" onclick="planningTool.generateInsights()">Generate AI Insights</button>
+                </div>
+            </div>
+            
+            <!-- Section 5: AI Insights -->
+            <div class="section" id="section-5">
+                <h2 class="section-title">Strategic Insights & Recommendations</h2>
+                <p class="section-description">AI-powered analysis of your use case planning.</p>
+                
+                <div class="loading" id="insightsLoading">
+                    <div class="spinner"></div>
+                    <p>Analyzing your use case with AI...</p>
+                </div>
+                
+                <div id="insightsContent" style="display:none;">
+                    <div class="ai-insights">
+                        <div class="insight-card">
+                            <div class="insight-title">Build Sequence Recommendation</div>
+                            <div id="buildSequence"></div>
+                        </div>
+                        
+                        <div class="insight-card">
+                            <div class="insight-title">Time-to-Value Analysis</div>
+                            <div id="timeToValue"></div>
+                        </div>
+                        
+                        <div class="insight-card">
+                            <div class="insight-title">Strategic Alignment Score</div>
+                            <div id="strategicAlignment"></div>
+                        </div>
+                        
+                        <div class="insight-card">
+                            <div class="insight-title">Quick Wins</div>
+                            <div id="quickWins"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="button-group">
+                    <button class="btn btn-secondary" onclick="planningTool.previousSection()">Back</button>
+                    <button class="btn btn-success" onclick="planningTool.saveAndFinish()">Save & Finish</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class UseCasePlanningTool {
+            constructor() {
+                this.apiBase = 'https://submission-api-faedcdh5frapftdk.westus2-01.azurewebsites.net/api';
+                this.currentSection = 1;
+                this.data = {
+                    teamId: null,
+                    teamName: null,
+                    useCase: null,
+                    stakeholders: [],
+                    objectives: [],
+                    valueMilestones: []
+                };
+                this.chart = null;
+                
+                this.init();
+            }
+
+            init() {
+                this.loadTeams();
+                this.setupEventListeners();
+            }
+
+            setupEventListeners() {
+                document.getElementById('teamSelect').addEventListener('change', (e) => {
+                    this.onTeamSelected(e.target.value);
+                });
+                
+                // Progress bar navigation
+                document.querySelectorAll('.progress-step').forEach(step => {
+                    step.addEventListener('click', (e) => {
+                        const targetSection = parseInt(e.target.dataset.step);
+                        if (targetSection <= this.currentSection || e.target.classList.contains('completed')) {
+                            this.goToSection(targetSection);
+                        }
+                    });
+                });
+            }
+
+            async loadTeams() {
+                try {
+                    const response = await fetch(`${this.apiBase}/getSubmissions`);
+                    const data = await response.json();
+                    
+                    const select = document.getElementById('teamSelect');
+                    select.innerHTML = '<option value="">-- Select a team --</option>';
+                    
+                    data.submissions.forEach(submission => {
+                        const option = document.createElement('option');
+                        option.value = submission.id;
+                        option.textContent = submission.teamName;
+                        option.dataset.usecase = submission.useCase;
+                        select.appendChild(option);
+                    });
+                } catch (error) {
+                    console.error('Error loading teams:', error);
+                    alert('Failed to load teams. Please refresh the page.');
+                }
+            }
+
+            onTeamSelected(teamId) {
+                if (!teamId) {
+                    document.getElementById('useCasePreview').style.display = 'none';
+                    return;
+                }
+                
+                const select = document.getElementById('teamSelect');
+                const selectedOption = select.options[select.selectedIndex];
+                
+                this.data.teamId = teamId;
+                this.data.teamName = selectedOption.textContent;
+                this.data.useCase = selectedOption.dataset.usecase;
+                
+                document.getElementById('useCaseText').textContent = this.data.useCase;
+                document.getElementById('useCasePreview').style.display = 'block';
+            }
+
+            nextSection() {
+                if (this.currentSection === 1 && !this.data.teamId) {
+                    alert('Please select a team first');
+                    return;
+                }
+                
+                if (this.currentSection < 5) {
+                    this.markSectionCompleted(this.currentSection);
+                    this.currentSection++;
+                    this.showSection(this.currentSection);
+                    
+                    // Render chart when reaching value timeline section
+                    if (this.currentSection === 4) {
+                        this.renderValueChart();
+                    }
+                }
+            }
+
+            previousSection() {
+                if (this.currentSection > 1) {
+                    this.currentSection--;
+                    this.showSection(this.currentSection);
+                }
+            }
+
+            goToSection(sectionNumber) {
+                this.currentSection = sectionNumber;
+                this.showSection(sectionNumber);
+                
+                if (sectionNumber === 4) {
+                    this.renderValueChart();
+                }
+            }
+
+            showSection(sectionNumber) {
+                document.querySelectorAll('.section').forEach(section => {
+                    section.classList.remove('active');
+                });
+                document.getElementById(`section-${sectionNumber}`).classList.add('active');
+                
+                document.querySelectorAll('.progress-step').forEach(step => {
+                    step.classList.remove('active');
+                    if (parseInt(step.dataset.step) === sectionNumber) {
+                        step.classList.add('active');
+                    }
+                });
+                
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+
+            markSectionCompleted(sectionNumber) {
+                const step = document.querySelector(`[data-step="${sectionNumber}"]`);
+                if (step) {
+                    step.classList.add('completed');
+                }
+            }
+
+            // Stakeholder Management
+            addStakeholder() {
+                const stakeholderId = `stakeholder-${Date.now()}`;
+                const stakeholder = {
+                    id: stakeholderId,
+                    jobTitle: '',
+                    department: '',
+                    stakeholderType: 'direct_user',
+                    rationale: ''
+                };
+                
+                this.data.stakeholders.push(stakeholder);
+                this.renderStakeholders();
+            }
+
+            removeStakeholder(stakeholderId) {
+                this.data.stakeholders = this.data.stakeholders.filter(s => s.id !== stakeholderId);
+                this.renderStakeholders();
+            }
+
+            renderStakeholders() {
+                const container = document.getElementById('stakeholdersList');
+                container.innerHTML = '';
+                
+                this.data.stakeholders.forEach((stakeholder, index) => {
+                    const card = document.createElement('div');
+                    card.className = 'stakeholder-card';
+                    card.innerHTML = `
+                        <div class="card-header">
+                            <div class="card-title">Stakeholder ${index + 1}</div>
+                            <div class="card-actions">
+                                <button class="btn-icon btn-remove" onclick="planningTool.removeStakeholder('${stakeholder.id}')">✕</button>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Job Title</label>
+                            <input type="text" value="${stakeholder.jobTitle}" 
+                                   onchange="planningTool.updateStakeholder('${stakeholder.id}', 'jobTitle', this.value)">
+                        </div>
+                        <div class="form-group">
+                            <label>Department</label>
+                            <input type="text" value="${stakeholder.department}"
+                                   onchange="planningTool.updateStakeholder('${stakeholder.id}', 'department', this.value)">
+                        </div>
+                        <div class="form-group">
+                            <label>Stakeholder Type</label>
+                            <div class="radio-group">
+                                <label class="radio-option">
+                                    <input type="radio" name="type-${stakeholder.id}" value="direct_user" 
+                                           ${stakeholder.stakeholderType === 'direct_user' ? 'checked' : ''}
+                                           onchange="planningTool.updateStakeholder('${stakeholder.id}', 'stakeholderType', this.value)">
+                                    Direct User
+                                </label>
+                                <label class="radio-option">
+                                    <input type="radio" name="type-${stakeholder.id}" value="direct_beneficiary"
+                                           ${stakeholder.stakeholderType === 'direct_beneficiary' ? 'checked' : ''}
+                                           onchange="planningTool.updateStakeholder('${stakeholder.id}', 'stakeholderType', this.value)">
+                                    Direct Beneficiary
+                                </label>
+                                <label class="radio-option">
+                                    <input type="radio" name="type-${stakeholder.id}" value="indirect_beneficiary"
+                                           ${stakeholder.stakeholderType === 'indirect_beneficiary' ? 'checked' : ''}
+                                           onchange="planningTool.updateStakeholder('${stakeholder.id}', 'stakeholderType', this.value)">
+                                    Indirect Beneficiary
+                                </label>
+                                <label class="radio-option">
+                                    <input type="radio" name="type-${stakeholder.id}" value="accountable"
+                                           ${stakeholder.stakeholderType === 'accountable' ? 'checked' : ''}
+                                           onchange="planningTool.updateStakeholder('${stakeholder.id}', 'stakeholderType', this.value)">
+                                    Accountable
+                                </label>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Why are they involved?</label>
+                            <textarea onchange="planningTool.updateStakeholder('${stakeholder.id}', 'rationale', this.value)">${stakeholder.rationale}</textarea>
+                        </div>
+                    `;
+                    container.appendChild(card);
+                });
+            }
+
+            updateStakeholder(id, field, value) {
+                const stakeholder = this.data.stakeholders.find(s => s.id === id);
+                if (stakeholder) {
+                    stakeholder[field] = value;
+                }
+            }
+
+            // Objectives Management
+            addObjective() {
+                const objectiveId = `objective-${Date.now()}`;
+                const objective = {
+                    id: objectiveId,
+                    title: '',
+                    description: '',
+                    outcomes: [],
+                    strategicAlignment: {
+                        isAligned: false,
+                        organizationalObjective: '',
+                        contribution: ''
+                    }
+                };
+                
+                this.data.objectives.push(objective);
+                this.renderObjectives();
+            }
+
+            removeObjective(objectiveId) {
+                this.data.objectives = this.data.objectives.filter(o => o.id !== objectiveId);
+                this.renderObjectives();
+            }
+
+            addOutcome(objectiveId) {
+                const objective = this.data.objectives.find(o => o.id === objectiveId);
+                if (objective) {
+                    const outcomeId = `outcome-${Date.now()}`;
+                    objective.outcomes.push({
+                        id: outcomeId,
+                        description: '',
+                        measurable: false,
+                        metric: '',
+                        targetValue: ''
+                    });
+                    this.renderObjectives();
+                }
+            }
+
+            removeOutcome(objectiveId, outcomeId) {
+                const objective = this.data.objectives.find(o => o.id === objectiveId);
+                if (objective) {
+                    objective.outcomes = objective.outcomes.filter(out => out.id !== outcomeId);
+                    this.renderObjectives();
+                }
+            }
+
+            renderObjectives() {
+                const container = document.getElementById('objectivesList');
+                container.innerHTML = '';
+                
+                this.data.objectives.forEach((objective, index) => {
+                    const card = document.createElement('div');
+                    card.className = 'objective-card';
+                    card.innerHTML = `
+                        <div class="card-header">
+                            <div class="card-title">Objective ${index + 1}</div>
+                            <div class="card-actions">
+                                <button class="btn-icon btn-remove" onclick="planningTool.removeObjective('${objective.id}')">✕</button>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Objective Title</label>
+                            <input type="text" value="${objective.title}" 
+                                   onchange="planningTool.updateObjective('${objective.id}', 'title', this.value)"
+                                   placeholder="e.g., Reduce customer response time">
+                        </div>
+                        <div class="form-group">
+                            <label>Description</label>
+                            <textarea onchange="planningTool.updateObjective('${objective.id}', 'description', this.value)"
+                                      placeholder="Provide details about this objective...">${objective.description}</textarea>
+                        </div>
+                        <div class="form-group">
+                            <label style="margin-bottom: 10px;">Expected Outcomes</label>
+                            <div class="outcomes-list" id="outcomes-${objective.id}">
+                                ${objective.outcomes.map(outcome => `
+                                    <div class="outcome-item">
+                                        <input type="text" value="${outcome.description}" 
+                                               onchange="planningTool.updateOutcome('${objective.id}', '${outcome.id}', this.value)"
+                                               placeholder="e.g., 30% reduction in response time"
+                                               style="flex: 1; border: none; background: transparent;">
+                                        <button class="btn-icon btn-remove" onclick="planningTool.removeOutcome('${objective.id}', '${outcome.id}')">✕</button>
+                                    </div>
+                                `).join('')}
+                            </div>
+                            <button class="btn btn-secondary" style="margin-top: 10px; width: auto; padding: 8px 16px; font-size: 0.9rem;"
+                                    onclick="planningTool.addOutcome('${objective.id}')">+ Add Outcome</button>
+                        </div>
+                        <div class="form-group">
+                            <label>
+                                <input type="checkbox" ${objective.strategicAlignment.isAligned ? 'checked' : ''}
+                                       onchange="planningTool.toggleAlignment('${objective.id}', this.checked)">
+                                This objective aligns with an organizational strategy
+                            </label>
+                            <div id="alignment-${objective.id}" style="margin-top: 15px; display: ${objective.strategicAlignment.isAligned ? 'block' : 'none'};">
+                                <div class="form-group">
+                                    <label>Organizational Objective</label>
+                                    <input type="text" value="${objective.strategicAlignment.organizationalObjective}"
+                                           onchange="planningTool.updateAlignment('${objective.id}', 'organizationalObjective', this.value)"
+                                           placeholder="e.g., Customer Excellence 2025">
+                                </div>
+                                <div class="form-group">
+                                    <label>How does this objective contribute?</label>
+                                    <textarea onchange="planningTool.updateAlignment('${objective.id}', 'contribution', this.value)"
+                                              placeholder="Explain the connection to the organizational strategy">${objective.strategicAlignment.contribution}</textarea>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    container.appendChild(card);
+                });
+            }
+
+            updateObjective(id, field, value) {
+                const objective = this.data.objectives.find(o => o.id === id);
+                if (objective) {
+                    objective[field] = value;
+                }
+            }
+
+            updateOutcome(objectiveId, outcomeId, value) {
+                const objective = this.data.objectives.find(o => o.id === objectiveId);
+                if (objective) {
+                    const outcome = objective.outcomes.find(out => out.id === outcomeId);
+                    if (outcome) {
+                        outcome.description = value;
+                    }
+                }
+            }
+
+            toggleAlignment(objectiveId, isAligned) {
+                const objective = this.data.objectives.find(o => o.id === objectiveId);
+                if (objective) {
+                    objective.strategicAlignment.isAligned = isAligned;
+                    document.getElementById(`alignment-${objectiveId}`).style.display = isAligned ? 'block' : 'none';
+                }
+            }
+
+            updateAlignment(objectiveId, field, value) {
+                const objective = this.data.objectives.find(o => o.id === objectiveId);
+                if (objective) {
+                    objective.strategicAlignment[field] = value;
+                }
+            }
+
+            // Value Milestones Management
+            addValueMilestone() {
+                const milestoneId = `milestone-${Date.now()}`;
+                const milestone = {
+                    id: milestoneId,
+                    milestone: '',
+                    timeframe: '0-3months',
+                    valueType: 'operational',
+                    description: '',
+                    impactedStakeholders: [],
+                    estimatedImpact: 'medium'
+                };
+                
+                this.data.valueMilestones.push(milestone);
+                this.renderValueMilestones();
+            }
+
+            removeValueMilestone(milestoneId) {
+                this.data.valueMilestones = this.data.valueMilestones.filter(m => m.id !== milestoneId);
+                this.renderValueMilestones();
+                this.renderValueChart();
+            }
+
+            renderValueMilestones() {
+                const container = document.getElementById('valueMilestonesList');
+                container.innerHTML = '';
+                
+                this.data.valueMilestones.forEach((milestone, index) => {
+                    const card = document.createElement('div');
+                    card.className = 'value-milestone-card';
+                    card.innerHTML = `
+                        <div class="card-header">
+                            <div class="card-title">Value Milestone ${index + 1}</div>
+                            <div class="card-actions">
+                                <button class="btn-icon btn-remove" onclick="planningTool.removeValueMilestone('${milestone.id}')">✕</button>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Milestone Name</label>
+                            <input type="text" value="${milestone.milestone}" 
+                                   onchange="planningTool.updateValueMilestone('${milestone.id}', 'milestone', this.value)"
+                                   placeholder="e.g., MVP Launch">
+                        </div>
+                        <div class="form-group">
+                            <label>Timeframe</label>
+                            <select onchange="planningTool.updateValueMilestone('${milestone.id}', 'timeframe', this.value); planningTool.renderValueChart();">
+                                <option value="0-3months" ${milestone.timeframe === '0-3months' ? 'selected' : ''}>0-3 months (Short-term)</option>
+                                <option value="3-6months" ${milestone.timeframe === '3-6months' ? 'selected' : ''}>3-6 months (Medium-term)</option>
+                                <option value="6-12months" ${milestone.timeframe === '6-12months' ? 'selected' : ''}>6-12 months (Long-term)</option>
+                                <option value="12+months" ${milestone.timeframe === '12+months' ? 'selected' : ''}>12+ months (Long-term)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Value Type</label>
+                            <select onchange="planningTool.updateValueMilestone('${milestone.id}', 'valueType', this.value); planningTool.renderValueChart();">
+                                <option value="operational" ${milestone.valueType === 'operational' ? 'selected' : ''}>Operational (Efficiency gains)</option>
+                                <option value="strategic" ${milestone.valueType === 'strategic' ? 'selected' : ''}>Strategic (Competitive advantage)</option>
+                                <option value="transformational" ${milestone.valueType === 'transformational' ? 'selected' : ''}>Transformational (Business model change)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Value Description</label>
+                            <textarea onchange="planningTool.updateValueMilestone('${milestone.id}', 'description', this.value)"
+                                      placeholder="What value will be realized at this milestone?">${milestone.description}</textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>Estimated Impact</label>
+                            <select onchange="planningTool.updateValueMilestone('${milestone.id}', 'estimatedImpact', this.value)">
+                                <option value="high" ${milestone.estimatedImpact === 'high' ? 'selected' : ''}>High</option>
+                                <option value="medium" ${milestone.estimatedImpact === 'medium' ? 'selected' : ''}>Medium</option>
+                                <option value="low" ${milestone.estimatedImpact === 'low' ? 'selected' : ''}>Low</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Who Experiences This Value?</label>
+                            <select multiple style="height: 100px;" onchange="planningTool.updateMilestoneStakeholders('${milestone.id}', this)">
+                                ${this.data.stakeholders.map(s => `
+                                    <option value="${s.id}" ${milestone.impactedStakeholders.includes(s.id) ? 'selected' : ''}>
+                                        ${s.jobTitle || 'Untitled'} - ${s.department || 'No department'}
+                                    </option>
+                                `).join('')}
+                            </select>
+                            <small style="color: #605e5c; margin-top: 5px; display: block;">Hold Ctrl/Cmd to select multiple</small>
+                        </div>
+                    `;
+                    container.appendChild(card);
+                });
+            }
+
+            updateValueMilestone(id, field, value) {
+                const milestone = this.data.valueMilestones.find(m => m.id === id);
+                if (milestone) {
+                    milestone[field] = value;
+                }
+            }
+
+            updateMilestoneStakeholders(milestoneId, selectElement) {
+                const milestone = this.data.valueMilestones.find(m => m.id === milestoneId);
+                if (milestone) {
+                    milestone.impactedStakeholders = Array.from(selectElement.selectedOptions).map(opt => opt.value);
+                }
+            }
+
+            // Value Chart Rendering
+            renderValueChart() {
+                const container = document.getElementById('valueChart');
+                container.innerHTML = '';
+                
+                if (this.data.valueMilestones.length === 0) {
+                    container.innerHTML = '<p style="text-align: center; color: #605e5c; padding: 40px;">Add value milestones to see the timeline visualization</p>';
+                    return;
+                }
+
+                const margin = {top: 20, right: 80, bottom: 60, left: 60};
+                const width = container.clientWidth - margin.left - margin.right;
+                const height = 400 - margin.top - margin.bottom;
+
+                const svg = d3.select(container)
+                    .append('svg')
+                    .attr('width', width + margin.left + margin.right)
+                    .attr('height', height + margin.top + margin.bottom)
+                    .append('g')
+                    .attr('transform', `translate(${margin.left},${margin.top})`);
+
+                // Define timeframe order and mapping
+                const timeframes = ['0-3months', '3-6months', '6-12months', '12+months'];
+                const timeframeLabels = {
+                    '0-3months': 'Short-term',
+                    '3-6months': 'Medium-term',
+                    '6-12months': 'Long-term',
+                    '12+months': 'Long-term'
+                };
+
+                // Calculate cumulative values by type
+                const valueByType = {
+                    operational: [0, 0, 0, 0],
+                    strategic: [0, 0, 0, 0],
+                    transformational: [0, 0, 0, 0]
+                };
+
+                const impactValues = {high: 3, medium: 2, low: 1};
+
+                this.data.valueMilestones.forEach(milestone => {
+                    const timeIndex = timeframes.indexOf(milestone.timeframe);
+                    if (timeIndex !== -1) {
+                        const impactValue = impactValues[milestone.estimatedImpact] || 2;
+                        valueByType[milestone.valueType][timeIndex] += impactValue;
+                    }
+                });
+
+                // Make cumulative
+                Object.keys(valueByType).forEach(type => {
+                    for (let i = 1; i < valueByType[type].length; i++) {
+                        valueByType[type][i] += valueByType[type][i - 1];
+                    }
+                });
+
+                // Calculate combined value
+                const combinedValue = timeframes.map((_, i) => 
+                    valueByType.operational[i] + valueByType.strategic[i] + valueByType.transformational[i]
+                );
+
+                // Scales
+                const x = d3.scalePoint()
+                    .domain(timeframes)
+                    .range([0, width])
+                    .padding(0.5);
+
+                const y = d3.scaleLinear()
+                    .domain([0, Math.max(...combinedValue) * 1.1])
+                    .range([height, 0]);
+
+                // X axis
+                svg.append('g')
+                    .attr('transform', `translate(0,${height})`)
+                    .call(d3.axisBottom(x).tickFormat(d => timeframeLabels[d]))
+                    .selectAll('text')
+                    .style('font-family', 'Segoe UI')
+                    .style('font-size', '12px');
+
+                // Y axis
+                svg.append('g')
+                    .call(d3.axisLeft(y).ticks(5))
+                    .selectAll('text')
+                    .style('font-family', 'Segoe UI')
+                    .style('font-size', '12px');
+
+                // Y axis label
+                svg.append('text')
+                    .attr('transform', 'rotate(-90)')
+                    .attr('y', 0 - margin.left)
+                    .attr('x', 0 - (height / 2))
+                    .attr('dy', '1em')
+                    .style('text-anchor', 'middle')
+                    .style('font-family', 'Segoe UI')
+                    .style('fill', '#605e5c')
+                    .text('Value');
+
+                // X axis label
+                svg.append('text')
+                    .attr('x', width / 2)
+                    .attr('y', height + margin.bottom - 10)
+                    .style('text-anchor', 'middle')
+                    .style('font-family', 'Segoe UI')
+                    .style('fill', '#605e5c')
+                    .text('Time');
+
+                // Line generator
+                const line = d3.line()
+                    .x((d, i) => x(timeframes[i]))
+                    .y(d => y(d))
+                    .curve(d3.curveMonotoneX);
+
+                // Draw lines
+                const lineStyles = {
+                    operational: {color: '#323130', width: 2, dash: '5,0'},
+                    strategic: {color: '#8a8886', width: 2, dash: '10,5'},
+                    transformational: {color: '#605e5c', width: 2, dash: '2,5'},
+                    combined: {color: '#0078d4', width: 3, dash: '5,0'}
+                };
+
+                // Operational
+                svg.append('path')
+                    .datum(valueByType.operational)
+                    .attr('fill', 'none')
+                    .attr('stroke', lineStyles.operational.color)
+                    .attr('stroke-width', lineStyles.operational.width)
+                    .attr('stroke-dasharray', lineStyles.operational.dash)
+                    .attr('d', line);
+
+                // Strategic
+                svg.append('path')
+                    .datum(valueByType.strategic)
+                    .attr('fill', 'none')
+                    .attr('stroke', lineStyles.strategic.color)
+                    .attr('stroke-width', lineStyles.strategic.width)
+                    .attr('stroke-dasharray', lineStyles.strategic.dash)
+                    .attr('d', line);
+
+                // Transformational
+                svg.append('path')
+                    .datum(valueByType.transformational)
+                    .attr('fill', 'none')
+                    .attr('stroke', lineStyles.transformational.color)
+                    .attr('stroke-width', lineStyles.transformational.width)
+                    .attr('stroke-dasharray', lineStyles.transformational.dash)
+                    .attr('d', line);
+
+                // Combined
+                svg.append('path')
+                    .datum(combinedValue)
+                    .attr('fill', 'none')
+                    .attr('stroke', lineStyles.combined.color)
+                    .attr('stroke-width', lineStyles.combined.width)
+                    .attr('d', line);
+
+                // Add milestone markers
+                this.data.valueMilestones.forEach(milestone => {
+                    const timeIndex = timeframes.indexOf(milestone.timeframe);
+                    if (timeIndex !== -1) {
+                        svg.append('circle')
+                            .attr('cx', x(milestone.timeframe))
+                            .attr('cy', y(combinedValue[timeIndex]))
+                            .attr('r', 5)
+                            .attr('fill', '#0078d4')
+                            .attr('stroke', 'white')
+                            .attr('stroke-width', 2)
+                            .append('title')
+                            .text(`${milestone.milestone}: ${milestone.description}`);
+                    }
+                });
+            }
+
+            // AI Integration
+            async suggestStakeholders() {
+                alert('AI stakeholder suggestions will be implemented when Azure OpenAI is connected');
+            }
+
+            async generateInsights() {
+                this.showSection(5);
+                document.getElementById('insightsLoading').classList.add('active');
+                document.getElementById('insightsContent').style.display = 'none';
+                
+                // Simulate AI analysis
+                setTimeout(() => {
+                    this.displayInsights();
+                }, 2000);
+            }
+
+            displayInsights() {
+                document.getElementById('insightsLoading').classList.remove('active');
+                document.getElementById('insightsContent').style.display = 'block';
+                
+                // Generate mock insights based on data
+                const quickWinMilestones = this.data.valueMilestones
+                    .filter(m => m.timeframe === '0-3months' && m.estimatedImpact === 'high')
+                    .map(m => m.milestone);
+                
+                document.getElementById('buildSequence').innerHTML = `
+                    <p>Based on your value timeline, we recommend this build sequence:</p>
+                    <ol style="margin-top: 15px; padding-left: 20px;">
+                        <li>Phase 1: Focus on operational improvements (0-3 months)</li>
+                        <li>Phase 2: Implement strategic capabilities (3-6 months)</li>
+                        <li>Phase 3: Deploy transformational features (6-12 months)</li>
+                    </ol>
+                `;
+                
+                document.getElementById('timeToValue').innerHTML = `
+                    <p>First value realization: <strong>${this.data.valueMilestones[0]?.timeframe || 'Not defined'}</strong></p>
+                    <p>Peak value delivery: <strong>6-12 months</strong></p>
+                    <p>Total milestones defined: <strong>${this.data.valueMilestones.length}</strong></p>
+                `;
+                
+                const alignedObjectives = this.data.objectives.filter(o => o.strategicAlignment.isAligned).length;
+                const alignmentScore = this.data.objectives.length > 0 
+                    ? Math.round((alignedObjectives / this.data.objectives.length) * 100) 
+                    : 0;
+                
+                document.getElementById('strategicAlignment').innerHTML = `
+                    <p>Strategic Alignment Score: <strong style="font-size: 2rem; display: block; margin-top: 10px;">${alignmentScore}%</strong></p>
+                    <p>${alignedObjectives} of ${this.data.objectives.length} objectives aligned to organizational strategy</p>
+                `;
+                
+                document.getElementById('quickWins').innerHTML = quickWinMilestones.length > 0
+                    ? `<ul style="padding-left: 20px;">${quickWinMilestones.map(m => `<li>${m}</li>`).join('')}</ul>`
+                    : '<p>Define short-term, high-impact milestones to identify quick wins</p>';
+            }
+
+            async saveAndFinish() {
+                try {
+                    // Here we would save to Azure Function
+                    console.log('Saving use case plan:', this.data);
+                    alert('Use case plan saved successfully! (Save to Azure Function not yet implemented)');
+                    
+                    // Could redirect back to dashboard or show success message
+                } catch (error) {
+                    console.error('Error saving:', error);
+                    alert('Failed to save. Please try again.');
+                }
+            }
+        }
+
+        // Initialize the tool
+        let planningTool;
+        document.addEventListener('DOMContentLoaded', () => {
+            planningTool = new UseCasePlanningTool();
+        });
+    </script>
+</body>
+</html>
