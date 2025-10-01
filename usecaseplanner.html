@@ -1158,7 +1158,7 @@
 
                 // Y axis
                 svg.append('g')
-                    .call(d3.axisLeft(y).ticks(5))
+                    .call(d3.axisLeft(y).ticks(5).tickFormat(() => '')) // Remove tick labels
                     .selectAll('text')
                     .style('font-family', 'Segoe UI')
                     .style('font-size', '12px');
@@ -1232,19 +1232,36 @@
                     .attr('stroke-width', lineStyles.combined.width)
                     .attr('d', line);
 
-                // Add milestone markers
-                this.data.valueMilestones.forEach(milestone => {
+                // Add milestone markers with numbers
+                this.data.valueMilestones.forEach((milestone, index) => {
                     const timeIndex = timeframes.indexOf(milestone.timeframe);
                     if (timeIndex !== -1) {
-                        svg.append('circle')
-                            .attr('cx', x(milestone.timeframe))
-                            .attr('cy', y(combinedValue[timeIndex]))
-                            .attr('r', 5)
+                        const milestoneNumber = index + 1;
+                        
+                        // Create group for milestone marker
+                        const markerGroup = svg.append('g')
+                            .attr('transform', `translate(${x(milestone.timeframe)}, ${y(combinedValue[timeIndex])})`);
+                        
+                        // Outer circle (white background)
+                        markerGroup.append('circle')
+                            .attr('r', 18)
                             .attr('fill', '#0078d4')
                             .attr('stroke', 'white')
-                            .attr('stroke-width', 2)
-                            .append('title')
-                            .text(`${milestone.milestone}: ${milestone.description}`);
+                            .attr('stroke-width', 3);
+                        
+                        // Number text
+                        markerGroup.append('text')
+                            .attr('text-anchor', 'middle')
+                            .attr('dy', '0.35em')
+                            .style('fill', 'white')
+                            .style('font-weight', '600')
+                            .style('font-size', '14px')
+                            .style('font-family', 'Segoe UI')
+                            .text(milestoneNumber);
+                        
+                        // Tooltip
+                        markerGroup.append('title')
+                            .text(`${milestoneNumber}. ${milestone.milestone || 'Untitled'}: ${milestone.description || 'No description'}`);
                     }
                 });
             }
