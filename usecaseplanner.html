@@ -433,11 +433,29 @@
                 <h2 class="section-title">Define Objectives & Outcomes</h2>
                 <p class="section-description">What do you want to achieve with this AI use case?</p>
                 
-                <div id="objectivesList"></div>
+                <!-- Step 1: Organizational Objectives -->
+                <div class="form-group" style="background: #f3f2f1; padding: 20px; border-radius: 8px; margin-bottom: 30px;">
+                    <h3 style="color: #0078d4; margin-bottom: 15px;">Step 1: Define Organizational Objectives</h3>
+                    <p style="color: #605e5c; margin-bottom: 15px;">What are the broader organizational strategies or objectives this use case could support?</p>
+                    
+                    <div id="orgObjectivesList"></div>
+                    
+                    <button class="add-button" onclick="planningTool.addOrgObjective()" style="background: white;">
+                        + Add Organizational Objective
+                    </button>
+                </div>
                 
-                <button class="add-button" onclick="planningTool.addObjective()">
-                    + Add Objective
-                </button>
+                <!-- Step 2: Use Case Objectives -->
+                <div class="form-group">
+                    <h3 style="color: #0078d4; margin-bottom: 15px;">Step 2: Define Use Case Objectives</h3>
+                    <p style="color: #605e5c; margin-bottom: 15px;">What specific objectives will this AI use case achieve?</p>
+                    
+                    <div id="objectivesList"></div>
+                    
+                    <button class="add-button" onclick="planningTool.addObjective()">
+                        + Add Use Case Objective
+                    </button>
+                </div>
                 
                 <div class="button-group">
                     <button class="btn btn-secondary" onclick="planningTool.previousSection()">Back</button>
@@ -536,6 +554,7 @@
                     teamId: null,
                     teamName: null,
                     useCase: null,
+                    organizationalObjectives: [],
                     stakeholders: [],
                     objectives: [],
                     valueMilestones: []
@@ -750,7 +769,65 @@
                 }
             }
 
-            // Objectives Management
+            // Organizational Objectives Management
+            addOrgObjective() {
+                const orgObjId = `orgobj-${Date.now()}`;
+                const orgObjective = {
+                    id: orgObjId,
+                    name: '',
+                    description: ''
+                };
+                
+                this.data.organizationalObjectives.push(orgObjective);
+                this.renderOrgObjectives();
+            }
+
+            removeOrgObjective(orgObjId) {
+                this.data.organizationalObjectives = this.data.organizationalObjectives.filter(o => o.id !== orgObjId);
+                this.renderOrgObjectives();
+                this.renderObjectives(); // Re-render to update dropdowns
+            }
+
+            renderOrgObjectives() {
+                const container = document.getElementById('orgObjectivesList');
+                container.innerHTML = '';
+                
+                this.data.organizationalObjectives.forEach((orgObj, index) => {
+                    const card = document.createElement('div');
+                    card.style.cssText = 'background: white; padding: 15px; border-radius: 6px; margin-bottom: 10px; border: 1px solid #edebe9;';
+                    card.innerHTML = `
+                        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px;">
+                            <strong style="color: #0078d4;">Organizational Objective ${index + 1}</strong>
+                            <button class="btn-icon btn-remove" onclick="planningTool.removeOrgObjective('${orgObj.id}')">✕</button>
+                        </div>
+                        <div class="form-group" style="margin-bottom: 10px;">
+                            <label>Name</label>
+                            <input type="text" value="${orgObj.name}" 
+                                   onchange="planningTool.updateOrgObjective('${orgObj.id}', 'name', this.value)"
+                                   placeholder="e.g., Customer Excellence 2025">
+                        </div>
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label>Description (optional)</label>
+                            <textarea onchange="planningTool.updateOrgObjective('${orgObj.id}', 'description', this.value)"
+                                      placeholder="Brief description of this organizational objective"
+                                      style="min-height: 60px;">${orgObj.description}</textarea>
+                        </div>
+                    `;
+                    container.appendChild(card);
+                });
+            }
+
+            updateOrgObjective(id, field, value) {
+                const orgObj = this.data.organizationalObjectives.find(o => o.id === id);
+                if (orgObj) {
+                    orgObj[field] = value;
+                    if (field === 'name') {
+                        this.renderObjectives(); // Update dropdowns when name changes
+                    }
+                }
+            }
+
+            // Objectives Management (Updated)
             addObjective() {
                 const objectiveId = `objective-${Date.now()}`;
                 const objective = {
@@ -758,11 +835,7 @@
                     title: '',
                     description: '',
                     outcomes: [],
-                    strategicAlignment: {
-                        isAligned: false,
-                        organizationalObjective: '',
-                        contribution: ''
-                    }
+                    alignedToOrgObjectives: [] // Changed to array to support multiple alignments
                 };
                 
                 this.data.objectives.push(objective);
@@ -839,59 +912,28 @@
                                     onclick="planningTool.addOutcome('${objective.id}')">+ Add Outcome</button>
                         </div>
                         <div class="form-group">
-                            <label>
-                                <input type="checkbox" ${objective.strategicAlignment.isAligned ? 'checked' : ''}
-                                       onchange="planningTool.toggleAlignment('${objective.id}', this.checked)">
-                                This objective aligns with an organizational strategy
-                            </label>
-                            <div id="alignment-${objective.id}" style="margin-top: 15px; display: ${objective.strategicAlignment.isAligned ? 'block' : 'none'};">
-                                <div class="form-group">
-                                    <label>Organizational Objective</label>
-                                    <input type="text" value="${objective.strategicAlignment.organizationalObjective}"
-                                           onchange="planningTool.updateAlignment('${objective.id}', 'organizationalObjective', this.value)"
-                                           placeholder="e.g., Customer Excellence 2025">
-                                </div>
-                                <div class="form-group">
-                                    <label>How does this objective contribute?</label>
-                                    <textarea onchange="planningTool.updateAlignment('${objective.id}', 'contribution', this.value)"
-                                              placeholder="Explain the connection to the organizational strategy">${objective.strategicAlignment.contribution}</textarea>
-                                </div>
-                            </div>
+                            <label>Align to Organizational Objectives (optional)</label>
+                            <select multiple style="height: 120px;" onchange="planningTool.updateObjectiveAlignment('${objective.id}', this)">
+                                ${this.data.organizationalObjectives.length > 0 
+                                    ? this.data.organizationalObjectives.map(orgObj => `
+                                        <option value="${orgObj.id}" ${objective.alignedToOrgObjectives.includes(orgObj.id) ? 'selected' : ''}>
+                                            ${orgObj.name || 'Untitled Organizational Objective'}
+                                        </option>
+                                    `).join('')
+                                    : '<option disabled>No organizational objectives defined yet</option>'
+                                }
+                            </select>
+                            <small style="color: #605e5c; margin-top: 5px; display: block;">Hold Ctrl/Cmd to select multiple objectives</small>
                         </div>
                     `;
                     container.appendChild(card);
                 });
             }
 
-            updateObjective(id, field, value) {
-                const objective = this.data.objectives.find(o => o.id === id);
-                if (objective) {
-                    objective[field] = value;
-                }
-            }
-
-            updateOutcome(objectiveId, outcomeId, value) {
+            updateObjectiveAlignment(objectiveId, selectElement) {
                 const objective = this.data.objectives.find(o => o.id === objectiveId);
                 if (objective) {
-                    const outcome = objective.outcomes.find(out => out.id === outcomeId);
-                    if (outcome) {
-                        outcome.description = value;
-                    }
-                }
-            }
-
-            toggleAlignment(objectiveId, isAligned) {
-                const objective = this.data.objectives.find(o => o.id === objectiveId);
-                if (objective) {
-                    objective.strategicAlignment.isAligned = isAligned;
-                    document.getElementById(`alignment-${objectiveId}`).style.display = isAligned ? 'block' : 'none';
-                }
-            }
-
-            updateAlignment(objectiveId, field, value) {
-                const objective = this.data.objectives.find(o => o.id === objectiveId);
-                if (objective) {
-                    objective.strategicAlignment[field] = value;
+                    objective.alignedToOrgObjectives = Array.from(selectElement.selectedOptions).map(opt => opt.value);
                 }
             }
 
@@ -904,12 +946,18 @@
                     timeframe: '0-3months',
                     valueType: 'operational',
                     description: '',
+                    linkedOutcomes: [], // Link to objective outcomes
                     impactedStakeholders: [],
                     estimatedImpact: 'medium'
                 };
                 
                 this.data.valueMilestones.push(milestone);
                 this.renderValueMilestones();
+                
+                // Auto-update chart when milestone is added
+                if (this.currentSection === 4) {
+                    this.renderValueChart();
+                }
             }
 
             removeValueMilestone(milestoneId) {
@@ -921,6 +969,18 @@
             renderValueMilestones() {
                 const container = document.getElementById('valueMilestonesList');
                 container.innerHTML = '';
+                
+                // Get all outcomes from all objectives
+                const allOutcomes = [];
+                this.data.objectives.forEach(objective => {
+                    objective.outcomes.forEach(outcome => {
+                        allOutcomes.push({
+                            id: outcome.id,
+                            objectiveTitle: objective.title,
+                            outcomeDescription: outcome.description
+                        });
+                    });
+                });
                 
                 this.data.valueMilestones.forEach((milestone, index) => {
                     const card = document.createElement('div');
@@ -937,6 +997,20 @@
                             <input type="text" value="${milestone.milestone}" 
                                    onchange="planningTool.updateValueMilestone('${milestone.id}', 'milestone', this.value)"
                                    placeholder="e.g., MVP Launch">
+                        </div>
+                        <div class="form-group">
+                            <label>Which Outcomes Does This Milestone Achieve?</label>
+                            <select multiple style="height: 120px;" onchange="planningTool.updateMilestoneOutcomes('${milestone.id}', this)">
+                                ${allOutcomes.length > 0 
+                                    ? allOutcomes.map(outcome => `
+                                        <option value="${outcome.id}" ${(milestone.linkedOutcomes || []).includes(outcome.id) ? 'selected' : ''}>
+                                            ${outcome.objectiveTitle || 'Untitled'}: ${outcome.outcomeDescription || 'No description'}
+                                        </option>
+                                    `).join('')
+                                    : '<option disabled>No outcomes defined yet - add objectives first</option>'
+                                }
+                            </select>
+                            <small style="color: #605e5c; margin-top: 5px; display: block;">Hold Ctrl/Cmd to select multiple outcomes</small>
                         </div>
                         <div class="form-group">
                             <label>Timeframe</label>
@@ -962,7 +1036,7 @@
                         </div>
                         <div class="form-group">
                             <label>Estimated Impact</label>
-                            <select onchange="planningTool.updateValueMilestone('${milestone.id}', 'estimatedImpact', this.value)">
+                            <select onchange="planningTool.updateValueMilestone('${milestone.id}', 'estimatedImpact', this.value); planningTool.renderValueChart();">
                                 <option value="high" ${milestone.estimatedImpact === 'high' ? 'selected' : ''}>High</option>
                                 <option value="medium" ${milestone.estimatedImpact === 'medium' ? 'selected' : ''}>Medium</option>
                                 <option value="low" ${milestone.estimatedImpact === 'low' ? 'selected' : ''}>Low</option>
@@ -972,7 +1046,7 @@
                             <label>Who Experiences This Value?</label>
                             <select multiple style="height: 100px;" onchange="planningTool.updateMilestoneStakeholders('${milestone.id}', this)">
                                 ${this.data.stakeholders.map(s => `
-                                    <option value="${s.id}" ${milestone.impactedStakeholders.includes(s.id) ? 'selected' : ''}>
+                                    <option value="${s.id}" ${(milestone.impactedStakeholders || []).includes(s.id) ? 'selected' : ''}>
                                         ${s.jobTitle || 'Untitled'} - ${s.department || 'No department'}
                                     </option>
                                 `).join('')}
@@ -982,6 +1056,13 @@
                     `;
                     container.appendChild(card);
                 });
+            }
+
+            updateMilestoneOutcomes(milestoneId, selectElement) {
+                const milestone = this.data.valueMilestones.find(m => m.id === milestoneId);
+                if (milestone) {
+                    milestone.linkedOutcomes = Array.from(selectElement.selectedOptions).map(opt => opt.value);
+                }
             }
 
             updateValueMilestone(id, field, value) {
