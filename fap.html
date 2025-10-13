@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Stage 3 — Frontier Action Planning (12-Month Roadmap)</title>
+<style>
+  :root{
+    --bg:#0f172a; --panel:#0b1226; --ink:#e5e7eb; --muted:#94a3b8;
+    --border:#1f2a3d; --shadow:0 14px 30px rgba(0,0,0,.40); --radius:18px;
+    --blue:#60a5fa; --green:#34d399; --amber:#f59e0b; --rose:#f43f5e; --violet:#a78bfa;
+  }
+  body{margin:0;background: radial-gradient(1200px 600px at 70% -10%, #172554 0%, #0b1226 45%, #050816 100%);color:var(--ink);
+       font:16px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial}
+  header{padding:24px 24px 12px;display:flex;gap:16px;justify-content:space-between;align-items:flex-start;flex-wrap:wrap}
+  h1{margin:.2rem 0 .3rem;font-size:28px}
+  .subtitle{color:var(--muted);max-width:900px}
+  .bar{display:flex;gap:10px;flex-wrap:wrap}
+  button{background:linear-gradient(180deg,#1f2937,#111827);color:var(--ink);border:1px solid #263041;
+         padding:10px 14px;border-radius:12px;cursor:pointer;box-shadow:var(--shadow)}
+  button:hover{transform:translateY(-1px);border-color:#3b82f6}
+  .btn-accent{background:linear-gradient(180deg,#2563eb,#1d4ed8);border-color:#3b82f6}
+  .btn-green{background:linear-gradient(180deg,#10b981,#059669);border-color:#34d399}
+  .btn-outline{background:transparent;border-color:#334155}
+  .wrap{display:grid;grid-template-columns: 1fr 340px;gap:16px;padding:8px 18px 24px}
+  .board{background:linear-gradient(180deg,#0b1226,#050a1a);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);overflow:auto}
+  .board header{padding:12px 14px;border-bottom:1px solid var(--border);display:grid;grid-template-columns: 220px repeat(3,1fr);gap:1px}
+  .col-head{padding:8px 10px;border:1px solid #1e293b;border-radius:10px;text-align:center;font-weight:700}
+  .grid{display:grid;grid-template-columns:220px repeat(3,1fr);gap:1px}
+  .row-label{padding:12px 10px;border-right:1px solid #1e293b;color:#cbd5e1;font-weight:600}
+  .cell{min-height:180px;border-left:1px solid #1e293b;border-bottom:1px solid #1e293b;padding:10px;display:flex;flex-wrap:wrap;gap:10px;align-content:flex-start}
+  .lane-emp {background:rgba(16,185,129,.05)}
+  .lane-cust{background:rgba(59,130,246,.05)}
+  .lane-proc{background:rgba(245,158,11,.05)}
+  .lane-inn {background:rgba(139,92,246,.06)}
+  .card{
+    background:linear-gradient(180deg,#0f172a,#0b1226);border:1px solid #22304a;border-radius:14px;
+    padding:10px 10px 8px; width:280px; position:relative; box-shadow:var(--shadow);
+  }
+  .card h4{margin:0 0 6px;font-size:14px}
+  .tag{display:inline-block;border:1px solid #334155;border-radius:999px;padding:2px 8px;color:#cbd5e1;font-size:12px}
+  .kpi{color:#cbd5e1;font-size:12px;margin-top:6px}
+  .meta{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+  .toolbar{position:absolute;top:6px;right:6px;display:flex;gap:6px}
+  .icon-btn{width:26px;height:26px;border-radius:8px;border:1px solid #334155;background:#0b1226;color:#cbd5e1;cursor:pointer}
+  .star.active{color:#fbbf24;border-color:#f59e0b}
+  .status{font-size:12px;padding:2px 8px;border-radius:999px;border:1px solid #334155}
+  .s-planned{background:#0b2a3a;color:#a5f3fc;border-color:#164e63}
+  .s-active{background:#0b3a2b;color:#a7f3d0;border-color:#14532d}
+  .s-risk{background:#3b1a0b;color:#fed7aa;border-color:#7c2d12}
+  .right{background:linear-gradient(180deg,#0b1226,#050a1a);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow)}
+  .right header{padding:12px 14px;border-bottom:1px solid var(--border)}
+  .right main{padding:12px 14px}
+  .summary{font-size:14px;color:var(--muted)}
+  .sum-row{display:flex;justify-content:space-between;margin:4px 0}
+  .prio-list{display:grid;gap:8px;margin-top:10px}
+  .divider{border-top:1px solid #1f2a3d;margin:10px 0}
+  .legend{display:flex;gap:6px;flex-wrap:wrap;font-size:12px;color:#cbd5e1}
+  .legend .dot{width:10px;height:10px;border-radius:999px;display:inline-block;margin-right:4px}
+  .l-emp{background:#10b981}.l-cust{background:#60a5fa}.l-proc{background:#f59e0b}.l-inn{background:#a78bfa}
+  .dropping{outline:2px dashed #3b82f6;outline-offset:-4px}
+  @media print{
+    header,.bar,.right{display:none!important}
+    body{background:white;color:#111}
+    .board{box-shadow:none;border-color:#ccc}
+    .cell{break-inside:avoid}
+    .card{box-shadow:none;border-color:#ccc;background:#fff}
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>Stage 3 — Frontier Action Planning</h1>
+    <div class="subtitle">
+      Drag initiatives into a 12-month timeline (0–3, 3–6, 6–12 months), grouped by the four pillars. 
+      Star your <strong>top 3–5 priorities</strong>, add milestones, owners, and status. Export the full Frontier Action Plan.
+    </div>
+  </div>
+  <div class="bar">
+    <label for="importFile" class="btn btn-outline" style="cursor:pointer">← Import Stage-3 input (JSON)</label>
+    <input id="importFile" type="file" accept=".json,.txt" style="display:none"/>
+    <button class="btn btn-outline" id="exportJSON">Export Plan (JSON)</button>
+    <button class="btn btn-outline" id="exportCSV">Export Plan (CSV)</button>
+    <button class="btn btn-green" onclick="window.print()">Print</button>
+  </div>
+</header>
+
+<section class="wrap">
+  <!-- Timeline board -->
+  <div class="board">
+    <header>
+      <div></div>
+      <div class="col-head">0–3 months</div>
+      <div class="col-head">3–6 months</div>
+      <div class="col-head">6–12 months</div>
+    </header>
+    <div class="grid" id="grid">
+      <!-- Rows will be generated -->
+    </div>
+  </div>
+
+  <!-- Summary / Inspector -->
+  <aside class="right">
+    <header><strong>Plan Summary & Inspector</strong></header>
+    <main>
+      <div class="legend">
+        <span><span class="dot l-emp"></span>Employee</span>
+        <span><span class="dot l-cust"></span>Customer</span>
+        <span><span class="dot l-proc"></span>Process</span>
+        <span><span class="dot l-inn"></span>Innovation</span>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="summary" id="summary">
+        <div class="sum-row"><span>Total initiatives</span><span id="sumTotal">0</span></div>
+        <div class="sum-row"><span>Prioritized (★)</span><span id="sumPrio">0</span></div>
+        <div class="sum-row"><span>0–3 / 3–6 / 6–12</span><span id="sumCols">0 / 0 / 0</span></div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div><strong>Top Priorities (3–5)</strong></div>
+      <div class="prio-list" id="prioList"><em class="summary">Star initiatives to see them here.</em></div>
+
+      <div class="divider"></div>
+
+      <div id="inspectorWrap">
+        <div class="summary"><em>Select a card to edit details.</em></div>
+      </div>
+    </main>
+  </aside>
+</section>
+
+<!-- Edit Dialog -->
+<dialog id="editDlg">
+  <form method="dialog" id="editForm" style="min-width: min(680px,92vw); background:linear-gradient(180deg,#0b1226,#0a0f1d); color:#e5e7eb; border:none; border-radius:18px; box-shadow:0 30px 80px rgba(0,0,0,.6);">
+    <div style="padding:12px 16px; border-bottom:1px solid #1f2a3d; display:flex; justify-content:space-between; align-items:center">
+      <strong>Edit initiative</strong>
+      <button class="icon-btn" value="cancel">✕</button>
+    </div>
+    <div style="padding:14px 16px">
+      <div style="display:grid; grid-template-columns: 1.4fr 1fr; gap:12px">
+        <div>
+          <label>Name</label>
+          <input id="e_name" type="text"/>
+        </div>
+        <div>
+          <label>Owner</label>
+          <input id="e_owner" type="text"/>
+        </div>
+      </div>
+      <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:12px; margin-top:8px">
+        <div>
+          <label>Horizon</label>
+          <select id="e_horizon">
+            <option value="0-3">0–3 months</option>
+            <option value="3-6">3–6 months</option>
+            <option value="6-12">6–12 months</option>
+          </select>
+        </div>
+        <div>
+          <label>Status</label>
+          <select id="e_status">
+            <option value="planned">Planned</option>
+            <option value="active">Active</option>
+            <option value="at-risk">At risk</option>
+          </select>
+        </div>
+        <div>
+          <label>Priority (★)</label>
+          <select id="e_star">
+            <option value="false">No</option>
+            <option value="true">Yes</option>
+          </select>
+        </div>
+      </div>
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-top:8px">
+        <div>
+          <label>KPI</label>
+          <input id="e_kpi" type="text"/>
+        </div>
+        <div>
+          <label>Target</label>
+          <input id="e_target" type="text"/>
+        </div>
+      </div>
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-top:8px">
+        <div>
+          <label>Milestones (comma-separated)</label>
+          <input id="e_milestones" type="text" placeholder="M1 data ready, M2 pilot, M3 rollout"/>
+        </div>
+        <div>
+          <label>Risks / dependencies</label>
+          <input id="e_risks" type="text" placeholder="Data access, approval, integration…"/>
+        </div>
+      </div>
+      <div style="margin-top:8px">
+        <label>Description</label>
+        <textarea id="e_desc" style="width:100%;min-height:88px;padding:10px;border-radius:12px;border:1px solid #2a3a56;background:#0c1427;color:#e5e7eb"></textarea>
+      </div>
+    </div>
+    <div style="padding:12px 16px; border-top:1px solid #1f2a3d; display:flex; gap:10px; justify-content:flex-end">
+      <button class="btn btn-outline" value="cancel">Cancel</button>
+      <button class="btn btn-accent" id="saveEdit" value="default">Save</button>
+    </div>
+  </form>
+</dialog>
+
+<script>
+  // --- Structure ---
+  const pillars = [
+    {key:'employee', label:'Enrich employee experiences', cls:'lane-emp', dot:'l-emp'},
+    {key:'customer', label:'Reinvent customer engagement', cls:'lane-cust', dot:'l-cust'},
+    {key:'process',  label:'Reshape business processes',   cls:'lane-proc', dot:'l-proc'},
+    {key:'innovation',label:'Bend the curve on innovation',cls:'lane-inn',  dot:'l-inn'}
+  ];
+  const horizons = ['0-3','3-6','6-12'];
+
+  // --- State ---
+  let items = []; // initiatives with {id,lane,diffTitle,name,owner,horizon,kpi,target,enablers,desc,deps,risks,milestones,status,score,votes,star}
+  const grid = document.getElementById('grid');
+
+  // Build grid
+  function buildGrid(){
+    grid.innerHTML = '';
+    pillars.forEach(p => {
+      // label
+      const lab = document.createElement('div');
+      lab.className='row-label';
+      lab.innerHTML = `<span>${p.label}</span>`;
+      grid.appendChild(lab);
+      horizons.forEach(h => {
+        const cell = document.createElement('div');
+        cell.className = `cell ${p.cls}`;
+        cell.dataset.pillar = p.key;
+        cell.dataset.horizon = h;
+        cell.addEventListener('dragover', e=>{ e.preventDefault(); cell.classList.add('dropping'); });
+        cell.addEventListener('dragleave', ()=>cell.classList.remove('dropping'));
+        cell.addEventListener('drop', e=>{
+          e.preventDefault(); cell.classList.remove('dropping');
+          const id = e.dataTransfer.getData('text/plain');
+          const it = items.find(x=>x.id===id); if(!it) return;
+          it.lane = p.key; it.horizon = h;
+          render();
+        });
+        grid.appendChild(cell);
+      });
+    });
+  }
+
+  function render(){
+    // Clear all cells
+    document.querySelectorAll('.cell').forEach(c=>c.innerHTML='');
+    // Place cards
+    items.forEach(i=>{
+      const cell = [...document.querySelectorAll('.cell')].find(c=>c.dataset.pillar===i.lane && c.dataset.horizon===i.horizon);
+      if(!cell) return;
+      cell.appendChild(renderCard(i));
+    });
+    updateSummary();
+  }
+
+  function renderCard(i){
+    const el = document.createElement('div');
+    el.className='card'; el.draggable=true; el.id=i.id;
+    el.addEventListener('dragstart', e=>{ e.dataTransfer.setData('text/plain', i.id); });
+
+    const statusClass = i.status==='active' ? 's-active' : i.status==='at-risk' ? 's-risk' : 's-planned';
+    el.innerHTML = `
+      <div class="toolbar">
+        <button class="icon-btn star ${i.star?'active':''}" title="Toggle priority">★</button>
+        <button class="icon-btn edit" title="Edit">✎</button>
+        <button class="icon-btn del" title="Delete">🗑</button>
+      </div>
+      <h4>${esc(i.name || '(Unnamed initiative)')}</h4>
+      <div class="kpi">KPI: <strong>${esc(i.kpi||'–')}</strong> • Target: <strong>${esc(i.target||'–')}</strong></div>
+      <div class="meta">
+        <span class="tag">Owner: ${esc(i.owner||'–')}</span>
+        <span class="status ${statusClass}">${i.status||'planned'}</span>
+        <span class="tag">Votes: ${i.votes||0}</span>
+        <span class="tag">Score: ${(i.score??0).toFixed(1)}</span>
+      </div>
+    `;
+    // actions
+    const [starBtn, editBtn, delBtn] = el.querySelectorAll('.icon-btn');
+    starBtn.addEventListener('click', ()=>{ i.star = !i.star; render(); });
+    editBtn.addEventListener('click', ()=> openEdit(i));
+    delBtn.addEventListener('click', ()=>{
+      if(confirm('Delete this initiative?')){ items = items.filter(x=>x.id!==i.id); render(); }
+    });
+    el.addEventListener('click', ()=> showInspector(i));
+    return el;
+  }
+
+  // Inspector
+  function showInspector(i){
+    const wrap = document.getElementById('inspectorWrap');
+    wrap.innerHTML = `
+      <div><strong>${esc(i.name)}</strong></div>
+      <div class="summary">For: ${esc(i.diffTitle||'–')}</div>
+      <div class="divider"></div>
+      <div class="summary">Owner: ${esc(i.owner||'–')} • Horizon: ${esc(i.horizon)} • Status: ${esc(i.status||'planned')}</div>
+      <div class="summary">KPI: ${esc(i.kpi||'–')} • Target: ${esc(i.target||'–')}</div>
+      <div class="summary">Enablers: ${esc((i.enablers||[]).join(', ')||'–')}</div>
+      <div class="summary">Milestones: ${esc((i.milestones||[]).join(' • ')||'–')}</div>
+      <div class="summary">Risks/Dependencies: ${esc(i.risks||i.deps||'–')}</div>
+      <div style="margin-top:6px">${esc(i.desc||'')}</div>
+    `;
+  }
+
+  // Edit dialog
+  const dlg = document.getElementById('editDlg');
+  const e_name = document.getElementById('e_name');
+  const e_owner = document.getElementById('e_owner');
+  const e_horizon = document.getElementById('e_horizon');
+  const e_status = document.getElementById('e_status');
+  const e_star = document.getElementById('e_star');
+  const e_kpi = document.getElementById('e_kpi');
+  const e_target = document.getElementById('e_target');
+  const e_milestones = document.getElementById('e_milestones');
+  const e_risks = document.getElementById('e_risks');
+  const e_desc = document.getElementById('e_desc');
+  let editingId = null;
+
+  function openEdit(i){
+    editingId = i.id;
+    e_name.value = i.name||''; e_owner.value = i.owner||'';
+    e_horizon.value = i.horizon||'0-3'; e_status.value = i.status||'planned';
+    e_star.value = i.star ? 'true' : 'false';
+    e_kpi.value = i.kpi||''; e_target.value = i.target||'';
+    e_milestones.value = (i.milestones||[]).join(', ');
+    e_risks.value = i.risks||i.deps||'';
+    e_desc.value = i.desc||'';
+    dlg.showModal();
+  }
+  document.getElementById('saveEdit').addEventListener('click', (e)=>{
+    e.preventDefault();
+    const it = items.find(x=>x.id===editingId); if(!it) { dlg.close(); return; }
+    it.name = e_name.value.trim();
+    it.owner = e_owner.value.trim();
+    it.horizon = e_horizon.value;
+    it.status = e_status.value;
+    it.star = (e_star.value==='true');
+    it.kpi = e_kpi.value.trim();
+    it.target = e_target.value.trim();
+    it.milestones = e_milestones.value.split(',').map(s=>s.trim()).filter(Boolean);
+    it.risks = e_risks.value.trim();
+    it.desc = e_desc.value.trim();
+    dlg.close();
+    render();
+  });
+
+  // Import
+  document.getElementById('importFile').addEventListener('change', e=>{
+    const f = e.target.files[0]; if(!f) return;
+    const fr = new FileReader();
+    fr.onload = ()=>{
+      try{
+        const data = JSON.parse(fr.result);
+        if(data.horizons){ // from Stage 2 "prep stage 3"
+          items = [];
+          ['0-3','3-6','6-12'].forEach(h=>{
+            (data.horizons[h]||[]).forEach(x => items.push(normalize(x,h)));
+          });
+        } else if(Array.isArray(data)){ // raw initiatives json
+          items = data.map(x => normalize(x, x.horizon||'0-3'));
+        } else {
+          alert('JSON format not recognized. Use stage3-input.json or initiatives JSON.');
+          return;
+        }
+        // default placement by lane already preserved
+        render();
+      }catch(err){ alert('Could not parse JSON.'); }
+    };
+    fr.readAsText(f);
+  });
+
+  function normalize(x, h){
+    return {
+      id: uid(),
+      lane: mapLane(x.lane)||'employee',
+      diffTitle: x.diffTitle||'',
+      name: x.name||'(Unnamed)',
+      owner: x.owner||'',
+      horizon: h,
+      kpi: x.kpi||'',
+      target: x.target||'',
+      enablers: x.enablers||[],
+      desc: x.desc||'',
+      deps: x.deps||'',
+      risks: x.risks||'',
+      milestones: x.milestones||[],
+      status: x.status||'planned',
+      score: typeof x.score==='number'? x.score : ((x.impact||0)*(x.feas||0) + (x.trust||0)),
+      votes: x.votes||0,
+      star: !!x.star
+    };
+  }
+  function mapLane(l){
+    if(!l) return null;
+    const k = String(l).toLowerCase();
+    if(k.startsWith('emp')) return 'employee';
+    if(k.startsWith('cust')) return 'customer';
+    if(k.startsWith('proc')) return 'process';
+    if(k.startsWith('inn')) return 'innovation';
+    return l;
+  }
+
+  // Export
+  document.getElementById('exportJSON').addEventListener('click', ()=>{
+    const payload = {
+      generatedAt: new Date().toISOString(),
+      summary: computeSummary(),
+      plan: items
+    };
+    download('frontier-action-plan.json', JSON.stringify(payload,null,2));
+  });
+  document.getElementById('exportCSV').addEventListener('click', ()=>{
+    const head = ['lane','horizon','name','owner','status','kpi','target','milestones','risks','enablers','score','votes','priority'];
+    const rows = items.map(i=>{
+      const vals = [
+        i.lane, i.horizon, i.name, i.owner, i.status, i.kpi, i.target,
+        (i.milestones||[]).join('|'), i.risks||i.deps||'',
+        (i.enablers||[]).join('|'), i.score, i.votes||0, i.star?'YES':''
+      ].map(v=>csv(v));
+      return vals.join(',');
+    });
+    download('frontier-action-plan.csv', head.join(',')+'\n'+rows.join('\n'));
+  });
+
+  // Summary
+  function computeSummary(){
+    const t = items.length;
+    const prio = items.filter(i=>i.star).length;
+    const c0 = items.filter(i=>i.horizon==='0-3').length;
+    const c1 = items.filter(i=>i.horizon==='3-6').length;
+    const c2 = items.filter(i=>i.horizon==='6-12').length;
+    const byLane = {};
+    pillars.forEach(p=> byLane[p.key] = items.filter(i=>i.lane===p.key).length );
+    return { total:t, prioritized:prio, columns:{'0-3':c0,'3-6':c1,'6-12':c2}, byLane };
+  }
+
+  function updateSummary(){
+    const s = computeSummary();
+    document.getElementById('sumTotal').textContent = s.total;
+    document.getElementById('sumPrio').textContent = s.prioritized;
+    document.getElementById('sumCols').textContent = `${s.columns['0-3']} / ${s.columns['3-6']} / ${s.columns['6-12']}`;
+    // priorities list
+    const pl = document.getElementById('prioList');
+    const tops = items.filter(i=>i.star).slice(0,5);
+    pl.innerHTML = tops.length ? '' : '<em class="summary">Star initiatives to see them here.</em>';
+    tops.forEach(i=>{
+      const d = document.createElement('div');
+      d.className='summary';
+      d.innerHTML = `★ <strong>${esc(i.name)}</strong> — ${esc(i.kpi||'KPI')} → <strong>${esc(i.target||'')}</strong> (${esc(i.horizon)})`;
+      pl.appendChild(d);
+    });
+  }
+
+  // Utils
+  function uid(){ return Math.random().toString(36).slice(2,10); }
+  function esc(s){ return String(s||'').replace(/[&<>"']/g,m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m])); }
+  function download(filename, text){
+    const blob = new Blob([text], {type:'text/plain;charset=utf-8'});
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = filename; a.click(); URL.revokeObjectURL(a.href);
+  }
+  function csv(v){ v = String(v??'').replace(/"/g,'""'); return /[",\n]/.test(v) ? `"${v}"` : v; }
+
+  // Init grid + seed example
+  buildGrid();
+  // Seed a couple of cards so the board isn't empty
+  items = [
+    {id:uid(), lane:'employee', horizon:'0-3', name:'Employee Copilot pilot (Sales/Support)', owner:'CoE + Sales Ops', kpi:'Hrs saved / FTE', target:'2 hrs/wk', status:'planned', star:true, score:12, votes:3},
+    {id:uid(), lane:'customer', horizon:'3-6', name:'Predictive Service Copilot rollout', owner:'CX + IT', kpi:'Inbound volume', target:'-25%', status:'planned', star:false, score:11, votes:2},
+    {id:uid(), lane:'process', horizon:'6-12', name:'Cross-system workflow orchestrator', owner:'Ops + IT', kpi:'Cycle time', target:'< 48h', status:'planned', star:false, score:10, votes:1},
+    {id:uid(), lane:'innovation', horizon:'6-12', name:'AI Product Studio (monthly prototypes)', owner:'Innovation Lab', kpi:'Prototypes/yr', target:'12', status:'planned', star:true, score:9, votes:0}
+  ];
+  render();
+</script>
+</body>
+</html>
