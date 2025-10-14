@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Frontier — Vision Builder (Light, Live)</title>
+<style>
+  :root{
+    --bg:#f7fafc; --card:#ffffff; --ink:#1f2937; --muted:#556581;
+    --primary:#3b82f6; --accent:#10b981; --warn:#f59e0b; --violet:#8b5cf6;
+    --border:#e5e7eb; --shadow:0 10px 24px rgba(31,41,55,.12); --radius:16px;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; color:var(--ink);
+    background: radial-gradient(1100px 480px at 80% -10%, #e8f1ff 0%, #f5fbff 40%, var(--bg) 70%);
+    font:16px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;
+  }
+  header{padding:18px 18px 8px; display:flex; gap:16px; align-items:flex-start; justify-content:space-between; flex-wrap:wrap}
+  h1{margin:.2rem 0 .3rem; font-size:26px}
+  .sub{color:var(--muted); max-width:980px}
+  .nav{display:flex; gap:8px; flex-wrap:wrap}
+  .tab{background:#fff; border:1px solid #d8dee8; color:#1f2937; padding:8px 12px; border-radius:10px; cursor:pointer}
+  .tab.active{border-color:#3b82f6; box-shadow:0 0 0 2px rgba(59,130,246,.18) inset}
+  .wrap{padding:10px 18px 24px; display:grid; gap:16px}
+
+  .panel{background:var(--card); border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow)}
+  .panel header{padding:12px 14px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between}
+  .panel main{padding:14px}
+
+  .grid{display:grid; gap:12px}
+  .cols-2{grid-template-columns:1fr 1fr}
+  .cols-3{grid-template-columns:repeat(3,1fr)}
+
+  label{display:block; font-size:13px; color:#42506b; margin:8px 0 6px}
+  input, select, textarea{
+    width:100%; padding:10px 12px; border-radius:12px; border:1px solid #d8dee8; background:#fff; color:#1f2937
+  }
+  input:focus, select:focus, textarea:focus{outline:none; border-color:#c4d5ff; box-shadow:0 0 0 3px rgba(59,130,246,.15)}
+
+  .chips{display:flex; gap:8px; flex-wrap:wrap}
+  .chip{border:1px solid #d7e0ee; border-radius:999px; padding:6px 10px; background:#fff; color:#334155; cursor:pointer; font-size:13px}
+  .chip.active{border-color:#3b82f6; box-shadow:0 0 0 2px rgba(59,130,246,.18) inset}
+  .token{display:inline-flex; gap:8px; align-items:center; border:1px solid #d7e0ee; border-radius:12px; padding:6px 10px; background:#fff; color:#334155}
+  .small{font-size:12px; color:#6b7280}
+  .hint{font-size:12px; color:#6b7280}
+  .counter{font-size:12px; color:#64748b; text-align:right}
+  .btn{background:#eff6ff; color:#0f3a8a; border:1px solid #cfe0ff; padding:10px 14px; border-radius:12px; cursor:pointer}
+  .btn:hover{background:#e6f0ff}
+  .btn-primary{background:linear-gradient(180deg,#60a5fa,#3b82f6); color:#fff; border:1px solid #3b82f6}
+  .btn-ghost{background:#fff; border:1px solid #d8dee8; color:#334155}
+  .btn-warn{background:#fff7ed; color:#9a3412; border:1px solid #fed7aa}
+  .btn-small{padding:6px 10px; border-radius:10px; font-size:14px}
+
+  .status{font-size:12px; padding:2px 8px; border-radius:999px; border:1px solid #e2e8f0}
+  .s-open{background:#f0f9ff; color:#075985; border-color:#bae6fd}
+  .s-locked{background:#fff7ed; color:#9a3412; border-color:#fed7aa}
+
+  .list{display:grid; gap:10px}
+  .card{background:#fff; border:1px solid #e7ecf4; border-radius:12px; padding:10px 12px; box-shadow:0 6px 14px rgba(15,23,42,.06)}
+  .row{display:flex; gap:10px; align-items:center; flex-wrap:wrap}
+
+  /* Facilitator layout */
+  .two{display:grid; grid-template-columns: 1fr 360px; gap:16px}
+  .winner{background:#ecfeff; border:1px solid #bae6fd; color:#155e75; padding:10px 12px; border-radius:12px}
+  .vote{display:flex; gap:8px; align-items:center}
+  .dot{width:12px; height:12px; border-radius:999px; background:#3b82f6}
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>Vision Builder — Shared AI Vision</h1>
+    <div class="sub">Participants compose concise vision statements. The facilitator sees them in real time, then locks for voting. Top-voted statement becomes the <strong>Shared AI Vision</strong>.</div>
+  </div>
+  <nav class="nav" id="nav"></nav>
+</header>
+
+<section class="wrap">
+  <!-- PARTICIPANT / TEAM -->
+  <div id="screen-team" class="panel" style="display:none">
+    <header>
+      <strong>Participant — Compose & Submit</strong>
+      <div class="row">
+        <span id="lockStateTeam" class="status s-open">OPEN</span>
+        <span class="hint">Write a 140–280 char statement. When you click “Save Statement”, it appears on the facilitator screen.</span>
+      </div>
+    </header>
+    <main>
+      <div class="grid cols-3">
+        <div>
+          <label for="teamSelect">Team *</label>
+          <select id="teamSelect"></select>
+        </div>
+        <div>
+          <label>Pick Tone</label>
+          <div id="tone" class="chips">
+            <span class="chip">Ambitious</span>
+            <span class="chip">Practical</span>
+            <span class="chip">Customer-obsessed</span>
+            <span class="chip">People-first</span>
+            <span class="chip">Operational</span>
+          </div>
+        </div>
+        <div>
+          <label>Phrasing Cards</label>
+          <div id="phrases" class="chips">
+            <span class="chip">AI-empowered organization</span>
+            <span class="chip">Every employee augmented by Copilot</span>
+            <span class="chip">Anticipate & personalize value</span>
+            <span class="chip">Decisions at the speed of data</span>
+            <span class="chip">Innovation as a monthly habit</span>
+            <span class="chip">Trust by design</span>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top:8px">
+        <label>Word Bank</label>
+        <div id="bank" class="chips" style="margin-top:6px;flex-wrap:wrap"></div>
+        <div class="hint">Click any token to insert into your draft.</div>
+      </div>
+
+      <div style="margin-top:10px">
+        <label for="compose">Compose (140–280 chars)</label>
+        <textarea id="compose" placeholder="Draft a concise, exec-ready statement…"></textarea>
+        <div class="counter"><span id="charCount">0</span> chars</div>
+      </div>
+
+      <div class="row" style="margin-top:8px">
+        <button class="btn-primary" id="saveStatement">Save Statement</button>
+        <button class="btn-ghost" id="clearCompose">Clear</button>
+        <span class="small">After the facilitator locks, you’ll be able to vote (2 votes per participant).</span>
+      </div>
+
+      <div class="grid cols-2" style="margin-top:12px">
+        <div>
+          <label>Supporting Themes</label>
+          <div id="themes" class="chips">
+            <span class="chip">Empowered workforce</span>
+            <span class="chip">Proactive customer value</span>
+            <span class="chip">Intelligent operations</span>
+            <span class="chip">Data-driven growth</span>
+            <span class="chip">Trusted & responsible AI</span>
+            <span class="chip">Faster innovation cycles</span>
+          </div>
+        </div>
+        <div>
+          <label>Evidence Lines (metrics)</label>
+          <input id="evidence" type="text" placeholder="e.g., +10% win rate • −25% inbound • <48h cycle • 2 hrs/FTE/wk"/>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- FACILITATOR -->
+  <div id="screen-fac" class="panel" style="display:none">
+    <header>
+      <strong>Facilitator — Live Statements & Voting</strong>
+      <div class="row">
+        <span id="lockStateFac" class="status s-open">OPEN</span>
+        <button class="btn-ghost btn-small" id="seed">Seed examples</button>
+        <button class="btn-warn btn-small" id="toggleLock">Lock / Unlock</button>
+        <button class="btn-ghost btn-small" id="exportJSON">Export JSON</button>
+        <button class="btn-ghost btn-small" id="exportMD">Export Markdown</button>
+      </div>
+    </header>
+    <main class="two">
+      <!-- Left: statements list -->
+      <div class="panel" style="margin:0">
+        <header><strong>Submitted Statements</strong> <span class="small" id="countLbl"></span></header>
+        <main>
+          <div id="statements" class="list"></div>
+        </main>
+      </div>
+
+      <!-- Right: winner + info -->
+      <aside class="panel" style="margin:0">
+        <header><strong>Winning Statement</strong></header>
+        <main>
+          <div id="winnerBox" class="winner small">No winner yet. Lock to open voting; set winner once votes converge.</div>
+          <div class="grid" style="margin-top:10px">
+            <div>
+              <label for="why">Why this matters (exec-ready)</label>
+              <textarea id="why" placeholder="1–2 sentences connecting vision to revenue, differentiation, and risk posture."></textarea>
+            </div>
+            <div>
+              <label for="notes">Facilitator notes</label>
+              <textarea id="notes" placeholder="Clarifications / commitments agreed in discussion."></textarea>
+            </div>
+          </div>
+        </main>
+      </aside>
+    </main>
+  </div>
+
+  <!-- VOTING (shared screen for participants after lock) -->
+  <div id="screen-vote" class="panel" style="display:none">
+    <header>
+      <strong>Participant — Vote on the Vision</strong>
+      <div class="row">
+        <span id="voteState" class="status s-locked">WAITING</span>
+        <span class="small">You have <strong id="votesLeft">2</strong> votes.</span>
+        <button class="btn-ghost btn-small" id="resetVotes">Reset my votes</button>
+      </div>
+    </header>
+    <main>
+      <div id="ballot" class="list"></div>
+      <div class="hint" style="margin-top:8px">Click “+1 vote” to support your preferred statement(s). Max 2 votes per browser.</div>
+    </main>
+  </div>
+</section>
+
+<script>
+  /* -------------------- Real-time channel -------------------- */
+  const chan = new BroadcastChannel('frontier-vision-live');
+  const publish = (type, payload) => chan.postMessage({type, payload});
+
+  /* -------------------- Demo Teams -------------------- */
+  const DEMO_TEAMS = ['Team Nova','Team Atlas','Team Quasar','Team Meridian','Team Horizon','Team Vertex'];
+
+  /* -------------------- State -------------------- */
+  let locked = false; // lock enables voting
+  let statements = []; // {id, team, text, themes[], evidence, tone[], votes}
+  let winnerId = null;
+
+  // per-tab vote capacity
+  let myVotes = Number(localStorage.getItem('vision.votes') || 2);
+
+  /* -------------------- Helpers -------------------- */
+  const q = s => document.querySelector(s);
+  const qa = s => Array.from(document.querySelectorAll(s));
+  const uid = () => Math.random().toString(36).slice(2,10);
+  const esc = s => String(s||'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+
+  /* -------------------- Router -------------------- */
+  const screens = [
+    {id:'screen-team', label:'Participant'},
+    {id:'screen-fac', label:'Facilitator'},
+    {id:'screen-vote', label:'Voting'}
+  ];
+  let current = 0;
+  function renderNav(){
+    const nav = q('#nav'); nav.innerHTML='';
+    screens.forEach((s,i)=>{
+      const b = document.createElement('button');
+      b.className = 'tab'+(i===current?' active':'');
+      b.textContent = s.label;
+      b.addEventListener('click', ()=> show(i));
+      nav.appendChild(b);
+    });
+  }
+  function show(i){
+    current = i; renderNav();
+    screens.forEach((s,idx)=> q('#'+s.id).style.display = (idx===i ? 'block' : 'none'));
+    if(i===0) renderTeam();
+    if(i===1) renderFac();
+    if(i===2) renderVote();
+  }
+
+  /* -------------------- Participant/Team -------------------- */
+  function populateTeamSelect(){
+    const sel = q('#teamSelect');
+    if(sel.dataset.ready) return;
+    sel.innerHTML = `<option value="">Select team…</option>` + DEMO_TEAMS.map(n=>`<option>${n}</option>`).join('');
+    sel.value = localStorage.getItem('vision.team') || '';
+    sel.dataset.ready = '1';
+  }
+
+  const toneSel = new Set(); const themeSel = new Set();
+  function renderTeam(){
+    q('#lockStateTeam').textContent = locked ? 'LOCKED' : 'OPEN';
+    q('#lockStateTeam').className = 'status ' + (locked ? 's-locked' : 's-open');
+    populateTeamSelect();
+
+    // Chips
+    qa('#tone .chip').forEach(ch=> ch.onclick = ()=>{ ch.classList.toggle('active'); const t=ch.textContent.trim(); ch.classList.contains('active')?toneSel.add(t):toneSel.delete(t); });
+    qa('#phrases .chip').forEach(ch=> ch.onclick = ()=> insertIntoComposer(ch.textContent.trim()));
+    qa('#themes .chip').forEach(ch=> ch.onclick = ()=>{ ch.classList.toggle('active'); const t=ch.textContent.trim(); ch.classList.contains('active')?themeSel.add(t):themeSel.delete(t); });
+
+    // Word bank (from common KPI/initiatives)
+    const tokens = ['+10% win rate','−25% inbound','<48h cycle','2 hrs/FTE/wk','12 prototypes/yr','$600k data ARR','Trust by design','Responsible AI','Copilot adoption >70%'];
+    const bank = q('#bank'); bank.innerHTML='';
+    tokens.forEach(t=>{
+      const el = document.createElement('div'); el.className='token'; el.textContent = t;
+      el.title='Click to insert'; el.onclick = ()=> insertIntoComposer(t);
+      bank.appendChild(el);
+    });
+
+    // Compose inputs
+    q('#compose').oninput = updateCounts;
+    q('#clearCompose').onclick = ()=>{ q('#compose').value=''; updateCounts(); };
+    q('#saveStatement').onclick = saveStatement;
+    updateCounts();
+
+    // Disable editing when locked? Still allow composing; but saving disabled after lock
+    q('#saveStatement').disabled = locked;
+  }
+
+  function insertIntoComposer(text){
+    const ta = q('#compose');
+    const pos = ta.selectionStart || ta.value.length;
+    ta.value = ta.value.slice(0,pos) + (ta.value && !ta.value.endsWith(' ') ? ' ' : '') + text + ' ' + ta.value.slice(pos);
+    updateCounts(); ta.focus();
+  }
+  function updateCounts(){ q('#charCount').textContent = q('#compose').value.length; }
+
+  function saveStatement(){
+    const team = q('#teamSelect').value.trim();
+    if(!team){ alert('Select your team.'); return; }
+    const text = q('#compose').value.trim();
+    if(text.length < 140 || text.length > 280){ alert('Please keep your statement 140–280 characters.'); return; }
+    const payload = {
+      id: uid(), team, text,
+      themes: Array.from(themeSel),
+      evidence: q('#evidence').value.trim(),
+      tone: Array.from(toneSel),
+      votes: 0
+    };
+    localStorage.setItem('vision.team', team);
+    statements.push(payload); // local
+    publish('vision:add', payload); // broadcast
+    // clear compose (keep themes/tone selected)
+    q('#compose').value=''; updateCounts();
+    alert('Statement saved and sent to facilitator.');
+  }
+
+  /* -------------------- Facilitator -------------------- */
+  function renderFac(){
+    q('#lockStateFac').textContent = locked ? 'LOCKED (Voting Open)' : 'OPEN';
+    q('#lockStateFac').className = 'status ' + (locked ? 's-locked' : 's-open');
+    q('#countLbl').textContent = `${statements.length} statement${statements.length===1?'':'s'}`;
+
+    // List statements
+    const wrap = q('#statements'); wrap.innerHTML='';
+    if(!statements.length){
+      wrap.innerHTML = '<div class="card small">No statements yet. Ask teams to submit from the Participant tab.</div>';
+    } else {
+      statements.forEach(s=>{
+        const div = document.createElement('div'); div.className='card';
+        div.innerHTML = `
+          <div class="row" style="justify-content:space-between">
+            <div><strong>${esc(s.team)}</strong> <span class="small">(${(s.tone||[]).join(', ')||'—'})</span></div>
+            <div class="row">
+              <span class="small">Votes: <strong id="votes_${s.id}">${s.votes||0}</strong></span>
+              <button class="btn-ghost btn-small" data-action="setWinner" data-id="${s.id}">Set as Winner</button>
+            </div>
+          </div>
+          <div style="margin-top:6px">${esc(s.text)}</div>
+          <div class="small" style="margin-top:6px">Themes: ${esc((s.themes||[]).join(' • ')||'—')}</div>
+          <div class="small">Evidence: ${esc(s.evidence||'—')}</div>
+        `;
+        wrap.appendChild(div);
+      });
+      // wire winner buttons
+      wrap.querySelectorAll('button[data-action="setWinner"]').forEach(btn=>{
+        btn.onclick = ()=>{
+          winnerId = btn.dataset.id;
+          const w = statements.find(x=>x.id===winnerId);
+          publish('vision:winner', {id:winnerId});
+          renderWinnerBox();
+        };
+      });
+    }
+    renderWinnerBox();
+  }
+
+  function renderWinnerBox(){
+    const box = q('#winnerBox');
+    const w = statements.find(x=>x.id===winnerId);
+    if(!w){ box.className='winner small'; box.textContent='No winner yet. Lock to open voting; set winner once votes converge.'; return; }
+    box.className='winner';
+    box.innerHTML = `<div class="small">Winning statement from <strong>${esc(w.team)}</strong></div>
+      <div style="margin-top:6px"><strong>${esc(w.text)}</strong></div>
+      <div class="small" style="margin-top:6px">Themes: ${esc((w.themes||[]).join(' • ')||'—')}</div>
+      <div class="small">Evidence: ${esc(w.evidence||'—')}</div>`;
+  }
+
+  // Facilitator controls
+  q('#toggleLock').onclick = ()=>{
+    locked = !locked;
+    publish('state:lock', {locked});
+    renderFac(); renderTeam(); renderVote();
+  };
+  q('#seed').onclick = ()=>{
+    const seed = [
+      {team:'Team Nova', text:'We are an AI-empowered organization where every employee is augmented by Copilot, customer needs are anticipated, and decisions move at the speed of data — turning innovation into a monthly habit with trust by design.', themes:['Empowered workforce','Proactive customer value','Intelligent operations','Trusted & responsible AI'], tone:['Ambitious','People-first'], evidence:'+10% win rate • −25% inbound • <48h cycle • 2 hrs/FTE/wk', votes:2},
+      {team:'Team Atlas', text:'In 12 months we operate as a trusted, data-driven enterprise: employees focus on high-value work, customer engagement is proactive, and intelligent operations shrink cycle time from weeks to days.', themes:['Data-driven growth','Intelligent operations'], tone:['Practical','Operational'], evidence:'12 prototypes/yr • <48h cycle', votes:1}
+    ].map(s=> ({id:uid(), ...s}));
+    statements.push(...seed);
+    publish('vision:seed', seed);
+    renderFac(); renderVote();
+  };
+
+  // Exports
+  q('#exportJSON').onclick = ()=>{
+    const payload = { generatedAt:new Date().toISOString(), locked, winnerId, statements, why:q('#why').value.trim(), notes:q('#notes').value.trim() };
+    download('shared-ai-vision.json', JSON.stringify(payload,null,2), 'application/json');
+  };
+  q('#exportMD').onclick = ()=>{
+    const w = statements.find(x=>x.id===winnerId);
+    const md = `# Shared AI Vision Statement
+
+**Vision (final):**
+> ${w ? w.text : '(winner not set yet)'}
+
+**Supporting themes:** ${w ? (w.themes||[]).join(' • ') : '—'}
+
+**Why this matters:**  
+${q('#why').value.trim()||'—'}
+
+**Evidence lines:**  
+- ${(w?.evidence||'—').split('•').map(s=>s.trim()).filter(Boolean).join('\n- ')}
+
+**Tone cues:** ${w ? (w.tone||[]).join(', ') : '—'}
+
+**Considered options (with votes):**
+${statements.map(s=>`- ${s.text} _(team: ${s.team}, votes: ${s.votes||0})_`).join('\n')}
+`;
+    download('shared-ai-vision.md', md, 'text/markdown');
+  };
+  function download(filename, text, type){
+    const blob = new Blob([text], {type:type||'text/plain;charset=utf-8'});
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = filename; a.click(); URL.revokeObjectURL(a.href);
+  }
+
+  /* -------------------- Voting (participants after lock) -------------------- */
+  function renderVote(){
+    q('#voteState').textContent = locked ? 'VOTING OPEN' : 'WAITING';
+    q('#voteState').className = 'status ' + (locked ? 's-open' : 's-locked');
+    q('#votesLeft').textContent = myVotes;
+    const cont = q('#ballot'); cont.innerHTML='';
+    if(!locked){ cont.innerHTML = '<div class="card small">Voting opens when the facilitator locks.</div>'; return; }
+
+    // Sort by votes desc
+    const list = [...statements].sort((a,b)=> (b.votes||0)-(a.votes||0));
+    list.forEach(s=>{
+      const div = document.createElement('div'); div.className='card';
+      div.innerHTML = `
+        <div class="row" style="justify-content:space-between">
+          <div><strong>${esc(s.team)}</strong></div>
+          <div class="vote">
+            <div class="dot"></div>
+            <button class="btn-ghost btn-small" data-id="${s.id}">+1 vote</button>
+            <span>Votes: <strong id="v_${s.id}">${s.votes||0}</strong></span>
+          </div>
+        </div>
+        <div style="margin-top:6px">${esc(s.text)}</div>
+      `;
+      cont.appendChild(div);
+    });
+
+    cont.querySelectorAll('button[data-id]').forEach(btn=>{
+      btn.onclick = ()=>{
+        if(!locked) return;
+        if(myVotes<=0){ alert('You have used your 2 votes.'); return; }
+        myVotes -= 1;
+        localStorage.setItem('vision.votes', String(myVotes));
+        q('#votesLeft').textContent = myVotes;
+
+        const id = btn.dataset.id;
+        // local update
+        const st = statements.find(x=>x.id===id);
+        if(st){ st.votes = (st.votes||0)+1; const el = q('#v_'+id); if(el) el.textContent = st.votes; }
+        // broadcast
+        publish('vote:add', {id});
+        // auto-suggest winner
+        suggestWinner();
+      };
+    });
+  }
+
+  q('#resetVotes').onclick = ()=>{ myVotes = 2; localStorage.setItem('vision.votes','2'); q('#votesLeft').textContent = myVotes; };
+
+  function suggestWinner(){
+    if(!statements.length) return;
+    const top = [...statements].sort((a,b)=> (b.votes||0)-(a.votes||0))[0];
+    if(top && top.id !== winnerId){
+      winnerId = top.id;
+      publish('vision:winner', {id:winnerId});
+      if(current===1) renderWinnerBox();
+    }
+  }
+
+  /* -------------------- Channel listeners -------------------- */
+  chan.onmessage = (e)=>{
+    const {type, payload} = e.data || {};
+    switch(type){
+      case 'vision:add':
+        statements.push(payload);
+        if(current===1) renderFac();
+        if(current===2) renderVote();
+        break;
+      case 'vision:seed':
+        statements.push(...payload);
+        if(current===1) renderFac();
+        if(current===2) renderVote();
+        break;
+      case 'vote:add':
+        {
+          const st = statements.find(x=>x.id===payload.id);
+          if(st){ st.votes = (st.votes||0)+1; const el = q('#votes_'+st.id); if(el) el.textContent = st.votes; const el2 = q('#v_'+st.id); if(el2) el2.textContent = st.votes; }
+          if(current===1) renderFac();
+        }
+        break;
+      case 'state:lock':
+        locked = !!payload.locked;
+        if(current===1) renderFac();
+        if(current===0) renderTeam();
+        if(current===2) renderVote();
+        break;
+      case 'vision:winner':
+        winnerId = payload.id;
+        if(current===1) renderWinnerBox();
+        break;
+    }
+  };
+
+  /* -------------------- Init -------------------- */
+  function init(){
+    renderNav(); show(0); // default to Participant for quick composing
+    // team dropdown
+    populateTeamSelect();
+  }
+  init();
+</script>
+</body>
+</html>
