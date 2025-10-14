@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Facilitator — Differences → Initiatives & Actions</title>
+<style>
+  :root{
+    --bg:#f7fafc; --card:#ffffff; --ink:#1f2937; --muted:#556581;
+    --primary:#3b82f6; --accent:#10b981; --warn:#f59e0b; --violet:#8b5cf6;
+    --border:#e5e7eb; --shadow:0 10px 24px rgba(31,41,55,.12); --r:16px;
+  }
+  *{box-sizing:border-box}
+  body{margin:0; color:var(--ink);
+    background:radial-gradient(1100px 480px at 80% -10%, #e8f1ff 0%, #f5fbff 40%, var(--bg) 70%);
+    font:16px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;}
+  header{padding:16px 18px; display:flex; gap:16px; align-items:center; justify-content:space-between}
+  h1{margin:0; font-size:22px}
+  .sub{color:var(--muted)}
+  .wrap{padding:0 18px 18px}
+  .shell{display:grid; grid-template-columns: 340px 1fr; gap:14px}
+
+  .panel{background:var(--card); border:1px solid var(--border); border-radius:var(--r); box-shadow:var(--shadow)}
+  .panel header{padding:10px 12px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between}
+  .panel main{padding:12px}
+
+  input,select,textarea{width:100%; padding:10px 12px; border:1px solid #d8dee8; border-radius:12px; background:#fff; color:#1f2937}
+  input:focus,select:focus,textarea:focus{outline:none; border-color:#c4d5ff; box-shadow:0 0 0 3px rgba(59,130,246,.15)}
+
+  .btn{background:#eff6ff; color:#0f3a8a; border:1px solid #cfe0ff; padding:8px 12px; border-radius:12px; cursor:pointer}
+  .btn:hover{background:#e6f0ff}
+  .btn-ghost{background:#fff; border:1px solid #d8dee8; color:#334155}
+  .btn-warn{background:#fff7ed; color:#9a3412; border:1px solid #fed7aa}
+  .btn-small{padding:6px 10px; border-radius:10px; font-size:14px}
+  .row{display:flex; align-items:center; gap:8px; flex-wrap:wrap}
+  .small{font-size:12px; color:#6b7280}
+  .badge{display:inline-flex; align-items:center; gap:6px; padding:2px 8px; border:1px solid #d7e0ee; border-radius:999px; background:#fff; font-size:12px; color:#334155}
+
+  /* Left list */
+  .diff{background:#fff; border:1px solid #e7ecf4; border-radius:12px; padding:10px; box-shadow:0 6px 14px rgba(15,23,42,.06); cursor:pointer}
+  .diff.active{border-color:#3b82f6; box-shadow:0 0 0 2px rgba(59,130,246,.18) inset}
+  .diff .meta{display:flex; gap:6px; flex-wrap:wrap; margin-top:6px}
+  .tag{font-size:11px; padding:2px 6px; border-radius:999px; background:#f1f5f9; border:1px solid #e2e8f0; color:#334155}
+
+  /* Right side */
+  .accordion{display:grid; gap:10px}
+  .acc-item{border:1px solid #e7ecf4; border-radius:12px; overflow:hidden; background:#fff; box-shadow:0 6px 14px rgba(15,23,42,.06)}
+  .acc-head{padding:10px 12px; background:#f8fafc; display:flex; align-items:center; justify-content:space-between; cursor:pointer; border-bottom:1px solid #e7ecf4}
+  .acc-title{display:flex; gap:8px; align-items:center}
+  .acc-body{padding:10px 12px; display:none}
+  .acc-item.open .acc-body{display:block}
+
+  .chips{display:flex; gap:8px; flex-wrap:wrap}
+  .chip{border:1px solid #d7e0ee; border-radius:999px; padding:6px 10px; background:#fff; color:#334155; cursor:pointer; font-size:13px}
+  .chip.active{border-color:#3b82f6; box-shadow:0 0 0 2px rgba(59,130,246,.18) inset}
+
+  .grid{display:grid; gap:10px}
+  .cols-2{grid-template-columns:1fr 1fr}
+  .cols-3{grid-template-columns:repeat(3,1fr)}
+  .table{width:100%; border-collapse:separate; border-spacing:0 8px}
+  .table th{font-size:12px; color:#6b7280; text-align:left; padding:0 8px}
+  .rowcard{background:#fff; border:1px solid #e7ecf4; border-radius:12px; padding:8px; display:grid; grid-template-columns: 1.6fr 1fr 110px 110px 1fr 80px; gap:8px; align-items:center}
+  .pill{display:inline-block; padding:2px 8px; border-radius:999px; border:1px solid #d7e0ee; font-size:12px; background:#f8fafc; color:#334155}
+
+  .kpis{display:flex; gap:8px; flex-wrap:wrap}
+  .kpi{background:#fff; border:1px solid #e7ecf4; border-radius:10px; padding:6px 8px; font-size:12px}
+  .sum{display:grid; grid-template-columns: repeat(3,1fr); gap:10px}
+  .tile{background:#fff; border:1px solid #e7ecf4; border-radius:12px; padding:10px; box-shadow:0 6px 14px rgba(15,23,42,.06)}
+  .meter{height:8px; border-radius:6px; background:#eef2f7; overflow:hidden}
+  .meter > div{height:100%}
+  .blue{background:#3b82f6} .green{background:#10b981} .amber{background:#f59e0b}
+  .timer{font-variant-numeric:tabular-nums; font-weight:700}
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>Facilitator — Differences → Initiatives & Actions</h1>
+    <div class="sub">Expand each **Difference** to capture **initiatives** and the **actions** required to make it real. Use the timer to drive deeper discussion.</div>
+  </div>
+  <div class="row">
+    <span class="badge">Horizon: <span id="h0">0–3</span>/<span id="h1">3–6</span>/<span id="h2">6–12</span></span>
+    <span class="badge">Total actions: <strong id="actCount">0</strong></span>
+    <span class="badge">Est. impact: <strong id="impactTotal">—</strong></span>
+    <span class="badge">Status: <span id="lockState" class="small">OPEN</span></span>
+  </div>
+</header>
+
+<section class="wrap shell">
+  <!-- LEFT — Differences -->
+  <aside class="panel">
+    <header>
+      <strong>Differences (from earlier activity)</strong>
+      <div class="row">
+        <input id="search" placeholder="Search differences…" style="width:200px"/>
+      </div>
+    </header>
+    <main>
+      <div class="row" style="justify-content:space-between;margin-bottom:8px">
+        <div class="row small">
+          <span class="badge">Employee <span id="c-emp">0</span></span>
+          <span class="badge">Customer <span id="c-cus">0</span></span>
+          <span class="badge">Process <span id="c-pro">0</span></span>
+          <span class="badge">Innovation <span id="c-inn">0</span></span>
+        </div>
+        <div class="row">
+          <button class="btn-ghost btn-small" id="seedDiffs">Seed demo</button>
+          <label class="btn-ghost btn-small" style="cursor:pointer">Import JSON
+            <input id="importJSON" type="file" accept=".json" style="display:none"/>
+          </label>
+          <button class="btn-ghost btn-small" id="exportJSON">Export JSON</button>
+        </div>
+      </div>
+      <div id="diffList" class="grid"></div>
+    </main>
+  </aside>
+
+  <!-- RIGHT — Initiatives & Actions -->
+  <section class="panel">
+    <header>
+      <div class="row">
+        <strong>Initiatives & Actions</strong>
+        <span class="small" id="currentDiff">Select a difference to begin</span>
+      </div>
+      <div class="row">
+        <span class="timer" id="timer">25:00</span>
+        <button class="btn-ghost btn-small" id="tStart">Start</button>
+        <button class="btn-ghost btn-small" id="tPause">Pause</button>
+        <button class="btn-ghost btn-small" id="tReset">Reset</button>
+        <button class="btn-warn btn-small" id="toggleLock">Lock / Unlock</button>
+      </div>
+    </header>
+    <main>
+      <div id="acc" class="accordion"></div>
+
+      <!-- Summary tiles -->
+      <div class="sum" style="margin-top:12px">
+        <div class="tile">
+          <div class="small">Portfolio balance</div>
+          <div class="meter" style="margin-top:6px">
+            <div id="m0" class="blue" style="width:0%"></div>
+          </div>
+          <div class="meter" style="margin-top:6px">
+            <div id="m1" class="green" style="width:0%"></div>
+          </div>
+          <div class="meter" style="margin-top:6px">
+            <div id="m2" class="amber" style="width:0%"></div>
+          </div>
+          <div class="small" style="margin-top:6px">0–3 / 3–6 / 6–12 months</div>
+        </div>
+        <div class="tile">
+          <div class="small">Top enablers used</div>
+          <div id="enablersTop" class="kpis" style="margin-top:8px"></div>
+        </div>
+        <div class="tile">
+          <div class="small">Risks & dependencies (count)</div>
+          <div id="riskCount" style="font-size:22px; font-weight:700; margin-top:6px">0</div>
+        </div>
+      </div>
+    </main>
+  </section>
+</section>
+
+<script>
+/* ---------------- State ---------------- */
+let diffs=[]; // [{id, title, type, owner?, notes?, initiatives:[{id,title,horizon,enablers[],owner,impact,confidence,steps:[{text,owner}],deps[] }]}]
+let selectedId=null;
+let locked=false;
+let timer=null, remaining=25*60;
+
+const OWNERS=['Ops','HR','Sales','CX','Data','IT','Finance','Marketing'];
+const ENABLERS=['Data','Skills','Governance','Technology','Culture'];
+const HORIZONS=['0–3','3–6','6–12'];
+
+/* ---------------- Helpers ---------------- */
+const q = s => document.querySelector(s);
+const qa = s => Array.from(document.querySelectorAll(s));
+const uid = () => Math.random().toString(36).slice(2,10);
+const esc = s => String(s||'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+function chip(label,active){ return `<span class="chip ${active?'active':''}" data-chip="${esc(label)}">${esc(label)}</span>` }
+function tag(label){ return `<span class="tag">${esc(label)}</span>` }
+
+/* ---------------- Seed demo ---------------- */
+function seedDemo(){
+  diffs = [
+    {id:uid(), type:'Employee', title:'Frontline work is Copilot-augmented; routine tasks automated', notes:'HR & Sales pilots', initiatives:[
+      mkInit('Employee Copilot pilot (HR & Sales)','0–3',['Skills','Technology'],'HR',2.5,0.7,['Draft policy pack','Run 2 squads'],['Data access']),
+      mkInit('Knowledge hub answers in 30s','0–3',['Data','Technology'],'IT',1.2,0.6,['Index SharePoint','Add Q&A prompts'],['Search relevance'])
+    ]},
+    {id:uid(), type:'Customer', title:'Proactive service reduces inbound by 20–25%', notes:'Pre-empt common issues', initiatives:[
+      mkInit('Proactive service (resolve before call)','3–6',['Data','Technology','Governance'],'CX',3.0,0.6,['Signals → triggers','Playbooks'],['Consent mgmt']),
+      mkInit('AI Sales Companion (next-best-offer)','3–6',['Data','Skills'],'Sales',2.8,0.5,['Model n-best','CRM guidance'],['Attribution'])
+    ]},
+    {id:uid(), type:'Process', title:'Decision cycle time drops below 48h', notes:'Ops orchestration', initiatives:[
+      mkInit('Workflow orchestrator (CRM↔ERP)','6–12',['Technology','Governance'],'IT',3.3,0.6,['Event bus','Exception paths'],['Integration debt'])
+    ]},
+    {id:uid(), type:'Innovation', title:'Innovation as a monthly habit (12 prototypes/yr)', notes:'AI Product Studio', initiatives:[
+      mkInit('AI Product Studio (monthly demos)','6–12',['Culture','Skills'],'Ops',1.7,0.5,['Demo cadence','Funding gate'],['Capacity'])
+    ]}
+  ];
+  renderLeft(); renderRight(); rollups();
+}
+function mkInit(title,horizon,enablers,owner,impact,confidence,steps,deps){
+  return {
+    id:uid(), title, horizon, enablers, owner,
+    impact, confidence, steps: steps.map(t=>({text:t, owner:owner})),
+    deps
+  };
+}
+
+/* ---------------- UI: Left list ---------------- */
+function renderLeft(){
+  const box=q('#diffList'); box.innerHTML='';
+  const term=q('#search').value?.toLowerCase()||'';
+  let cEmp=0,cCus=0,cPro=0,cInn=0;
+
+  diffs.filter(d=> d.title.toLowerCase().includes(term) || d.type.toLowerCase().includes(term)).forEach(d=>{
+    if(d.type==='Employee') cEmp++; else if(d.type==='Customer') cCus++; else if(d.type==='Process') cPro++; else if(d.type==='Innovation') cInn++;
+    const el=document.createElement('div'); el.className='diff'+(selectedId===d.id?' active':'');
+    el.innerHTML = `<strong>${esc(d.title)}</strong>
+      <div class="meta">
+        ${tag(d.type)}
+        <span class="tag">Initiatives: ${d.initiatives.length}</span>
+        <span class="tag">Actions: ${d.initiatives.reduce((a,b)=>a+(b.steps?.length||0),0)}</span>
+      </div>`;
+    el.onclick=()=>{ selectedId=d.id; renderLeft(); renderRight(); };
+    box.appendChild(el);
+  });
+
+  q('#c-emp').textContent=cEmp; q('#c-cus').textContent=cCus; q('#c-pro').textContent=cPro; q('#c-inn').textContent=cInn;
+}
+q('#search').oninput=renderLeft;
+
+/* ---------------- UI: Right side (accordion per initiative) ---------------- */
+function renderRight(){
+  const cur = diffs.find(d=>d.id===selectedId);
+  q('#currentDiff').textContent = cur ? `Discussing: “${cur.title}”` : 'Select a difference to begin';
+
+  const acc=q('#acc'); acc.innerHTML='';
+  if(!cur){ return; }
+
+  cur.initiatives.forEach(init=>{
+    const wrap=document.createElement('div'); wrap.className='acc-item';
+    wrap.innerHTML = `
+      <div class="acc-head">
+        <div class="acc-title">
+          <span class="pill">${esc(init.horizon)}</span>
+          <strong>${esc(init.title)}</strong>
+        </div>
+        <div class="row small">
+          <span>Enablers:</span>
+          ${init.enablers.map(e=>tag(e)).join('')}
+          <span class="tag">Owner: ${esc(init.owner)}</span>
+          <span class="tag">Impact: £${init.impact.toFixed(1)}m</span>
+          <span class="tag">Confidence: ${(init.confidence*100)|0}%</span>
+        </div>
+      </div>
+      <div class="acc-body">
+        <div class="grid cols-3">
+          <div>
+            <label>Horizon</label>
+            <select data-bind="horizon">
+              ${HORIZONS.map(h=>`<option ${init.horizon===h?'selected':''}>${h}</option>`).join('')}
+            </select>
+          </div>
+          <div>
+            <label>Owner</label>
+            <select data-bind="owner">
+              ${OWNERS.map(o=>`<option ${init.owner===o?'selected':''}>${o}</option>`).join('')}
+            </select>
+          </div>
+          <div>
+            <label>Enablers</label>
+            <div class="chips" data-bind="enablers">
+              ${ENABLERS.map(e=>chip(e, init.enablers.includes(e))).join('')}
+            </div>
+          </div>
+        </div>
+
+        <div class="grid cols-3" style="margin-top:8px">
+          <div>
+            <label>Est. Revenue/Value Impact (12m)</label>
+            <input type="number" step="0.1" min="0" value="${init.impact}" data-bind="impact"/>
+            <div class="small">Shown in £m for demo purposes</div>
+          </div>
+          <div>
+            <label>Confidence</label>
+            <input type="range" min="0" max="1" step="0.05" value="${init.confidence}" data-bind="confidence"/>
+            <div class="small">${(init.confidence*100)|0}%</div>
+          </div>
+          <div>
+            <label>Dependencies</label>
+            <input type="text" value="${esc(init.deps.join(', '))}" placeholder="Comma-separated…" data-bind="deps"/>
+          </div>
+        </div>
+
+        <div style="margin-top:10px">
+          <div class="row" style="justify-content:space-between">
+            <strong>Actions / Steps</strong>
+            <button class="btn-ghost btn-small" data-add>+ Add step</button>
+          </div>
+          <table class="table" style="margin-top:6px">
+            <thead><tr>
+              <th>Action</th><th>Owner</th><th>Start</th><th>End</th><th>Status</th><th></th>
+            </tr></thead>
+            <tbody data-steps>
+              ${init.steps.map((s,i)=>rowcard(s,i)).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    `;
+    // open first by default
+    wrap.classList.toggle('open', true);
+
+    // Wire up bindings
+    const body = wrap.querySelector('.acc-body');
+    body.querySelector('[data-bind="horizon"]').onchange = (e)=>{ init.horizon=e.target.value; rollups(); renderLeft(); };
+    body.querySelector('[data-bind="owner"]').onchange = (e)=>{ init.owner=e.target.value; renderLeft(); };
+    body.querySelector('[data-bind="impact"]').oninput = (e)=>{ init.impact=Number(e.target.value||0); rollups(); renderLeft(); };
+    body.querySelector('[data-bind="confidence"]').oninput = (e)=>{ init.confidence=Number(e.target.value||0); renderLeft(); };
+    body.querySelector('[data-bind="deps"]').oninput = (e)=>{ init.deps = e.target.value.split(',').map(s=>s.trim()).filter(Boolean); rollups(); };
+
+    body.querySelectorAll('[data-bind="enablers"] .chip').forEach(ch=>{
+      ch.onclick=()=>{ const label=ch.dataset.chip;
+        if(init.enablers.includes(label)){ init.enablers=init.enablers.filter(x=>x!==label); ch.classList.remove('active'); }
+        else { init.enablers.push(label); ch.classList.add('active'); }
+        rollups();
+      };
+    });
+
+    body.querySelector('[data-add]').onclick=()=>{
+      init.steps.push({text:'New action', owner:init.owner, start:'', end:'', status:'Planned'});
+      renderRight(); rollups();
+    };
+
+    acc.appendChild(wrap);
+  });
+}
+function rowcard(s,i){
+  return `<tr>
+    <td><input value="${esc(s.text||'')}" data-step="text" data-i="${i}"/></td>
+    <td>
+      <select data-step="owner" data-i="${i}">
+        ${OWNERS.map(o=>`<option ${s.owner===o?'selected':''}>${o}</option>`).join('')}
+      </select>
+    </td>
+    <td><input type="date" value="${s.start||''}" data-step="start" data-i="${i}"/></td>
+    <td><input type="date" value="${s.end||''}" data-step="end" data-i="${i}"/></td>
+    <td>
+      <select data-step="status" data-i="${i}">
+        ${['Planned','In progress','Blocked','Done'].map(st=>`<option ${s.status===st?'selected':''}>${st}</option>`).join('')}
+      </select>
+    </td>
+    <td><button class="btn-ghost btn-small" data-del data-i="${i}">Remove</button></td>
+  </tr>`;
+}
+
+/* After render, attach step handlers */
+const observer = new MutationObserver(()=>{
+  const cur = diffs.find(d=>d.id===selectedId); if(!cur) return;
+  // bind per initiative table rows
+  qa('.acc-body').forEach((body, idx)=>{
+    const init = cur.initiatives[idx];
+    body.querySelectorAll('[data-step]').forEach(inp=>{
+      const i = Number(inp.dataset.i);
+      const key = inp.getAttribute('data-step');
+      inp.oninput = ()=>{ init.steps[i][key] = inp.value; rollups(); };
+      inp.onchange = inp.oninput;
+    });
+    body.querySelectorAll('[data-del]').forEach(btn=>{
+      const i = Number(btn.dataset.i);
+      btn.onclick=()=>{ init.steps.splice(i,1); renderRight(); rollups(); };
+    });
+  });
+});
+observer.observe(q('#acc'), {childList:true, subtree:true});
+
+/* ---------------- Rollups (counters, meters, impact) ---------------- */
+function rollups(){
+  // totals
+  const totalActions = diffs.reduce((a,d)=> a + d.initiatives.reduce((x,i)=> x + (i.steps?.length||0),0), 0);
+  q('#actCount').textContent = totalActions;
+
+  // horizons balance
+  const c = [0,0,0];
+  diffs.forEach(d=> d.initiatives.forEach(i=>{
+    const idx = i.horizon==='0–3'?0 : i.horizon==='3–6'?1 : 2;
+    c[idx] += 1;
+  }));
+  const sum = Math.max(1, c[0]+c[1]+c[2]);
+  q('#h0').textContent = c[0]; q('#h1').textContent = c[1]; q('#h2').textContent = c[2];
+  q('#m0').style.width = (c[0]/sum*100)+'%';
+  q('#m1').style.width = (c[1]/sum*100)+'%';
+  q('#m2').style.width = (c[2]/sum*100)+'%';
+
+  // top enablers
+  const map={}; ENABLERS.forEach(e=>map[e]=0);
+  diffs.forEach(d=> d.initiatives.forEach(i=> i.enablers.forEach(e=> map[e]++)));
+  const top = Object.entries(map).sort((a,b)=>b[1]-a[1]).slice(0,5);
+  const box=q('#enablersTop'); box.innerHTML='';
+  top.forEach(([k,v])=>{
+    const el=document.createElement('div'); el.className='kpi'; el.textContent=`${k}: ${v}`;
+    box.appendChild(el);
+  });
+
+  // risk proxy = dependency count
+  const depCount = diffs.reduce((a,d)=> a + d.initiatives.reduce((x,i)=> x + (i.deps?.length||0),0), 0);
+  q('#riskCount').textContent = depCount;
+
+  // impact total (sum of (impact * confidence))
+  const impact = diffs.reduce((a,d)=> a + d.initiatives.reduce((x,i)=> x + (i.impact||0)*(i.confidence||0),0), 0);
+  q('#impactTotal').textContent = '£' + impact.toFixed(1) + 'm';
+}
+
+/* ---------------- Timer ---------------- */
+function fmt(sec){ const m=Math.floor(sec/60), s=sec%60; return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`; }
+function tick(){ remaining--; if(remaining<0){ clearInterval(timer); timer=null; alert('Time! Wrap up this difference.'); remaining=0; }
+  q('#timer').textContent = fmt(remaining); }
+q('#tStart').onclick=()=>{ if(timer) return; timer=setInterval(tick,1000); };
+q('#tPause').onclick=()=>{ if(!timer) return; clearInterval(timer); timer=null; };
+q('#tReset').onclick=()=>{ clearInterval(timer); timer=null; remaining=25*60; q('#timer').textContent=fmt(remaining); };
+
+/* ---------------- Lock ---------------- */
+q('#toggleLock').onclick=()=>{
+  locked=!locked; q('#lockState').textContent=locked?'LOCKED':'OPEN';
+  qa('input,select,textarea,button').forEach(el=>{
+    const keep = ['toggleLock','tStart','tPause','tReset','seedDiffs','importJSON','exportJSON'];
+    if(el.id && keep.includes(el.id)) return;
+    if(el.closest('header')) return;
+    el.disabled = locked;
+  });
+};
+
+/* ---------------- Import/Export ---------------- */
+q('#importJSON').onchange=(e)=>{
+  const f=e.target.files[0]; if(!f) return;
+  const fr=new FileReader();
+  fr.onload=()=>{ try{
+    const data=JSON.parse(fr.result);
+    if(!Array.isArray(data)) throw new Error('Expected an array of differences');
+    diffs=data; selectedId = diffs[0]?.id || null; renderLeft(); renderRight(); rollups();
+  }catch(err){ alert('Invalid JSON: '+err.message); } };
+  fr.readAsText(f);
+};
+q('#exportJSON').onclick=()=>{
+  const out = JSON.stringify(diffs,null,2);
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([out],{type:'application/json'}));
+  a.download = 'differences_initiatives.json';
+  a.click();
+  URL.revokeObjectURL(a.href);
+};
+
+/* ---------------- Seed button ---------------- */
+q('#seedDiffs').onclick=()=>{ seedDemo(); selectedId = diffs[0].id; };
+
+/* ---------------- Init ---------------- */
+function init(){
+  seedDemo();
+  selectedId = diffs[0].id;
+  renderLeft(); renderRight(); rollups();
+}
+init();
+</script>
+</body>
+</html>
