@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Frontier — Final Output (Vision + Plan + Impact)</title>
+<title>Frontier Workshop Suite — Participant • Facilitator • Voting • Final Output</title>
 <style>
   :root{
     --bg:#f7fafc; --card:#ffffff; --ink:#1f2937; --muted:#556581;
@@ -31,27 +31,47 @@
   .grid{display:grid; gap:12px}
   .cols-2{grid-template-columns:1fr 1fr}
   .cols-3{grid-template-columns:repeat(3,1fr)}
-  .two{display:grid; grid-template-columns: 1.3fr .7fr; gap:16px}
+  .two{display:grid; grid-template-columns:1fr 360px; gap:16px}
+
+  label{display:block; font-size:13px; color:#42506b; margin:8px 0 6px}
+  input, select, textarea{width:100%; padding:10px 12px; border-radius:12px; border:1px solid #d8dee8; background:#fff; color:#1f2937}
+  input:focus, select:focus, textarea:focus{outline:none; border-color:#c4d5ff; box-shadow:0 0 0 3px rgba(59,130,246,.15)}
+  .counter{font-size:12px; color:#64748b; text-align:right}
+
+  .chips{display:flex; gap:8px; flex-wrap:wrap}
+  .chip{border:1px solid #d7e0ee; border-radius:999px; padding:6px 10px; background:#fff; color:#334155; cursor:pointer; font-size:13px}
+  .chip.active{border-color:#3b82f6; box-shadow:0 0 0 2px rgba(59,130,246,.18) inset}
+  .token{display:inline-flex; gap:6px; align-items:center; border:1px solid #d7e0ee; border-radius:12px; padding:6px 10px; background:#fff; color:#334155; cursor:pointer}
+  .ai{font-size:11px; color:#065f46; background:#ecfdf5; border:1px solid #a7f3d0; border-radius:999px; padding:2px 6px}
+
   .small{font-size:12px; color:#6b7280}
   .hint{font-size:12px; color:#6b7280}
+  .status{font-size:12px; padding:2px 8px; border-radius:999px; border:1px solid #e2e8f0}
+  .s-open{background:#f0f9ff; color:#075985; border-color:#bae6fd}
+  .s-locked{background:#fff7ed; color:#9a3412; border-color:#fed7aa}
+
   .btn{background:#eff6ff; color:#0f3a8a; border:1px solid #cfe0ff; padding:10px 14px; border-radius:12px; cursor:pointer}
   .btn:hover{background:#e6f0ff}
   .btn-ghost{background:#fff; border:1px solid #d8dee8; color:#334155}
+  .btn-warn{background:#fff7ed; color:#9a3412; border:1px solid #fed7aa}
   .btn-small{padding:6px 10px; border-radius:10px; font-size:14px}
 
-  /* Cards, pills */
+  .list{display:grid; gap:10px}
   .card{background:#fff; border:1px solid #e7ecf4; border-radius:12px; padding:10px 12px; box-shadow:0 6px 14px rgba(15,23,42,.06)}
-  .winner{background:#ecfeff; border:1px solid #bae6fd; color:#155e75; padding:12px 14px; border-radius:12px}
-  .pill{display:inline-block; padding:2px 8px; border-radius:999px; border:1px solid #d7e0ee; font-size:12px; background:#f8fafc; color:#334155}
 
-  /* Plan lanes */
-  .board{display:grid; grid-template-columns: repeat(3, 1fr); gap:12px}
+  .winner{background:#ecfeff; border:1px solid #bae6fd; color:#155e75; padding:10px 12px; border-radius:12px}
+  .vote{display:flex; gap:8px; align-items:center}
+  .dot{width:12px; height:12px; border-radius:999px; background:#3b82f6}
+  .emailbox{width:100%; min-height:140px; padding:10px; border-radius:12px; border:1px solid #d8dee8}
+
+  /* Final Output boards & charts */
+  .board{display:grid; grid-template-columns:repeat(3,1fr); gap:12px}
   .lane{background:#fff; border:2px dashed #d8dee8; border-radius:14px; min-height:200px; padding:10px}
   .lane h3{text-align:center; margin:0 0 8px; color:#1f3a8a}
   .icard{background:#fff; border:1px solid #e7ecf4; border-radius:12px; padding:8px; margin:8px 0; box-shadow:0 6px 14px rgba(15,23,42,.06)}
+  .pill{display:inline-block; padding:2px 8px; border-radius:999px; border:1px solid #d7e0ee; font-size:12px; background:#f8fafc; color:#334155}
   .kpi{font-size:13px; color:#334155}
 
-  /* Chart + impacts */
   .chartbox{background:#fff; border:1px solid #e7ecf4; border-radius:14px; padding:10px; box-shadow:0 6px 14px rgba(15,23,42,.06)}
   .legend{display:flex; gap:8px; flex-wrap:wrap; font-size:12px; color:#334155}
   .legend .dot{width:10px; height:10px; border-radius:999px; display:inline-block}
@@ -60,78 +80,156 @@
 </style>
 </head>
 <body>
-
 <header>
   <div>
-    <h1>Final Output — Shared AI Vision • Frontier Action Plan • Impact</h1>
-    <div class="sub">Once the facilitator selects a winner, this screen becomes the single **take-away**: winning vision, 12-month plan, balance chart, and impact call-outs.</div>
+    <h1>Frontier Workshop Suite</h1>
+    <div class="sub">End-to-end mockup: **Participant** (vision builder with AI steering) • **Facilitator** (live statements, lock, voting, winner, export) • **Voting** • **Final Output** (vision + sequenced initiatives + chart + impact).</div>
   </div>
   <nav class="nav" id="nav"></nav>
 </header>
 
 <section class="wrap">
-  <!-- FACILITATOR (for continuity — optional quick seed/lock & winner) -->
-  <div id="screen-fac" class="panel" style="display:none">
+  <!-- PARTICIPANT -->
+  <div id="screen-participant" class="panel" style="display:none">
     <header>
-      <strong>Facilitator — Live Statements</strong>
-      <div class="row">
-        <button class="btn-ghost btn-small" id="seedStatements">Seed statements</button>
-        <button class="btn-ghost btn-small" id="selectTop">Select top as winner</button>
-      </div>
+      <strong>Participant — Build the Vision (with AI Steering)</strong>
+      <div class="row"><span id="lockStateTeam" class="status s-open">OPEN</span><span class="small">Write 140–280 chars. AI suggestions come from your initiatives.</span></div>
     </header>
     <main>
-      <div id="stmtList" class="grid"></div>
+      <div class="grid cols-3">
+        <div>
+          <label for="teamSelect">Team *</label>
+          <select id="teamSelect"></select>
+        </div>
+        <div>
+          <label>Tone</label>
+          <div id="tone" class="chips">
+            <span class="chip">Ambitious</span>
+            <span class="chip">Practical</span>
+            <span class="chip">Customer-obsessed</span>
+            <span class="chip">People-first</span>
+            <span class="chip">Operational</span>
+          </div>
+        </div>
+        <div>
+          <label>Word Bank</label>
+          <div id="bank" class="chips" style="margin-top:6px;flex-wrap:wrap"></div>
+        </div>
+      </div>
+
+      <div class="grid cols-2" style="margin-top:8px">
+        <div class="card">
+          <div class="row" style="justify-content:space-between"><strong>Initiative Context</strong><span class="small">Use seeds or import JSON</span></div>
+          <div id="initList" class="list" style="margin-top:6px"></div>
+          <div class="row" style="margin-top:8px">
+            <button class="btn-ghost btn-small" id="seedInits">Seed initiatives</button>
+            <label class="btn-ghost btn-small" style="cursor:pointer">Import JSON
+              <input id="importInits" type="file" accept=".json" style="display:none"/>
+            </label>
+          </div>
+        </div>
+        <div class="card">
+          <div class="row" style="justify-content:space-between"><strong>AI Steering — Suggested Phrases</strong><span class="small"><span class="ai">AI-suggested</span></span></div>
+          <div id="aiPhrases" class="chips" style="margin-top:6px;flex-wrap:wrap"></div>
+          <div class="row" style="margin-top:8px"><button class="btn-ghost btn-small" id="regen">Regenerate</button><span class="hint">Click to insert into your draft.</span></div>
+        </div>
+      </div>
+
+      <div style="margin-top:10px">
+        <label for="compose">Compose (140–280 chars)</label>
+        <textarea id="compose" placeholder="Draft a concise, exec-ready statement…"></textarea>
+        <div class="counter"><span id="charCount">0</span> chars</div>
+      </div>
+      <div class="row" style="margin-top:8px">
+        <button class="btn" id="saveStatement">Save Statement</button>
+        <button class="btn-ghost" id="clearCompose">Clear</button>
+        <span class="small">When the facilitator locks, head to the **Voting** tab (2 votes).</span>
+      </div>
+    </main>
+  </div>
+
+  <!-- FACILITATOR -->
+  <div id="screen-facilitator" class="panel" style="display:none">
+    <header>
+      <strong>Facilitator — Live Statements, Lock & Voting, Exports</strong>
+      <div class="row">
+        <span id="lockStateFac" class="status s-open">OPEN</span>
+        <button class="btn-ghost btn-small" id="seedStatements">Seed statements</button>
+        <button class="btn-warn btn-small" id="toggleLock">Lock / Unlock</button>
+        <button class="btn-ghost btn-small" id="exportJSON">Export JSON</button>
+        <button class="btn-ghost btn-small" id="exportMD">Export Markdown</button>
+        <button class="btn-ghost btn-small" id="buildEmail">Generate Email Draft</button>
+      </div>
+    </header>
+    <main class="two">
+      <div class="panel" style="margin:0">
+        <header><strong>Submitted Statements</strong> <span class="small" id="countLbl"></span></header>
+        <main><div id="statements" class="list"></div></main>
+      </div>
+      <aside class="panel" style="margin:0">
+        <header><strong>Winner & Email Draft</strong></header>
+        <main>
+          <div id="winnerBox" class="winner small">No winner yet. Lock → vote → select.</div>
+          <label style="margin-top:10px">Email draft to participants</label>
+          <textarea id="emailDraft" class="emailbox" placeholder="Click “Generate Email Draft”…"></textarea>
+          <div class="row" style="margin-top:8px">
+            <button class="btn-ghost btn-small" id="copyEmail">Copy email</button>
+            <a id="mailtoLink" class="btn-ghost btn-small" href="#" target="_blank">Open in email client</a>
+          </div>
+        </main>
+      </aside>
+    </main>
+  </div>
+
+  <!-- VOTING -->
+  <div id="screen-voting" class="panel" style="display:none">
+    <header>
+      <strong>Participant — Vote on the Vision</strong>
+      <div class="row"><span id="voteState" class="status s-locked">WAITING</span><span class="small">You have <strong id="votesLeft">2</strong> votes</span><button class="btn-ghost btn-small" id="resetVotes">Reset my votes</button></div>
+    </header>
+    <main>
+      <div id="ballot" class="list"></div>
+      <div class="hint" style="margin-top:8px">Click “+1 vote” on your preferred statements (max 2 votes per browser/tab).</div>
     </main>
   </div>
 
   <!-- FINAL OUTPUT -->
   <div id="screen-output" class="panel" style="display:none">
     <header>
-      <strong>Workshop Output</strong>
+      <strong>Final Output — Vision • Plan • Impact</strong>
       <div class="row">
         <label class="btn-ghost btn-small" style="cursor:pointer">Import FAP Plan JSON
           <input id="importPlan" type="file" accept=".json" style="display:none"/>
         </label>
         <button class="btn-ghost btn-small" id="seedPlan">Seed plan</button>
         <button class="btn-ghost btn-small" id="exportPack">Export Event Pack (JSON)</button>
-        <button class="btn-ghost btn-small" id="exportMD">Export Markdown Summary</button>
+        <button class="btn-ghost btn-small" id="exportOutMD">Export Markdown Summary</button>
       </div>
     </header>
     <main class="two">
-      <!-- Left: Vision + Plan -->
       <div class="grid">
         <div class="winner" id="visionBox">
           <div class="small">Shared AI Vision (winner)</div>
-          <div id="visionText" style="font-size:18px; font-weight:700; margin-top:6px">—</div>
+          <div id="visionText" style="font-size:18px;font-weight:700;margin-top:6px">Awaiting winner…</div>
           <div id="visionMeta" class="small" style="margin-top:6px">Team: — • Tone: —</div>
         </div>
-
         <div class="card">
-          <div class="row" style="justify-content:space-between">
-            <strong>12-Month Frontier Action Plan</strong>
-            <span class="small">Sequenced initiatives with KPI targets</span>
-          </div>
+          <div class="row" style="justify-content:space-between"><strong>12-Month Frontier Action Plan</strong><span class="small">Sequenced initiatives with KPI targets</span></div>
           <div id="board" class="board" style="margin-top:8px"></div>
         </div>
       </div>
-
-      <!-- Right: Chart + Impact -->
       <div class="grid">
         <div class="chartbox">
           <strong>Portfolio Balance</strong>
-          <canvas id="donut" width="360" height="240" aria-label="Portfolio balance"></canvas>
+          <canvas id="donut" width="360" height="240"></canvas>
           <div class="legend" style="margin-top:6px">
             <span><span class="dot" style="background:#3b82f6"></span> 0–3</span>
             <span><span class="dot" style="background:#10b981"></span> 3–6</span>
             <span><span class="dot" style="background:#f59e0b"></span> 6–12</span>
           </div>
         </div>
-
         <div class="card">
-          <div class="row" style="justify-content:space-between">
-            <strong>Impact Spotlight</strong>
-            <span class="small">Mock figures; customise for your client</span>
-          </div>
+          <div class="row" style="justify-content:space-between"><strong>Impact Spotlight</strong><span class="small">Mock values — edit for client</span></div>
           <div id="spot" class="spot" style="margin-top:8px"></div>
         </div>
       </div>
@@ -140,193 +238,406 @@
 </section>
 
 <script>
-  /* -------------------- Real-time channel (winner comes from your Vision Builder) -------------------- */
-  const chan = new BroadcastChannel('frontier-vision-ai-steering'); // keep same channel name used earlier
-  const publish = (type, payload) => chan.postMessage({type, payload});
+/* ---------------- Real-time channel ---------------- */
+const chan = new BroadcastChannel('frontier-workshop-suite');
+const publish = (type,payload)=> chan.postMessage({type,payload});
 
-  /* -------------------- State -------------------- */
-  // Winner from vision activity
-  let winner = null; // {id, team, text, tone[], votes}
-  // Plan (can be imported from FAP JSON, or demo-seeded here)
-  let plan = { '0-3':[], '3-6':[], '6-12':[] };
+/* ---------------- Shared state ---------------- */
+const DEMO_TEAMS=['Team Nova','Team Atlas','Team Quasar','Team Meridian','Team Horizon','Team Vertex'];
+let initiatives=[];
+let statements=[]; // {id,team,text,tone[],votes,source}
+let locked=false;
+let winnerId=null;
+let winner=null;   // resolved object
+let plan={'0-3':[],'3-6':[],'6-12':[]};
+let myVotes=Number(localStorage.getItem('suite.votes')||2);
 
-  // Demo statements (for quick testing without the other file)
-  let statements = [];
+/* ---------------- Helpers ---------------- */
+const q=s=>document.querySelector(s), qa=s=>Array.from(document.querySelectorAll(s));
+const uid=()=>Math.random().toString(36).slice(2,10);
+const esc=s=>String(s||'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+const cap=s=>s? s[0].toUpperCase()+s.slice(1):s;
 
-  /* -------------------- Simple nav -------------------- */
-  const screens = [
-    {id:'screen-fac', label:'Facilitator (demo)'},
-    {id:'screen-output', label:'Final Output'}
-  ];
-  let current = 1; // default to Final Output
-  const q = s => document.querySelector(s);
-  function renderNav(){
-    const nav = q('#nav'); nav.innerHTML='';
-    screens.forEach((s,i)=>{
-      const b = document.createElement('button');
-      b.className = 'tab'+(i===current?' active':'');
-      b.textContent = s.label;
-      b.onclick = ()=> show(i);
-      nav.appendChild(b);
-    });
-  }
-  function show(i){
-    current = i; renderNav();
-    screens.forEach((s,idx)=> q('#'+s.id).style.display = (idx===i?'block':'none'));
-    if(i===0) renderFacDemo();
-    if(i===1) renderOutput();
-  }
-
-  /* -------------------- Winner handling -------------------- */
-  function setWinner(w){
-    winner = w;
-    renderOutput();
-  }
-
-  /* -------------------- Plan rendering -------------------- */
-  function renderPlan(){
-    const board = q('#board'); board.innerHTML='';
-    const lanes = [
-      {key:'0-3', label:'0–3 months', note:'Quick wins / foundation'},
-      {key:'3-6', label:'3–6 months', note:'Scale-ups'},
-      {key:'6-12', label:'6–12 months', note:'Transformational'},
-    ];
-    lanes.forEach(L=>{
-      const col = document.createElement('div');
-      col.className='lane';
-      col.innerHTML = `<h3>${L.label}</h3><div class="small">${L.note}</div>`;
-      (plan[L.key]||[]).forEach(it=>{
-        const card = document.createElement('div'); card.className='icard';
-        card.innerHTML = `
-          <div class="row" style="justify-content:space-between">
-            <strong>${esc(it.title)}</strong>
-            <span class="pill">${esc(cap(it.pillar||'initiative'))}</span>
-          </div>
-          <div class="kpi">KPI: <strong>${esc(it.kpi||'—')}</strong> &nbsp; Target: <strong>${esc(it.target||'—')}</strong></div>
-        `;
-        col.appendChild(card);
-      });
-      board.appendChild(col);
-    });
-  }
-
-  /* -------------------- Donut chart -------------------- */
-  function balanceCounts(){
-    const c = {'0-3':0,'3-6':0,'6-12':0};
-    ['0-3','3-6','6-12'].forEach(h=> c[h] = (plan[h]||[]).length);
-    return c;
-  }
-  function renderDonut(){
-    const canvas = q('#donut'); if(!canvas) return;
-    const ctx = canvas.getContext('2d'), W=canvas.width, H=canvas.height;
-    ctx.clearRect(0,0,W,H);
-    const r = 90, cx=W/2, cy=H/2 - 5, inner=52;
-    const colors = {'0-3':'#3b82f6','3-6':'#10b981','6-12':'#f59e0b'};
-    const counts = balanceCounts();
-    const total = Math.max(1, counts['0-3']+counts['3-6']+counts['6-12']);
-    let start = -Math.PI/2;
-    ['0-3','3-6','6-12'].forEach(h=>{
-      const frac = counts[h]/total;
-      const end = start + frac*2*Math.PI;
-      ctx.beginPath(); ctx.moveTo(cx,cy); ctx.arc(cx,cy,r,start,end); ctx.closePath();
-      ctx.fillStyle = colors[h]; ctx.globalAlpha = 0.85; ctx.fill();
-      start = end;
-    });
-    ctx.globalAlpha = 1; ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.arc(cx,cy,inner,0,2*Math.PI); ctx.fill();
-    ctx.fillStyle = '#475569'; ctx.font = '12px system-ui, -apple-system, Segoe UI'; ctx.textAlign='center';
-    ctx.fillText('Portfolio balance', cx, cy-2);
-    ctx.font = 'bold 14px system-ui, -apple-system, Segoe UI';
-    ctx.fillText(`${total} initiatives`, cx, cy+16);
-  }
-
-  /* -------------------- Impact Spotlight -------------------- */
-  function renderImpact(){
-    const spot = q('#spot'); spot.innerHTML='';
-    // You can compute these from your real plan; here we mock sensible defaults
-    const roll = {
-      rev: '£1.8M–£2.4M (12m)',
-      prod: '~2 hrs/FTE/wk',
-      cx: '−20–25% inbound',
-      risk: '−30–40% findings',
-      innov: '12 prototypes/yr',
-      cycle: '< 48h avg cycle'
-    };
-    const tiles = [
-      {label:'Projected revenue uplift', val: roll.rev, sub:'Sales & CX initiatives'},
-      {label:'Productivity hours saved', val: roll.prod, sub:'Copilot & automation'},
-      {label:'Customer experience', val: roll.cx, sub:'Proactive service, AOV'},
-      {label:'Risk posture', val: roll.risk, sub:'Compliance monitors'},
-      {label:'Innovation throughput', val: roll.innov, sub:'AI Product Studio'},
-      {label:'Cycle time', val: roll.cycle, sub:'Workflow orchestrator'},
-    ];
-    tiles.forEach(t=>{
-      const d = document.createElement('div'); d.className='tile';
-      d.innerHTML = `<div class="small">${t.label}</div>
-        <div style="font-size:22px;font-weight:700;margin:2px 0 4px">${esc(t.val)}</div>
-        <div class="kpi">${esc(t.sub)}</div>`;
-      spot.appendChild(d);
-    });
-  }
-
-  /* -------------------- Output rendering -------------------- */
-  function renderOutput(){
-    // Vision box
-    const vText = q('#visionText'), vMeta = q('#visionMeta');
-    if(winner){
-      vText.textContent = winner.text;
-      vMeta.textContent = `Team: ${winner.team} • Tone: ${(winner.tone||[]).join(', ') || '—'}`;
-    } else {
-      vText.textContent = 'Awaiting winner from facilitator…';
-      vMeta.textContent = 'Team: — • Tone: —';
-    }
-    // Plan + Chart + Impact
-    renderPlan();
-    renderDonut();
-    renderImpact();
-  }
-
-  /* -------------------- Imports/Exports -------------------- */
-  q('#importPlan').addEventListener('change', e=>{
-    const f = e.target.files[0]; if(!f) return;
-    const fr = new FileReader();
-    fr.onload = ()=>{
-      try{
-        const data = JSON.parse(fr.result);
-        if(data.plan){ plan = data.plan; }
-        else if(data['0-3']||data['3-6']||data['6-12']) { plan = data; }
-        else { alert('JSON must contain {plan:{0-3,3-6,6-12}} or top-level lanes.'); return; }
-        renderOutput();
-      }catch{ alert('Could not parse plan JSON'); }
-    };
-    fr.readAsText(f);
+/* ---------------- Router ---------------- */
+const screens=[
+  {id:'screen-participant',label:'Participant'},
+  {id:'screen-facilitator',label:'Facilitator'},
+  {id:'screen-voting',label:'Voting'},
+  {id:'screen-output',label:'Final Output'}
+];
+let current=0;
+function renderNav(){
+  const nav=q('#nav'); nav.innerHTML='';
+  screens.forEach((s,i)=>{
+    const b=document.createElement('button');
+    b.className='tab'+(i===current?' active':'');
+    b.textContent=s.label; b.onclick=()=>show(i);
+    nav.appendChild(b);
   });
+}
+function show(i){
+  current=i; renderNav();
+  screens.forEach((s,idx)=> q('#'+s.id).style.display= (idx===i?'block':'none'));
+  if(i===0) renderParticipant();
+  if(i===1) renderFacilitator();
+  if(i===2) renderVoting();
+  if(i===3) renderOutput();
+}
 
-  q('#exportPack').onclick = ()=>{
-    const payload = { generatedAt:new Date().toISOString(), winner, plan };
-    download('frontier-final-output.json', JSON.stringify(payload,null,2), 'application/json');
+/* ---------------- Participant ---------------- */
+function populateTeamSelect(){
+  const sel=q('#teamSelect');
+  if(sel.dataset.ready) return;
+  sel.innerHTML=`<option value="">Select team…</option>` + DEMO_TEAMS.map(n=>`<option>${n}</option>`).join('');
+  sel.value=localStorage.getItem('suite.team')||'';
+  sel.dataset.ready='1';
+}
+const toneSel=new Set();
+function renderParticipant(){
+  q('#lockStateTeam').textContent=locked?'LOCKED':'OPEN';
+  q('#lockStateTeam').className='status '+(locked?'s-locked':'s-open');
+  populateTeamSelect();
+  qa('#tone .chip').forEach(ch=>{
+    ch.onclick=()=>{ ch.classList.toggle('active'); const t=ch.textContent.trim(); ch.classList.contains('active')?toneSel.add(t):toneSel.delete(t); };
+  });
+  q('#compose').oninput=()=> q('#charCount').textContent=q('#compose').value.length;
+  q('#clearCompose').onclick=()=>{ q('#compose').value=''; q('#charCount').textContent=0; };
+  q('#saveStatement').onclick=saveStatement;
+  q('#saveStatement').disabled=locked;
+  if(!initiatives.length) seedInitiatives(); // auto-seed for demo
+}
+function insertIntoDraft(text){
+  const ta=q('#compose'); const pos=ta.selectionStart||ta.value.length;
+  ta.value=ta.value.slice(0,pos) + (ta.value && !ta.value.endsWith(' ') ? ' ' : '') + text + ' ' + ta.value.slice(pos);
+  q('#charCount').textContent=ta.value.length; ta.focus();
+}
+function saveStatement(){
+  const team=q('#teamSelect').value.trim();
+  if(!team){ alert('Select your team.'); return; }
+  const text=q('#compose').value.trim();
+  if(text.length<140||text.length>280){ alert('Keep to 140–280 chars.'); return; }
+  const payload={id:uid(),team,text,tone:Array.from(toneSel),votes:0,source:'team+AI'};
+  localStorage.setItem('suite.team',team);
+  statements.push(payload); publish('vision:add',payload);
+  q('#compose').value=''; q('#charCount').textContent=0;
+  alert('Statement saved and sent to facilitator.');
+}
+
+/* Initiatives + AI suggestions */
+function mkInit(title,pillar,kpi,target){ return {title,pillar,kpi,target}; }
+function seedInitiatives(){
+  initiatives=[
+    mkInit('Employee Copilot pilot (HR & Sales)','employee','Hrs saved / FTE','2 hrs/wk'),
+    mkInit('AI meeting recaps + next-step assistant','employee','Adoption','>70%'),
+    mkInit('AI Sales Companion (next-best-offer)','customer','Win rate','+10%'),
+    mkInit('Proactive service (resolve before call)','customer','Inbound volume','-25%'),
+    mkInit('Workflow orchestrator (CRM↔ERP)','process','Cycle time','< 48h'),
+    mkInit('AI Product Studio (monthly demos)','innovation','Prototypes/yr','12'),
+    mkInit('Data monetization pilot','innovation','Data ARR','$600k'),
+    mkInit('Customer personalization engine','customer','AOV','+7%')
+  ];
+  renderInitList(); genAI();
+}
+function renderInitList(){
+  const list=q('#initList'); list.innerHTML='';
+  initiatives.forEach(it=>{
+    const d=document.createElement('div'); d.className='card';
+    d.innerHTML=`<strong>${esc(it.title)}</strong>
+      <div class="small">Pillar: ${cap(it.pillar)} • KPI: <strong>${esc(it.kpi)}</strong> → <strong>${esc(it.target)}</strong></div>`;
+    list.appendChild(d);
+  });
+  // word bank
+  const bank=q('#bank'); bank.innerHTML='';
+  const tokens=new Set();
+  initiatives.forEach(it=>{
+    tokens.add(`${it.kpi} ${it.target}`);
+    if(it.pillar==='employee') tokens.add('Copilot adoption >70%');
+    if(it.pillar==='process') tokens.add('Cycle time <48h');
+    if(it.pillar==='innovation') tokens.add('12 prototypes/yr');
+    if(it.pillar==='customer') tokens.add('Proactive service');
+  });
+  [...tokens].slice(0,18).forEach(tk=>{
+    const el=document.createElement('div'); el.className='token'; el.textContent=tk; el.onclick=()=>insertIntoDraft(tk);
+    bank.appendChild(el);
+  });
+}
+q('#seedInits').onclick=seedInitiatives;
+q('#importInits').addEventListener('change',e=>{
+  const f=e.target.files[0]; if(!f) return;
+  const fr=new FileReader();
+  fr.onload=()=>{
+    try{
+      const data=JSON.parse(fr.result);
+      initiatives=Array.isArray(data)?data:(Array.isArray(data.initiatives)?data.initiatives:[]);
+      if(!initiatives.length) throw new Error('No initiatives');
+      renderInitList(); genAI();
+    }catch{ alert('Invalid initiatives JSON'); }
   };
-  q('#exportMD').onclick = ()=>{
-    const md = `# Workshop Final Output
+  fr.readAsText(f);
+});
+function genAI(){
+  const pick=(arr,n)=>arr.sort(()=>Math.random()-0.5).slice(0,Math.max(1,n));
+  const phrases=[];
+  initiatives.forEach(it=>{
+    const part1={
+      employee:['Copilot-augmented workforce','Every employee focuses on high-value work','Frontline amplified by AI'],
+      customer:['Proactive customer value','Personalised engagement at scale','Next-best-offer in every channel'],
+      process:['Intelligent operations','Decisions at the speed of data','Workflow from click to cash'],
+      innovation:['Innovation as a monthly habit','Data-backed product bets','AI Product Studio velocity']
+    }[it.pillar] || ['AI-first execution'];
+    const part2:[
+      `driving ${it.kpi.toLowerCase()} to ${it.target}`,
+      `achieving ${it.target} ${it.kpi.toLowerCase()}`,
+      `hitting ${it.kpi.toLowerCase()} ${it.target}`
+    ];
+    const part3=['with trust by design','measured weekly in outcomes','embedded in day-to-day work'];
+    pick(part1,1).forEach(a=> pick(part2,1).forEach(b=> pick(part3,1).forEach(c=> phrases.push(`${a}, ${b}, ${c}.`))));
+  });
+  const uniq=[...new Set(phrases)].slice(0,24);
+  const box=q('#aiPhrases'); box.innerHTML='';
+  uniq.forEach(p=>{
+    const tk=document.createElement('div'); tk.className='token';
+    tk.innerHTML=`<span>${esc(p)}</span> <span class="ai">AI-suggested</span>`;
+    tk.onclick=()=>insertIntoDraft(p);
+    box.appendChild(tk);
+  });
+}
+q('#regen').onclick=genAI;
+
+/* ---------------- Facilitator ---------------- */
+function renderFacilitator(){
+  q('#lockStateFac').textContent=locked?'LOCKED (Voting Open)':'OPEN';
+  q('#lockStateFac').className='status '+(locked?'s-locked':'s-open');
+  q('#countLbl').textContent=`${statements.length} statement${statements.length===1?'':'s'}`;
+
+  const wrap=q('#statements'); wrap.innerHTML='';
+  if(!statements.length){
+    wrap.innerHTML='<div class="card small">No statements yet. Ask teams to submit from Participant.</div>';
+  }else{
+    statements.forEach(s=>{
+      const d=document.createElement('div'); d.className='card';
+      d.innerHTML=`
+        <div class="row" style="justify-content:space-between">
+          <div><strong>${esc(s.team)}</strong> <span class="small">(${(s.tone||[]).join(', ')||'—'})</span></div>
+          <div class="row">
+            <span class="small">Votes: <strong id="votes_${s.id}">${s.votes||0}</strong></span>
+            <button class="btn-ghost btn-small" data-id="${s.id}">Set as Winner</button>
+          </div>
+        </div>
+        <div style="margin-top:6px">${esc(s.text)}</div>
+        <div class="small" style="margin-top:6px">Source: ${s.source||'team'}</div>`;
+      wrap.appendChild(d);
+    });
+    wrap.querySelectorAll('button[data-id]').forEach(b=> b.onclick=()=>{
+      winnerId=b.dataset.id; publish('vision:winner',{id:winnerId}); resolveWinner(); renderWinnerBox();
+      show(3); // jump to Final Output
+    });
+  }
+  renderWinnerBox();
+}
+function renderWinnerBox(){
+  const box=q('#winnerBox');
+  if(!winner){ box.className='winner small'; box.textContent='No winner yet. Lock → vote → select.'; return; }
+  box.className='winner';
+  box.innerHTML=`<div class="small">Winning statement from <strong>${esc(winner.team)}</strong></div>
+                 <div style="margin-top:6px"><strong>${esc(winner.text)}</strong></div>
+                 <div class="small" style="margin-top:6px">Tone: ${(winner.tone||[]).join(', ')||'—'}</div>`;
+}
+q('#toggleLock').onclick=()=>{ locked=!locked; publish('state:lock',{locked}); renderFacilitator(); renderParticipant(); renderVoting(); };
+q('#seedStatements').onclick=()=>{
+  const seed=[
+    {team:'Team Nova', text:'We are an AI-empowered organization where every employee is augmented by Copilot, customer needs are anticipated, and decisions move at the speed of data — innovation as a monthly habit with trust by design.', tone:['Ambitious','People-first'], votes:2, source:'team+AI'},
+    {team:'Team Atlas', text:'In 12 months we operate as a trusted, data-driven enterprise: employees focus on high-value work, engagement is proactive, and intelligent operations shrink cycle time from weeks to days.', tone:['Practical','Operational'], votes:1, source:'team+AI'}
+  ].map(s=>({id:uid(),...s}));
+  statements.push(...seed); publish('vision:seed',seed); renderFacilitator(); renderVoting();
+};
+
+/* Exports + email */
+q('#exportJSON').onclick=()=>{
+  const payload={generatedAt:new Date().toISOString(), locked, winnerId, statements, initiatives, plan};
+  download('workshop-pack.json', JSON.stringify(payload,null,2),'application/json');
+};
+q('#exportMD').onclick=()=>{
+  const w=winner;
+  const md=`# Shared AI Vision — Workshop Output
+
+**Vision (final):**
+> ${w? w.text : '(winner not set yet)'}
+
+**Tone cues:** ${w? (w.tone||[]).join(', ') : '—'}
+
+---
+
+## Considered Statements (votes)
+${statements.map(s=>`- (${s.team}, ${s.votes||0} votes) ${s.text}`).join('\n')}
+
+## Initiative Context
+${initiatives.map(i=>`- **${i.title}** — Pillar: ${cap(i.pillar)} — KPI: ${i.kpi} → ${i.target}`).join('\n')}
+`;
+  download('vision-summary.md', md, 'text/markdown');
+};
+q('#buildEmail').onclick=()=>{
+  const w=winner;
+  const subject=encodeURIComponent('Workshop: Shared AI Vision & Next Steps');
+  const body=[
+    'Hi all,','','Thanks for your contributions to today’s workshop. The winning Shared AI Vision statement is:', '',
+    w? `“${w.text}” (from ${w.team})` : '(winner not set yet)','',
+    'We also considered:', ...statements.map(s=>`• (${s.team}, ${s.votes||0} votes) ${s.text}`),'',
+    'Initiative context used for AI Steering:', ...initiatives.map(i=>`• ${i.title} — ${i.kpi} → ${i.target}`),'',
+    'Next steps:','• Confirm Frontier Action Plan owners & metrics','• Kick off 0–3 month quick wins','',
+    'Best,','Facilitator'
+  ].join('\n');
+  q('#emailDraft').value=`Subject: Workshop: Shared AI Vision & Next Steps\n\n${body.replace(/%0A/g,'\n')}`;
+  q('#mailtoLink').href=`mailto:?subject=${subject}&body=${encodeURIComponent(body)}`;
+};
+q('#copyEmail').onclick=async()=>{ try{ await navigator.clipboard.writeText(q('#emailDraft').value||''); alert('Email draft copied.'); }catch{} };
+function download(filename,text,type){ const blob=new Blob([text],{type:type||'text/plain;charset=utf-8'}); const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=filename; a.click(); URL.revokeObjectURL(a.href); }
+
+/* ---------------- Voting ---------------- */
+function renderVoting(){
+  q('#voteState').textContent=locked?'VOTING OPEN':'WAITING';
+  q('#voteState').className='status '+(locked?'s-open':'s-locked');
+  q('#votesLeft').textContent=myVotes;
+  const cont=q('#ballot'); cont.innerHTML='';
+  if(!locked){ cont.innerHTML='<div class="card small">Voting opens when the facilitator locks.</div>'; return; }
+  const list=[...statements].sort((a,b)=>(b.votes||0)-(a.votes||0));
+  list.forEach(s=>{
+    const d=document.createElement('div'); d.className='card';
+    d.innerHTML=`<div class="row" style="justify-content:space-between">
+      <div><strong>${esc(s.team)}</strong></div>
+      <div class="vote">
+        <div class="dot"></div>
+        <button class="btn-ghost btn-small" data-id="${s.id}">+1 vote</button>
+        <span>Votes: <strong id="v_${s.id}">${s.votes||0}</strong></span>
+      </div>
+    </div>
+    <div style="margin-top:6px">${esc(s.text)}</div>`;
+    cont.appendChild(d);
+  });
+  cont.querySelectorAll('button[data-id]').forEach(btn=>{
+    btn.onclick=()=>{
+      if(!locked) return;
+      if(myVotes<=0){ alert('You have used your 2 votes.'); return; }
+      myVotes-=1; localStorage.setItem('suite.votes',String(myVotes));
+      q('#votesLeft').textContent=myVotes;
+      const id=btn.dataset.id;
+      const st=statements.find(x=>x.id===id); if(st){ st.votes=(st.votes||0)+1; q('#v_'+id).textContent=st.votes; }
+      publish('vote:add',{id}); autoSuggestWinner();
+    };
+  });
+}
+q('#resetVotes').onclick=()=>{ myVotes=2; localStorage.setItem('suite.votes','2'); q('#votesLeft').textContent=myVotes; };
+function autoSuggestWinner(){
+  if(!statements.length) return;
+  const top=[...statements].sort((a,b)=>(b.votes||0)-(a.votes||0))[0];
+  if(top && top.id!==winnerId){ winnerId=top.id; publish('vision:winner',{id:winnerId}); resolveWinner(); renderWinnerBox(); }
+}
+
+/* ---------------- Final Output ---------------- */
+function resolveWinner(){
+  winner = statements.find(x=>x.id===winnerId) || null;
+}
+function renderOutput(){
+  // vision
+  const v=q('#visionText'), m=q('#visionMeta');
+  if(winner){ v.textContent=winner.text; m.textContent=`Team: ${winner.team} • Tone: ${(winner.tone||[]).join(', ')||'—'}`; }
+  else { v.textContent='Awaiting winner…'; m.textContent='Team: — • Tone: —'; }
+  // plan + chart + impact
+  renderPlan(); renderDonut(); renderImpact();
+}
+function renderPlan(){
+  const board=q('#board'); board.innerHTML='';
+  [{k:'0-3',t:'0–3 months',n:'Quick wins / foundation'},
+   {k:'3-6',t:'3–6 months',n:'Scale-ups'},
+   {k:'6-12',t:'6–12 months',n:'Transformational'}].forEach(L=>{
+    const col=document.createElement('div'); col.className='lane';
+    col.innerHTML=`<h3>${L.t}</h3><div class="small">${L.n}</div>`;
+    (plan[L.k]||[]).forEach(it=>{
+      const c=document.createElement('div'); c.className='icard';
+      c.innerHTML=`<div class="row" style="justify-content:space-between"><strong>${esc(it.title)}</strong><span class="pill">${esc(cap(it.pillar||'initiative'))}</span></div>
+                   <div class="kpi">KPI: <strong>${esc(it.kpi||'—')}</strong> &nbsp; Target: <strong>${esc(it.target||'—')}</strong></div>`;
+      col.appendChild(c);
+    });
+    board.appendChild(col);
+  });
+}
+function balanceCounts(){ return {'0-3':(plan['0-3']||[]).length,'3-6':(plan['3-6']||[]).length,'6-12':(plan['6-12']||[]).length}; }
+function renderDonut(){
+  const canvas=q('#donut'); if(!canvas) return; const ctx=canvas.getContext('2d'), W=canvas.width, H=canvas.height;
+  ctx.clearRect(0,0,W,H); const r=90, cx=W/2, cy=H/2-5, inner=52;
+  const colors={'0-3':'#3b82f6','3-6':'#10b981','6-12':'#f59e0b'};
+  const counts=balanceCounts(); const total=Math.max(1,counts['0-3']+counts['3-6']+counts['6-12']); let start=-Math.PI/2;
+  ['0-3','3-6','6-12'].forEach(h=>{ const frac=counts[h]/total; const end=start+frac*2*Math.PI;
+    ctx.beginPath(); ctx.moveTo(cx,cy); ctx.arc(cx,cy,r,start,end); ctx.closePath(); ctx.fillStyle=colors[h]; ctx.globalAlpha=.85; ctx.fill(); start=end;});
+  ctx.globalAlpha=1; ctx.fillStyle='#fff'; ctx.beginPath(); ctx.arc(cx,cy,inner,0,2*Math.PI); ctx.fill();
+  ctx.fillStyle='#475569'; ctx.font='12px system-ui'; ctx.textAlign='center'; ctx.fillText('Portfolio balance',cx,cy-2);
+  ctx.font='bold 14px system-ui'; ctx.fillText(`${total} initiatives`,cx,cy+16);
+}
+function renderImpact(){
+  const spot=q('#spot'); spot.innerHTML='';
+  const tiles=[
+    {label:'Projected revenue uplift', val:'£1.8M–£2.4M (12m)', sub:'Sales & CX initiatives'},
+    {label:'Productivity hours saved', val:'~2 hrs/FTE/wk', sub:'Copilot & automation'},
+    {label:'Customer experience', val:'−20–25% inbound', sub:'Proactive service, AOV'},
+    {label:'Risk posture', val:'−30–40% findings', sub:'Compliance monitors'},
+    {label:'Innovation throughput', val:'12 prototypes/yr', sub:'AI Product Studio'},
+    {label:'Cycle time', val:'< 48h avg', sub:'Workflow orchestrator'}
+  ];
+  tiles.forEach(t=>{ const d=document.createElement('div'); d.className='tile';
+    d.innerHTML=`<div class="small">${t.label}</div><div style="font-size:22px;font-weight:700;margin:2px 0 4px">${t.val}</div><div class="kpi">${t.sub}</div>`;
+    spot.appendChild(d);
+  });
+}
+
+/* Imports/exports on Final Output */
+q('#seedPlan').onclick=()=>{
+  plan={'0-3':[
+      {title:'Employee Copilot pilot (HR & Sales)',pillar:'employee',kpi:'Hrs saved / FTE',target:'2 hrs/wk'},
+      {title:'AI meeting recaps + next-step assistant',pillar:'employee',kpi:'Adoption',target:'>70%'},
+      {title:'Knowledge hub answers in 30s',pillar:'employee',kpi:'Time to answer',target:'<30s'}],
+    '3-6':[
+      {title:'AI Sales Companion (next-best-offer)',pillar:'customer',kpi:'Win rate',target:'+10%'},
+      {title:'Proactive service (resolve before call)',pillar:'customer',kpi:'Inbound volume',target:'-25%'},
+      {title:'Workflow orchestrator (CRM↔ERP)',pillar:'process',kpi:'Cycle time',target:'< 48h'}],
+    '6-12':[
+      {title:'AI Product Studio (monthly demos)',pillar:'innovation',kpi:'Prototypes/yr',target:'12'},
+      {title:'Data monetization pilot',pillar:'innovation',kpi:'Data ARR',target:'$600k'},
+      {title:'Intelligent ops dashboard',pillar:'process',kpi:'Observability',target:'Org-wide'}]
+  };
+  renderOutput();
+};
+q('#importPlan').addEventListener('change',e=>{
+  const f=e.target.files[0]; if(!f) return;
+  const fr=new FileReader();
+  fr.onload=()=>{ try{
+      const data=JSON.parse(fr.result);
+      plan=data.plan?data.plan:(data['0-3']||data['3-6']||data['6-12']?data:plan);
+      renderOutput();
+    }catch{ alert('Could not parse plan JSON'); } };
+  fr.readAsText(f);
+});
+q('#exportPack').onclick=()=> download('final-output.json', JSON.stringify({generatedAt:new Date().toISOString(), winner, plan},null,2),'application/json');
+q('#exportOutMD').onclick=()=>{
+  const md=`# Workshop Final Output
 
 ## Shared AI Vision
-${winner ? `> ${winner.text}\n\n_Team:_ ${winner.team}  \n_Tone:_ ${(winner.tone||[]).join(', ') || '—'}` : '> (Winner not set yet)'}
+${winner? `> ${winner.text}\n\n_Team:_ ${winner.team}  \n_Tone:_ ${(winner.tone||[]).join(', ')||'—'}` : '> (Winner not set yet)'}
 
 ---
 
-## Frontier Action Plan (12 months)
+## Frontier Action Plan
 
 ### 0–3 months
-${(plan['0-3']||[]).map(i=>`- **${i.title}** — KPI: ${i.kpi} → ${i.target}`).join('\n') || '—'}
+${(plan['0-3']||[]).map(i=>`- **${i.title}** — KPI: ${i.kpi} → ${i.target}`).join('\n')||'—'}
 
 ### 3–6 months
-${(plan['3-6']||[]).map(i=>`- **${i.title}** — KPI: ${i.kpi} → ${i.target}`).join('\n') || '—'}
+${(plan['3-6']||[]).map(i=>`- **${i.title}** — KPI: ${i.kpi} → ${i.target}`).join('\n')||'—'}
 
 ### 6–12 months
-${(plan['6-12']||[]).map(i=>`- **${i.title}** — KPI: ${i.kpi} → ${i.target}`).join('\n') || '—'}
+${(plan['6-12']||[]).map(i=>`- **${i.title}** — KPI: ${i.kpi} → ${i.target}`).join('\n')||'—'}
 
 ---
-
-## Impact Spotlight (mock)
+## Impact (mock)
 - Revenue uplift: £1.8M–£2.4M (12m)
 - Productivity: ~2 hrs/FTE/wk
 - CX: −20–25% inbound
@@ -334,104 +645,33 @@ ${(plan['6-12']||[]).map(i=>`- **${i.title}** — KPI: ${i.kpi} → ${i.target}`
 - Innovation: 12 prototypes/yr
 - Cycle time: < 48h
 `;
-    download('frontier-final-output.md', md, 'text/markdown');
-  };
-  function download(filename, text, type){
-    const blob = new Blob([text], {type:type||'text/plain;charset=utf-8'});
-    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = filename; a.click(); URL.revokeObjectURL(a.href);
+  download('final-output.md', md, 'text/markdown');
+};
+
+/* ---------------- Channel listeners ---------------- */
+chan.onmessage=(e)=>{
+  const {type,payload}=e.data||{};
+  switch(type){
+    case 'vision:add': statements.push(payload); if(current===1) renderFacilitator(); if(current===2) renderVoting(); break;
+    case 'vision:seed': statements.push(...payload); if(current===1) renderFacilitator(); if(current===2) renderVoting(); break;
+    case 'vote:add': {
+      const st=statements.find(x=>x.id===payload.id);
+      if(st){ st.votes=(st.votes||0)+1; const a=q('#votes_'+st.id); if(a) a.textContent=st.votes; const b=q('#v_'+st.id); if(b) b.textContent=st.votes; }
+      if(current===1) renderFacilitator();
+      break;
+    }
+    case 'state:lock': locked=!!payload.locked; if(current===1) renderFacilitator(); if(current===0) renderParticipant(); if(current===2) renderVoting(); break;
+    case 'vision:winner': winnerId=payload.id; resolveWinner(); if(current===1) renderWinnerBox(); if(current===3) renderOutput(); break;
   }
+};
 
-  /* -------------------- Facilitator demo (optional) -------------------- */
-  function renderFacDemo(){
-    const wrap = q('#stmtList'); wrap.innerHTML='';
-    if(!statements.length){
-      wrap.innerHTML = '<div class="card small">No statements yet — click “Seed statements”.</div>';
-      return;
-    }
-    statements.forEach(s=>{
-      const d = document.createElement('div'); d.className='card';
-      d.innerHTML = `<div class="row" style="justify-content:space-between">
-        <strong>${esc(s.team)}</strong><span class="small">${s.votes||0} votes</span></div>
-        <div style="margin-top:6px">${esc(s.text)}</div>`;
-      wrap.appendChild(d);
-    });
-  }
-  q('#seedStatements')?.addEventListener('click', ()=>{
-    statements = [
-      {id:uid(), team:'Team Nova', text:'We are an AI-empowered organization where every employee is augmented by Copilot, customer needs are anticipated, and decisions move at the speed of data — innovation as a monthly habit with trust by design.', tone:['Ambitious','People-first'], votes:4},
-      {id:uid(), team:'Team Atlas', text:'In 12 months we are a trusted, data-driven enterprise: employees focus on high-value work, engagement is proactive, and intelligent operations shrink cycle time from weeks to days.', tone:['Practical','Operational'], votes:2}
-    ];
-    renderFacDemo();
-  });
-  q('#selectTop')?.addEventListener('click', ()=>{
-    if(!statements.length) return alert('Seed or receive statements first.');
-    const top = [...statements].sort((a,b)=> (b.votes||0)-(a.votes||0))[0];
-    // simulate facilitator selection
-    publish('vision:winner', {id: top.id});
-    setWinner(top);
-    show(1);
-  });
-
-  /* -------------------- Seed plan for demo -------------------- */
-  q('#seedPlan').addEventListener('click', ()=>{
-    plan = {
-      '0-3':[
-        mkPlan('Employee Copilot pilot (HR & Sales)','employee','Hrs saved / FTE','2 hrs/wk'),
-        mkPlan('AI meeting recaps + next-step assistant','employee','Adoption','>70%'),
-        mkPlan('Knowledge hub answers in 30s','employee','Time to answer','<30s')
-      ],
-      '3-6':[
-        mkPlan('AI Sales Companion (next-best-offer)','customer','Win rate','+10%'),
-        mkPlan('Proactive service (resolve before call)','customer','Inbound volume','-25%'),
-        mkPlan('Workflow orchestrator (CRM↔ERP)','process','Cycle time','< 48h')
-      ],
-      '6-12':[
-        mkPlan('AI Product Studio (monthly demos)','innovation','Prototypes/yr','12'),
-        mkPlan('Data monetization pilot','innovation','Data ARR','$600k'),
-        mkPlan('Intelligent ops dashboard','process','Observability','Org-wide')
-      ]
-    };
-    renderOutput();
-  });
-  function mkPlan(title,pillar,kpi,target){ return {title,pillar,kpi,target}; }
-
-  /* -------------------- Channel listeners (listen for real winner from Vision Builder) -------------------- */
-  chan.onmessage = (e)=>{
-    const {type, payload} = e.data || {};
-    if(type==='vision:winner'){
-      // In the vision builder, other tabs also broadcast the actual statement elsewhere;
-      // here we only know the id — but often you also broadcast the statement.
-      // For robustness, if we’ve also received the statements list in this tab, use it; otherwise keep waiting.
-      const found = statements.find(x=>x.id===payload.id);
-      if(found){ setWinner(found); }
-    }
-    if(type==='vision:seed'){
-      // capture statements for this tab (so winner id can be resolved)
-      statements.push(...payload);
-      renderFacDemo();
-    }
-    if(type==='vision:add'){
-      statements.push(payload);
-      renderFacDemo();
-    }
-  };
-
-  /* -------------------- Utils -------------------- */
-  const esc = s => String(s||'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
-  const cap = s => s ? s.charAt(0).toUpperCase()+s.slice(1) : s;
-
-  /* -------------------- Init -------------------- */
-  function init(){
-    renderNav();
-    show(current);
-    // seed plan so the Output looks populated immediately
-    document.getElementById('seedPlan').click();
-    // seed demo statements so "Facilitator (demo)" works offline
-    document.getElementById('seedStatements')?.click();
-    // select top as winner to showcase the output in one click
-    document.getElementById('selectTop')?.click();
-  }
-  init();
+/* ---------------- Init ---------------- */
+function init(){
+  renderNav(); show(0); // start on Participant
+  // quick demo seeds
+  seedInitiatives();
+}
+init();
 </script>
 </body>
 </html>
