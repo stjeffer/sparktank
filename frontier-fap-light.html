@@ -3,11 +3,11 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Frontier — FAP Sequencing (Light)</title>
+<title>Frontier — FAP Sequencing (Light, Alignment & Chart)</title>
 <style>
   :root{
     --bg:#f7fafc; --card:#ffffff; --ink:#1f2937; --muted:#556581;
-    --primary:#3b82f6; --primary-600:#2563eb; --accent:#10b981; --warn:#f59e0b; --danger:#ef4444;
+    --primary:#3b82f6; --primary-600:#2563eb; --accent:#10b981; --warn:#f59e0b; --danger:#ef4444; --violet:#8b5cf6;
     --border:#e5e7eb; --shadow:0 10px 24px rgba(31,41,55,.12); --radius:16px;
   }
   *{box-sizing:border-box}
@@ -18,7 +18,7 @@
   }
   header{padding:18px 18px 8px; display:flex; gap:16px; align-items:flex-start; justify-content:space-between; flex-wrap:wrap}
   h1{margin:.2rem 0 .3rem; font-size:26px}
-  .sub{color:var(--muted); max-width:960px}
+  .sub{color:var(--muted); max-width:980px}
   .nav{display:flex; gap:8px; flex-wrap:wrap}
   .tab{background:#fff; border:1px solid #d8dee8; color:#1f2937; padding:8px 12px; border-radius:10px; cursor:pointer}
   .tab.active{border-color:#3b82f6; box-shadow:0 0 0 2px rgba(59,130,246,.18) inset}
@@ -62,13 +62,32 @@
   .muted{color:#6b7280; font-size:13px}
   .empty{padding:12px; border:2px dashed #d8dee8; border-radius:10px; color:#6b7280; background:#fbfdff}
 
-  /* Facilitator grid */
+  /* Facilitator grid & alignment */
+  .gridwrap{display:grid; grid-template-columns: 1fr 340px; gap:16px}
   .gridboard{overflow:auto}
-  .hdr{display:grid; grid-template-columns: 200px repeat(3, 1fr); gap:1px; padding:8px 10px; border-bottom:1px solid var(--border)}
+  .hdr{display:grid; grid-template-columns: 220px repeat(3, 1fr); gap:1px; padding:8px 10px; border-bottom:1px solid var(--border)}
   .col-h{border:1px solid #d8dee8; border-radius:10px; text-align:center; padding:6px; font-weight:700}
-  .table{display:grid; grid-template-columns: 200px repeat(3, 1fr); gap:1px}
+  .table{display:grid; grid-template-columns: 220px repeat(3, 1fr); gap:1px}
   .rowlab{padding:10px; border-right:1px solid #e5e7eb; font-weight:600}
   .cell{min-height:130px; border-left:1px solid #e5e7eb; border-bottom:1px solid #e5e7eb; padding:8px; display:flex; gap:8px; flex-wrap:wrap; align-content:flex-start}
+  .card-mini{background:#fff; border:1px solid #e7ecf4; border-radius:10px; padding:8px; box-shadow:0 6px 14px rgba(15,23,42,.06); position:relative}
+  .align-ok{box-shadow:0 0 0 2px rgba(16,185,129,.35) inset}
+  .align-off{box-shadow:0 0 0 2px rgba(245,158,11,.35) inset}
+  .align-div{box-shadow:0 0 0 2px rgba(139,92,246,.35) inset}
+  .flag{position:absolute; top:6px; right:6px; font-size:11px; padding:2px 6px; border-radius:999px; border:1px solid #e2e8f0}
+  .f-ok{background:#ecfdf5; color:#065f46; border-color:#a7f3d0}
+  .f-off{background:#fffbeb; color:#92400e; border-color:#fde68a}
+  .f-div{background:#f5f3ff; color:#5b21b6; border-color:#ddd6fe}
+  .sidepanel{background:var(--card); border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow); padding:12px}
+  .sidepanel h4{margin:2px 0 8px}
+  .alist{display:grid; gap:10px; max-height:58vh; overflow:auto}
+  .aline{font-size:14px; color:#334155}
+  .aline small{color:#6b7280}
+
+  /* Chart */
+  .chartbox{background:#fff; border:1px solid #e7ecf4; border-radius:14px; padding:10px; box-shadow:0 6px 14px rgba(15,23,42,.06)}
+  .legend{display:flex; gap:8px; flex-wrap:wrap; font-size:12px; color:#334155}
+  .legend .dot{width:10px; height:10px; border-radius:999px; display:inline-block}
 </style>
 </head>
 <body>
@@ -76,7 +95,7 @@
 <header>
   <div>
     <h1>Frontier Action Plan — Sequencing</h1>
-    <div class="sub">Drag the top initiatives into the <strong>0–3, 3–6, 6–12 month</strong> lanes. The facilitator sees all teams in real time. A <strong>20-minute timer</strong> runs the activity; boards lock at time-up.</div>
+    <div class="sub">Teams drag the <strong>top initiatives</strong> into <strong>0–3</strong> / <strong>3–6</strong> / <strong>6–12 months</strong>. Facilitator sees live updates, <strong>alignment</strong> across teams, and a <strong>balance chart</strong>. Activity locks after <strong>20 minutes</strong>.</div>
   </div>
   <nav class="nav" id="nav"></nav>
 </header>
@@ -86,16 +105,15 @@
   <div id="screen-team" class="panel" style="display:none">
     <header>
       <strong>Team Board</strong>
-      <div class="row">
-        <div class="status" id="lockStateTeam">OPEN</div>
-        <span class="hint">This tab is for teams. Pick your team name, then drag initiatives into lanes.</span>
-      </div>
+      <div class="row"><div class="status" id="lockStateTeam">OPEN</div><span class="hint">Select your team and sequence the initiatives.</span></div>
     </header>
     <main>
       <div class="row">
         <div>
-          <label for="teamName">Team name *</label>
-          <input id="teamName" placeholder="Team Nova"/>
+          <label for="teamSelect">Team *</label>
+          <select id="teamSelect">
+            <!-- populated in JS -->
+          </select>
         </div>
         <div>
           <label for="teamColor">Color</label>
@@ -156,33 +174,61 @@
       </div>
     </header>
     <main>
-      <div class="gridboard">
-        <div class="hdr">
-          <div></div>
-          <div class="col-h">0–3 months</div>
-          <div class="col-h">3–6 months</div>
-          <div class="col-h">6–12 months</div>
+      <div class="gridwrap">
+        <div class="gridboard">
+          <div class="hdr">
+            <div></div>
+            <div class="col-h">0–3 months</div>
+            <div class="col-h">3–6 months</div>
+            <div class="col-h">6–12 months</div>
+          </div>
+          <div id="grid" class="table"></div>
         </div>
-        <div id="grid" class="table"></div>
+
+        <aside class="sidepanel">
+          <h4>Balance (All Teams)</h4>
+          <div class="chartbox">
+            <canvas id="donut" width="300" height="220" aria-label="Portfolio balance"></canvas>
+            <div class="legend" style="margin-top:6px">
+              <span><span class="dot" style="background:#3b82f6"></span> 0–3</span>
+              <span><span class="dot" style="background:#10b981"></span> 3–6</span>
+              <span><span class="dot" style="background:#f59e0b"></span> 6–12</span>
+            </div>
+          </div>
+
+          <h4 style="margin-top:14px">Alignment Summary</h4>
+          <div id="alignList" class="alist">
+            <div class="hint">As teams place the same initiative, we detect consensus or divergence.</div>
+          </div>
+        </aside>
       </div>
-      <div class="hint" style="margin-top:10px">Tip: Keep this on the big screen. Teams work on their boards; you’ll see updates live.</div>
+      <div class="hint" style="margin-top:10px">Cards show alignment badges: <span class="f-ok flag">Aligned</span> <span class="f-off flag">Off</span> <span class="f-div flag">Divergent</span></div>
     </main>
   </div>
 </section>
 
 <script>
+  /* ---------- Demo teams for dropdown ---------- */
+  const DEMO_TEAMS = [
+    { name:'Team Nova', color:'#60a5fa' },
+    { name:'Team Atlas', color:'#34d399' },
+    { name:'Team Quasar', color:'#f59e0b' },
+    { name:'Team Meridian', color:'#a78bfa' },
+    { name:'Team Horizon', color:'#fb7185' },
+    { name:'Team Vertex', color:'#22d3ee' },
+  ];
+
   /* ---------- Real-time channel ---------- */
-  const chan = new BroadcastChannel('frontier-fap');
+  const chan = new BroadcastChannel('frontier-fap-2');
   function publish(type, payload){ chan.postMessage({type, payload}); }
 
   /* ---------- State ---------- */
   let locked = false;
-  let team = { name: localStorage.getItem('fap.team') || '', color: localStorage.getItem('fap.color') || '#60a5fa' };
+  let team = { name: localStorage.getItem('fap2.team') || '', color: localStorage.getItem('fap2.color') || '#60a5fa' };
   let backlog = []; // {id,title,pillar,kpi,target}
   let placed = { '0-3':[], '3-6':[], '6-12':[] }; // team local placements
-
-  // facilitator state: map teamName -> {color, lanes:{...}}
-  let facState = {}; // { [teamName]: { color, lanes: {'0-3':[], '3-6':[], '6-12':[]} } }
+  // facilitator: { [teamName]: { color, lanes: { '0-3':[], '3-6':[], '6-12':[] } } }
+  let facState = {};
 
   /* ---------- UI helpers ---------- */
   const q = sel => document.querySelector(sel);
@@ -214,8 +260,9 @@
   }
 
   /* ---------- Seed top 10 initiatives ---------- */
+  function mkTop(title,pillar,kpi,target){ return { id:uid(), title, pillar, kpi, target }; }
   function seedTopData(){
-    const items = [
+    backlog = [
       mkTop('Employee Copilot pilot (HR & Sales)','employee','Hrs saved / FTE','2 hrs/wk'),
       mkTop('AI meeting recaps + next-step assistant','employee','Adoption','>70%'),
       mkTop('AI Sales Companion (next-best-offer)','customer','Win rate','+10%'),
@@ -227,28 +274,39 @@
       mkTop('Data monetization pilot','innovation','Data ARR','$600k'),
       mkTop('Customer personalization engine','customer','AOV','+7%'),
     ];
-    backlog = items;
     renderTeam();
   }
-  function mkTop(title,pillar,kpi,target){ return { id:uid(), title, pillar, kpi, target }; }
 
   /* ---------- TEAM SCREEN ---------- */
   function renderTeam(){
-    // header status
     q('#lockStateTeam').textContent = locked ? 'LOCKED' : 'OPEN';
     q('#lockStateTeam').className = 'status ' + (locked?'s-locked':'s-open');
 
-    // team fields
-    q('#teamName').value = team.name || '';
-    q('#teamColor').value = team.color || '#60a5fa';
+    // populate dropdown once
+    const sel = q('#teamSelect');
+    if(!sel.dataset.ready){
+      sel.innerHTML = `<option value="">Select a team…</option>` + DEMO_TEAMS.map(t=>`<option value="${t.name}" data-color="${t.color}">${t.name}</option>`).join('');
+      sel.dataset.ready = '1';
+      // restore selection
+      if(team.name){
+        sel.value = team.name;
+        const opt = sel.querySelector(`option[value="${CSS.escape(team.name)}"]`);
+        if(opt){ q('#teamColor').value = opt.dataset.color || team.color; }
+      }
+      sel.addEventListener('change', ()=>{
+        const opt = sel.selectedOptions[0];
+        if(!opt || !opt.value) return;
+        q('#teamColor').value = opt.dataset.color || '#60a5fa';
+      });
+    }
 
-    // enable/disable on lock
-    qa('#screen-team input, #screen-team button').forEach(el=>{
+    // enable/disable inputs on lock
+    qa('#screen-team input, #screen-team select, #screen-team button').forEach(el=>{
       if(el.id==='seedTop' || el.id==='saveTeam') return;
       el.disabled = locked;
     });
 
-    // backlog cards (draggable)
+    // backlog render
     const bl = q('#backlog'); bl.innerHTML='';
     if(backlog.length===0) {
       bl.innerHTML = `<div class="empty">No items yet — click “Seed examples” to load the top 10.</div>`;
@@ -269,7 +327,7 @@
       }
     });
 
-    // dnd handlers
+    // DnD
     qa('.lane').forEach(l=>{
       l.addEventListener('dragover', e=>{ if(locked) return; e.preventDefault(); l.classList.add('drop'); });
       l.addEventListener('dragleave', ()=> l.classList.remove('drop'));
@@ -310,12 +368,10 @@
   }
 
   function moveItemToLane(id, horizon){
-    // from backlog?
-    const idx = backlog.findIndex(x=>x.id===id);
     let item;
+    const idx = backlog.findIndex(x=>x.id===id);
     if(idx>-1){ item = backlog.splice(idx,1)[0]; }
     else {
-      // from other lane
       for(const h of ['0-3','3-6','6-12']){
         const j = placed[h].findIndex(x=>x.id===id);
         if(j>-1){ item = placed[h].splice(j,1)[0]; break; }
@@ -324,36 +380,60 @@
     if(!item) return;
     placed[horizon].push(item);
     renderTeam();
-    // notify facilitator
+
     if(team.name){
       publish('place', { team: team.name, color: team.color, horizon, item });
-      // keep a local projection of facilitator state too
       upsertFac(team.name, team.color, horizon, item);
     }
   }
 
   q('#seedTop').addEventListener('click', seedTopData);
   q('#saveTeam').addEventListener('click', ()=>{
-    const name = q('#teamName').value.trim();
+    const sel = q('#teamSelect');
+    const opt = sel.selectedOptions[0];
+    if(!opt || !opt.value){ alert('Select a team'); return; }
     const color = q('#teamColor').value;
-    if(!name){ alert('Enter a team name'); return; }
-    team = { name, color };
-    localStorage.setItem('fap.team', name);
-    localStorage.setItem('fap.color', color);
-    // announce presence + push current placements (if any)
-    publish('hello', { team:name, color });
-    // also push existing placed items (on refresh)
-    ['0-3','3-6','6-12'].forEach(h=> placed[h].forEach(item => publish('place', {team:name, color, horizon:h, item})));
+    team = { name: opt.value, color };
+    localStorage.setItem('fap2.team', team.name);
+    localStorage.setItem('fap2.color', color);
+    publish('hello', { team:team.name, color:team.color });
+    // push current placements (on refresh)
+    ['0-3','3-6','6-12'].forEach(h=> placed[h].forEach(item => publish('place', {team:team.name, color:team.color, horizon:h, item})));
   });
 
-  /* ---------- FACILITATOR SCREEN ---------- */
+  /* ---------- FACILITATOR: state & rendering ---------- */
   function upsertFac(teamName, color, horizon, item){
     if(!facState[teamName]) facState[teamName] = { color, lanes: {'0-3':[], '3-6':[], '6-12':[]} };
-    // remove if already placed elsewhere
+    // remove previous placements of this id
     ['0-3','3-6','6-12'].forEach(h=>{
-      facState[teamName].lanes[h] = facState[teamName].lanes[h].filter(x=>x.id!==item.id);
+      facState[teamName].lanes[h] = facState[teamName].lanes[h].filter(x=>x.id!==item.id && x.title!==item.title);
     });
     facState[teamName].lanes[horizon].push(item);
+  }
+
+  function computeAlignment(){
+    // title-normalized -> horizon counts
+    const norm = s => s.toLowerCase().replace(/\s+/g,' ').trim();
+    const dist = {}; // { titleKey: {title, counts:{'0-3':n,'3-6':n,'6-12':n}, total, topH, topCount, status } }
+    Object.values(facState).forEach(t=>{
+      ['0-3','3-6','6-12'].forEach(h=>{
+        (t.lanes[h]||[]).forEach(it=>{
+          const k = norm(it.title);
+          if(!dist[k]) dist[k] = { title: it.title, counts:{'0-3':0,'3-6':0,'6-12':0}, total:0, topH:null, topCount:0, status:'div' };
+          dist[k].counts[h]++; dist[k].total++;
+        });
+      });
+    });
+    Object.values(dist).forEach(d=>{
+      let topH = '0-3', topCount = d.counts['0-3'];
+      ['3-6','6-12'].forEach(h=>{ if(d.counts[h]>topCount){ topH=h; topCount=d.counts[h]; }});
+      d.topH = topH; d.topCount = topCount;
+      // status: if total<2 => not enough; if clear majority (topCount>=2 and topCount > total/2) => aligned; if tie across horizons => divergent
+      if(d.total<2){ d.status='weak'; }
+      else if( (topCount > d.total/2) ){ d.status='ok'; }
+      else { d.status='div'; }
+    });
+    return dist;
   }
 
   function renderFac(){
@@ -362,39 +442,110 @@
     st.className = 'status ' + (locked ? 's-locked' : 's-open');
 
     const grid = q('#grid'); grid.innerHTML='';
-    const teams = Object.keys(facState).sort((a,b)=> a.localeCompare(b));
-    if(!teams.length){
-      // show empty rows for a few example teams
-      ['Team Nova','Team Atlas','Team Quasar'].forEach(name=>{
-        if(!facState[name]) facState[name]={color:'#60a5fa',lanes:{'0-3':[],'3-6':[],'6-12':[]}};
-      });
-    }
     const names = Object.keys(facState);
-    names.forEach(name=>{
+    if(!names.length){
+      // seed blank rows for demo
+      DEMO_TEAMS.forEach(t=>{ if(!facState[t.name]) facState[t.name]={color:t.color,lanes:{'0-3':[],'3-6':[],'6-12':[]}}; });
+    }
+
+    const align = computeAlignment();
+
+    Object.entries(facState).sort((a,b)=> a[0].localeCompare(b[0])).forEach(([name, val])=>{
       const lab = document.createElement('div');
       lab.className = 'rowlab';
       lab.innerHTML = `<strong>${esc(name)}</strong>`;
       grid.appendChild(lab);
+
       ['0-3','3-6','6-12'].forEach(h=>{
         const cell = document.createElement('div'); cell.className='cell';
-        const items = (facState[name].lanes[h]||[]);
+        const items = (val.lanes[h]||[]);
         if(!items.length){
           cell.innerHTML = `<div class="muted">—</div>`;
         }else{
           items.forEach(it=>{
+            const k = it.title.toLowerCase().replace(/\s+/g,' ').trim();
+            const a = align[k] || {status:'weak', topH:h, topCount:1, total:1};
+            const cls = a.status==='ok' ? 'align-ok' : a.status==='div' ? 'align-div' : (a.topH!==h ? 'align-off' : ''); // off if minority horizon
+            const flag = a.status==='ok' && a.topH===h ? `<span class="flag f-ok">Aligned (${a.topCount}/${a.total})</span>`
+                      : (a.status==='div' ? `<span class="flag f-div">Divergent</span>`
+                      : (a.topH!==h && a.total>1 ? `<span class="flag f-off">Off (top: ${a.topH})</span>` : ''));
             const d = document.createElement('div');
-            d.className = 'icard';
-            d.innerHTML = `<div><strong>${esc(it.title)}</strong></div>
-                           <div class="muted">KPI <strong>${esc(it.kpi)}</strong> → <strong>${esc(it.target)}</strong></div>`;
+            d.className = 'card-mini '+cls;
+            d.innerHTML = `${flag}<div><strong>${esc(it.title)}</strong></div>
+                           <div class="muted">KPI <strong>${esc(it.kpi||'')}</strong> → <strong>${esc(it.target||'')}</strong></div>`;
             cell.appendChild(d);
           });
         }
         grid.appendChild(cell);
       });
     });
+
+    // update side Alignment Summary
+    renderAlignmentList(align);
+    // update donut chart (balance across horizons)
+    renderDonut();
   }
 
-  // Export (facilitator)
+  function renderAlignmentList(align){
+    const list = q('#alignList'); list.innerHTML='';
+    const entries = Object.values(align);
+    if(!entries.length){ list.innerHTML = `<div class="hint">No data yet.</div>`; return; }
+    // sort: aligned first (by topCount desc), then divergent, then weak
+    entries.sort((a,b)=>{
+      const rank = v => v.status==='ok' ? 0 : v.status==='div' ? 1 : 2;
+      return (rank(a)-rank(b)) || (b.topCount-a.topCount);
+    });
+    entries.forEach(d=>{
+      const row = document.createElement('div');
+      const badge = d.status==='ok' ? '<span class="flag f-ok">Aligned</span>' : d.status==='div' ? '<span class="flag f-div">Divergent</span>' : '<span class="flag f-off">Weak</span>';
+      row.className = 'aline';
+      row.innerHTML = `<div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+        <div><strong>${esc(d.title)}</strong><br/><small>0–3:${d.counts['0-3']} • 3–6:${d.counts['3-6']} • 6–12:${d.counts['6-12']}</small></div>
+        ${badge}
+      </div>`;
+      list.appendChild(row);
+    });
+  }
+
+  /* ---------- Donut chart (pure Canvas) ---------- */
+  function balanceCounts(){
+    const c = {'0-3':0,'3-6':0,'6-12':0};
+    Object.values(facState).forEach(t=>{
+      ['0-3','3-6','6-12'].forEach(h=>{
+        c[h] += (t.lanes[h]||[]).length;
+      });
+    });
+    return c;
+  }
+  function renderDonut(){
+    const canvas = q('#donut'); if(!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const W = canvas.width, H = canvas.height;
+    ctx.clearRect(0,0,W,H);
+    const r = 90, cx = W/2, cy = H/2 - 5, inner = 52;
+    const colors = {'0-3':'#3b82f6','3-6':'#10b981','6-12':'#f59e0b'};
+    const counts = balanceCounts();
+    const total = Math.max(1, counts['0-3']+counts['3-6']+counts['6-12']);
+    // arcs
+    let start = -Math.PI/2;
+    ['0-3','3-6','6-12'].forEach(h=>{
+      const frac = counts[h]/total;
+      const end = start + frac*2*Math.PI;
+      ctx.beginPath(); ctx.moveTo(cx,cy); ctx.arc(cx,cy,r,start,end); ctx.closePath();
+      ctx.fillStyle = colors[h]; ctx.globalAlpha = 0.85; ctx.fill();
+      start = end;
+    });
+    // donut hole
+    ctx.globalAlpha = 1; ctx.fillStyle = '#ffffff'; ctx.beginPath(); ctx.arc(cx,cy,inner,0,2*Math.PI); ctx.fill();
+    // center label
+    ctx.fillStyle = '#475569'; ctx.font = '12px system-ui, -apple-system, Segoe UI';
+    ctx.textAlign = 'center';
+    ctx.fillText('Portfolio balance', cx, cy-2);
+    ctx.font = 'bold 14px system-ui, -apple-system, Segoe UI';
+    ctx.fillText(`${total} initiatives`, cx, cy+16);
+  }
+
+  /* ---------- Export (facilitator) ---------- */
   q('#exportJSON').addEventListener('click', ()=>{
     const payload = {
       generatedAt: new Date().toISOString(),
@@ -449,16 +600,18 @@
   /* ---------- Init ---------- */
   function init(){
     renderNav(); show(0); // default Team
+    // populate dropdown now
+    // (restored selection handled in renderTeam)
     // seed top initiatives so teams can start
     seedTopData();
-    // announce team if already saved
+    // if team already saved, announce
     if(team.name){ publish('hello', team); }
     // init facilitator timer display
     q('#timer').textContent = fmt(remaining);
   }
   init();
 
-  // utility
+  // util
   function cap(s){ return s ? s.charAt(0).toUpperCase()+s.slice(1) : s; }
 </script>
 </body>
