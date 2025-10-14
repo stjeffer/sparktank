@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Team Sign-Up</title>
+<style>
+  :root{
+    --bg:#f7fafc;               /* light */
+    --card:#ffffff;
+    --ink:#1f2937;              /* slate-800 */
+    --muted:#556581;            /* slate-ish */
+    --primary:#3b82f6;          /* blue-500 */
+    --primary-600:#2563eb;
+    --accent:#10b981;           /* emerald-500 */
+    --warn:#f59e0b;             /* amber-500 */
+    --danger:#ef4444;           /* red-500 */
+    --border:#e5e7eb;           /* gray-200 */
+    --shadow:0 10px 24px rgba(31,41,55,.12);
+    --radius:16px;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; color:var(--ink); background:
+      radial-gradient(1100px 480px at 80% -10%, #e8f1ff 0%, #f5fbff 40%, var(--bg) 70%);
+    font:16px/1.45 system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+  }
+  header{
+    padding:20px 20px 6px; display:flex; gap:16px; align-items:flex-start; justify-content:space-between; flex-wrap:wrap
+  }
+  h1{margin:.2rem 0 .3rem; font-size:28px}
+  .sub{color:var(--muted); max-width:880px}
+  .wrap{padding:10px 18px 22px; display:grid; grid-template-columns: 420px 1fr; gap:16px}
+  @media (max-width:1100px){ .wrap{grid-template-columns:1fr} }
+
+  .panel{
+    background:var(--card); border:1px solid var(--border); border-radius:var(--radius); box-shadow:var(--shadow)
+  }
+  .panel header{padding:12px 14px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between}
+  .panel main{padding:14px}
+
+  label{display:block; font-size:13px; color:#42506b; margin:8px 0 6px}
+  input[type=text], input[type=number], input[type=color], textarea, select{
+    width:100%; padding:10px 12px; border-radius:12px; border:1px solid #d8dee8; background:#fff; color:var(--ink);
+    transition:border-color .15s ease, box-shadow .15s ease
+  }
+  input:focus, textarea:focus, select:focus{
+    outline:none; border-color:#c4d5ff; box-shadow:0 0 0 3px rgba(59,130,246,.15)
+  }
+
+  .grid{display:grid; gap:12px}
+  .cols-2{grid-template-columns:1fr 1fr}
+  .cols-3{grid-template-columns:repeat(3,1fr)}
+
+  .row{display:flex; gap:10px; align-items:center; flex-wrap:wrap}
+  .btn{
+    background:#eff6ff; color:#0f3a8a; border:1px solid #cfe0ff; padding:10px 14px; border-radius:12px; cursor:pointer
+  }
+  .btn:hover{background:#e6f0ff}
+  .btn-primary{background:linear-gradient(180deg,#60a5fa,#3b82f6); color:#fff; border:1px solid #3b82f6}
+  .btn-primary:hover{filter:brightness(1.02)}
+  .btn-ghost{background:#fff; border:1px solid #d8dee8; color:#334155}
+  .btn-danger{background:#fee2e2; color:#991b1b; border:1px solid #fecaca}
+  .btn-small{padding:6px 10px; border-radius:10px; font-size:14px}
+
+  /* Team list */
+  .cards{display:grid; gap:12px}
+  .card{
+    background:#fff; border:1px solid #e7ecf4; border-radius:14px; padding:12px 12px 10px; position:relative; box-shadow:0 6px 14px rgba(15,23,42,.06);
+    display:grid; grid-template-columns: 34px 1fr auto; gap:12px; align-items:center
+  }
+  .swatch{width:34px; height:34px; border-radius:10px; border:1px solid #d8dee8; display:grid; place-items:center; font-size:18px}
+  .meta{color:var(--muted); font-size:13px}
+  .actions{display:flex; gap:8px}
+  .handle{cursor:grab; user-select:none; color:#64748b}
+  .pill{display:inline-block; padding:2px 8px; border-radius:999px; border:1px solid #d7e0ee; font-size:12px; background:#f8fafc; color:#334155}
+  .hint{font-size:12px; color:#6b7280}
+
+  .inline-err{font-size:12px; color:#b91c1c; margin-top:4px}
+  .empty{padding:16px; border:2px dashed #d8dee8; border-radius:12px; color:#6b7280; background:#fbfdff}
+
+  .toolbar{display:flex; gap:8px; flex-wrap:wrap}
+  .right{display:flex; gap:10px; align-items:center}
+  .tag{display:inline-flex; align-items:center; gap:6px; background:#f1f5f9; color:#334155; border:1px solid #e2e8f0; border-radius:999px; padding:4px 10px; font-size:12px}
+  .badge{background:#ecfeff; color:#155e75; border:1px solid #bae6fd; padding:2px 8px; border-radius:999px; font-size:12px}
+  .strong{font-weight:700}
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>Team Sign-Up</h1>
+    <div class="sub">Register tables and team members before we kick off. Choose an emoji and color to make each team easy to spot on facilitator screens.</div>
+  </div>
+  <div class="right">
+    <span class="tag">Room code: <span id="roomCode" class="strong">FRONT-27A</span></span>
+    <button class="btn btn-ghost btn-small" id="copyCode">Copy code</button>
+    <button class="btn btn-ghost btn-small" id="exportJSON">Export JSON</button>
+    <button class="btn btn-ghost btn-small" id="exportCSV">Export CSV</button>
+    <label class="btn btn-ghost btn-small" style="cursor:pointer">Import
+      <input id="importFile" type="file" accept=".json,.csv" style="display:none">
+    </label>
+  </div>
+</header>
+
+<section class="wrap">
+  <!-- Create / Edit -->
+  <div class="panel" aria-labelledby="formTitle">
+    <header><strong id="formTitle">Add a team</strong><span class="hint">All fields except Members are required</span></header>
+    <main>
+      <div class="grid">
+        <div class="grid cols-2">
+          <div>
+            <label for="tName">Team name *</label>
+            <input id="tName" type="text" placeholder="e.g., Team Nova" required />
+            <div class="inline-err" id="errName" hidden>Please enter a team name.</div>
+          </div>
+          <div>
+            <label for="tTable">Table # *</label>
+            <input id="tTable" type="number" min="1" step="1" placeholder="e.g., 12" required />
+            <div class="inline-err" id="errTable" hidden>Please enter a table number.</div>
+          </div>
+        </div>
+
+        <div class="grid cols-3">
+          <div>
+            <label for="tEmoji">Emoji *</label>
+            <input id="tEmoji" type="text" placeholder="🛰️" maxlength="2" aria-label="Team emoji" />
+            <div class="inline-err" id="errEmoji" hidden>Please add one emoji (e.g., 🚀).</div>
+          </div>
+          <div>
+            <label for="tColor">Team color *</label>
+            <input id="tColor" type="color" value="#60a5fa" />
+          </div>
+          <div>
+            <label for="tMembers">Members (comma-separated)</label>
+            <input id="tMembers" type="text" placeholder="A. Singh, J. Patel, L. Brown" />
+          </div>
+        </div>
+
+        <div class="toolbar">
+          <button class="btn btn-primary" id="addBtn">+ Add team</button>
+          <button class="btn btn-ghost" id="clearBtn">Clear</button>
+          <span class="hint">Tip: Use emoji + color for quick table spotting.</span>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Roster -->
+  <div class="panel">
+    <header>
+      <strong>Registered teams</strong>
+      <div class="hint" id="countHint">0 teams</div>
+    </header>
+    <main>
+      <div id="list" class="cards">
+        <div class="empty">No teams yet — add a team on the left.</div>
+      </div>
+      <div class="hint" style="margin-top:10px">Drag the ⋮⋮ handle to reorder teams. Changes are saved automatically.</div>
+    </main>
+  </div>
+</section>
+
+<script>
+  // ---------- State ----------
+  let teams = load() || seed();
+
+  // ---------- Elements ----------
+  const tName = q('#tName'), tTable = q('#tTable'), tEmoji = q('#tEmoji'), tColor = q('#tColor'), tMembers = q('#tMembers');
+  const addBtn = q('#addBtn'), clearBtn = q('#clearBtn'), list = q('#list'), countHint = q('#countHint');
+
+  // ---------- Utilities ----------
+  function q(sel){ return document.querySelector(sel); }
+  function qa(sel){ return Array.from(document.querySelectorAll(sel)); }
+  function uid(){ return Math.random().toString(36).slice(2,10); }
+  function save(){ localStorage.setItem('teams.v1', JSON.stringify(teams)); }
+  function load(){ try{ return JSON.parse(localStorage.getItem('teams.v1')||'null'); }catch(e){ return null; } }
+  function csvEscape(s){ const v = String(s??'').replace(/"/g,'""'); return /[",\n]/.test(v) ? `"${v}"` : v; }
+  function humanCount(n){ return `${n} team${n===1?'':'s'}`; }
+
+  // ---------- Seed demo data ----------
+  function seed(){
+    return [
+      mk('Team Nova', 11, '🛰️', '#60a5fa', ['A. Singh','J. Patel','L. Brown']),
+      mk('Team Atlas', 7, '🧭', '#34d399', ['E. Turner','S. O’Neil','G. Costa']),
+      mk('Team Quasar', 4, '✨', '#f59e0b', ['H. Lee','M. Gomez','R. Shah','P. Ward']),
+      mk('Team Meridian', 15, '📡', '#a78bfa', ['D. Price','C. Young','I. Novak']),
+      mk('Team Horizon', 2, '🌅', '#fb7185', ['K. Ahmed','B. Rossi','Y. Kim']),
+      mk('Team Vertex', 19, '🔺', '#22d3ee', ['T. Chen','S. Alvarez','N. Carter']),
+    ];
+  }
+  function mk(name, tableNo, emoji, color, members){
+    return { id:uid(), name, tableNo, emoji, color, members };
+  }
+
+  // ---------- Render ----------
+  function render(){
+    list.innerHTML = '';
+    if(!teams.length){
+      list.innerHTML = '<div class="empty">No teams yet — add a team on the left.</div>';
+    }
+    teams.forEach(t => list.appendChild(card(t)));
+    countHint.textContent = humanCount(teams.length);
+    save();
+  }
+
+  function card(t){
+    const c = document.createElement('div');
+    c.className = 'card';
+    c.draggable = true;
+    c.dataset.id = t.id;
+
+    const sw = document.createElement('div');
+    sw.className = 'swatch';
+    sw.style.background = t.color || '#e2e8f0';
+    sw.style.borderColor = '#cbd5e1';
+    sw.textContent = t.emoji || '🎯';
+
+    const mid = document.createElement('div');
+    mid.innerHTML = `
+      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+        <strong>${esc(t.name)}</strong>
+        <span class="pill">Table ${esc(t.tableNo)}</span>
+      </div>
+      <div class="meta">${esc((t.members||[]).join(', ') || '—')}</div>
+    `;
+
+    const right = document.createElement('div');
+    right.className = 'actions';
+    right.innerHTML = `
+      <button class="btn btn-ghost btn-small handle" title="Drag to reorder">⋮⋮</button>
+      <button class="btn btn-ghost btn-small" title="Edit">Edit</button>
+      <button class="btn btn-danger btn-small" title="Delete">Delete</button>
+    `;
+
+    // Edit & Delete handlers
+    const [handleBtn, editBtn, delBtn] = right.querySelectorAll('button');
+    editBtn.addEventListener('click', ()=> loadIntoForm(t));
+    delBtn.addEventListener('click', ()=>{
+      if(confirm(`Delete ${t.name}?`)){
+        teams = teams.filter(x=>x.id!==t.id);
+        render();
+      }
+    });
+
+    // Drag & drop reorder
+    c.addEventListener('dragstart', e=>{
+      e.dataTransfer.setData('text/plain', t.id);
+      setTimeout(()=> c.style.opacity = .5, 0);
+    });
+    c.addEventListener('dragend', ()=> c.style.opacity = 1);
+    c.addEventListener('dragover', e=> e.preventDefault());
+    c.addEventListener('drop', e=>{
+      e.preventDefault();
+      const draggedId = e.dataTransfer.getData('text/plain');
+      if(!draggedId || draggedId === t.id) return;
+      const from = teams.findIndex(x=>x.id===draggedId);
+      const to = teams.findIndex(x=>x.id===t.id);
+      const [moved] = teams.splice(from,1);
+      teams.splice(to,0,moved);
+      render();
+    });
+
+    c.appendChild(sw); c.appendChild(mid); c.appendChild(right);
+    return c;
+  }
+
+  function esc(s){ return String(s||'').replace(/[&<>"']/g,m=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m])); }
+
+  // ---------- Form logic ----------
+  let editId = null;
+
+  function validate(){
+    let ok = true;
+    const name = tName.value.trim();
+    const table = tTable.value.trim();
+    const emoji = tEmoji.value.trim();
+
+    q('#errName').hidden = !!name;
+    q('#errTable').hidden = !!table;
+    q('#errEmoji').hidden = !!emoji;
+
+    if(!name) ok=false;
+    if(!table) ok=false;
+    if(!emoji) ok=false;
+
+    // allow a single emoji char (presentation)
+    if(emoji && [...emoji].length>2){ q('#errEmoji').hidden=false; ok=false; }
+
+    return ok;
+  }
+
+  addBtn.addEventListener('click', ()=>{
+    if(!validate()) return;
+
+    const payload = {
+      name: tName.value.trim(),
+      tableNo: Number(tTable.value.trim()),
+      emoji: tEmoji.value.trim(),
+      color: tColor.value,
+      members: tMembers.value ? tMembers.value.split(',').map(s=>s.trim()).filter(Boolean) : []
+    };
+
+    if(editId){
+      const idx = teams.findIndex(x=>x.id===editId);
+      if(idx>-1) teams[idx] = { ...teams[idx], ...payload };
+      editId = null;
+      q('#formTitle').textContent = 'Add a team';
+      addBtn.textContent = '+ Add team';
+    }else{
+      teams.push({ id:uid(), ...payload });
+    }
+    clearForm();
+    render();
+  });
+
+  function loadIntoForm(t){
+    editId = t.id;
+    q('#formTitle').textContent = 'Edit team';
+    tName.value = t.name;
+    tTable.value = t.tableNo;
+    tEmoji.value = t.emoji || '';
+    tColor.value = t.color || '#60a5fa';
+    tMembers.value = (t.members||[]).join(', ');
+    addBtn.textContent = 'Save changes';
+    window.scrollTo({top:0, behavior:'smooth'});
+  }
+
+  function clearForm(){
+    ['#tName','#tTable','#tEmoji','#tMembers'].forEach(sel=> q(sel).value = '');
+    tColor.value = '#60a5fa';
+    qa('.inline-err').forEach(e=> e.hidden = true);
+  }
+  clearBtn.addEventListener('click', ()=>{ editId=null; q('#formTitle').textContent='Add a team'; addBtn.textContent='+ Add team'; clearForm(); });
+
+  // ---------- Exports ----------
+  q('#exportJSON').addEventListener('click', ()=>{
+    download('teams.json', JSON.stringify(teams, null, 2), 'application/json');
+  });
+  q('#exportCSV').addEventListener('click', ()=>{
+    const head = ['id','name','tableNo','emoji','color','members'];
+    const rows = teams.map(t => [
+      t.id, t.name, t.tableNo, t.emoji||'', t.color||'',
+      (t.members||[]).join('|')
+    ].map(csvEscape).join(','));
+    download('teams.csv', head.join(',')+'\n'+rows.join('\n'), 'text/csv');
+  });
+  function download(filename, text, type){
+    const blob = new Blob([text], {type:type||'text/plain;charset=utf-8'});
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = filename; a.click(); URL.revokeObjectURL(a.href);
+  }
+
+  // ---------- Import ----------
+  q('#importFile').addEventListener('change', (e)=>{
+    const f = e.target.files[0]; if(!f) return;
+    const fr = new FileReader();
+    fr.onload = ()=>{
+      try{
+        if(f.name.endsWith('.json')){
+          const data = JSON.parse(fr.result);
+          if(Array.isArray(data)) { teams = data; render(); }
+          else if(Array.isArray(data.teams)) { teams = data.teams; render(); }
+          else alert('JSON does not contain an array of teams.');
+        } else {
+          // CSV (very minimal)
+          const lines = fr.result.split(/\r?\n/).filter(Boolean);
+          const body = lines.slice(1);
+          teams = body.map(line=>{
+            const [id,name,tableNo,emoji,color,members] = line.split(',').map(s=>s.replace(/^"|"$/g,'').replace(/""/g,'"'));
+            return { id: id||uid(), name, tableNo: Number(tableNo||0), emoji, color, members: members? members.split('|') : [] };
+          });
+          render();
+        }
+      }catch(err){ alert('Import failed. Please check the file format.'); }
+    };
+    fr.readAsText(f);
+  });
+
+  // ---------- Room code ----------
+  q('#copyCode').addEventListener('click', async ()=>{
+    try{
+      await navigator.clipboard.writeText(q('#roomCode').textContent.trim());
+      q('#copyCode').textContent = 'Copied!';
+      setTimeout(()=> q('#copyCode').textContent = 'Copy code', 1200);
+    }catch(e){ /* noop */ }
+  });
+
+  // ---------- Init ----------
+  render();
+</script>
+</body>
+</html>
