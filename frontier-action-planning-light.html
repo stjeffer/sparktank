@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Frontier Workshop — Actions for Top Differences</title>
+<style>
+  :root{
+    --bg:#f7fafb; --ink:#0f172a; --muted:#64748b; --border:#e5e7eb;
+    --card:#ffffff; --brand:#2563eb; --ok:#10b981; --warn:#f59e0b; --bad:#ef4444;
+    --r:14px; --shadow:0 8px 20px rgba(15,23,42,.08);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial;}
+  header{background:#1e293b;color:#fff;padding:16px 20px}
+  h1{margin:0;font-size:22px}
+  .sub{color:#cbd5e1}
+  main{padding:18px}
+  .tabs{display:flex;gap:8px;justify-content:flex-end;margin-bottom:10px}
+  .tab{border:1px solid var(--border);background:#fff;color:#0f172a;border-radius:10px;padding:8px 12px;cursor:pointer}
+  .tab.active{border-color:var(--brand);box-shadow:0 0 0 2px rgba(37,99,235,.18) inset}
+  .layout{display:grid;grid-template-columns:320px 1fr;gap:12px}
+  .panel{background:var(--card);border:1px solid var(--border);border-radius:var(--r);box-shadow:var(--shadow)}
+  .panel header{display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border);padding:10px 12px;background:#fff;color:var(--ink)}
+  .panel main{padding:12px}
+  .small{font-size:12px;color:var(--muted)}
+  .btn{background:#eff6ff;border:1px solid #c7d7fe;color:#0b3ea3;border-radius:10px;padding:8px 12px;cursor:pointer}
+  .btn:hover{background:#e7f0ff}
+  .btn-ghost{background:#fff;border:1px solid var(--border);color:#1f2937}
+  .btn-warn{background:#fff7ed;border:1px solid #fed7aa;color:#9a3412}
+  .badge{display:inline-flex;gap:6px;align-items:center;border:1px solid var(--border);border-radius:999px;padding:2px 8px;background:#fff;font-size:12px}
+  .list{display:grid;gap:10px}
+  .diff{border:1px solid var(--border);border-radius:12px;padding:10px;background:#fff;box-shadow:0 6px 14px rgba(15,23,42,.06);cursor:pointer}
+  .diff.active{border-color:var(--brand);box-shadow:0 0 0 2px rgba(37,99,235,.18) inset}
+  .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .grid{display:grid;gap:10px}
+  .cols-2{grid-template-columns:1fr 1fr}
+  .cols-3{grid-template-columns:repeat(3,1fr)}
+  input,select,textarea{width:100%;padding:9px 10px;border:1px solid var(--border);border-radius:10px;background:#fff}
+  input:focus,select:focus,textarea:focus{outline:none;border-color:#c4d5ff;box-shadow:0 0 0 3px rgba(37,99,235,.15)}
+  textarea{min-height:100px}
+  .chips{display:flex;gap:8px;flex-wrap:wrap}
+  .chip{border:1px solid var(--border);border-radius:999px;padding:6px 10px;background:#fff;cursor:pointer}
+  .chip.active{border-color:var(--brand);box-shadow:0 0 0 2px rgba(37,99,235,.18) inset}
+  .timer{font-variant-numeric:tabular-nums;font-weight:700}
+  .table{width:100%;border-collapse:separate;border-spacing:0 8px}
+  .table th{font-size:12px;color:var(--muted);text-align:left;padding:0 6px}
+  .rowcard{background:#fff;border:1px solid var(--border);border-radius:12px;padding:8px;display:grid;grid-template-columns:1.4fr 110px 1.2fr 1.2fr 1fr 80px;gap:8px;align-items:center}
+  .notice{background:#f1f5f9;border:1px dashed #cbd5e1;border-radius:12px;padding:10px}
+</style>
+</head>
+<body>
+<header>
+  <h1>Actions for Top Differences</h1>
+  <div class="sub">Teams are assigned a difference and detail the actions required to make it real. Facilitator sees counts, controls the timer, and can lock when ready.</div>
+</header>
+
+<main>
+  <div class="tabs">
+    <button id="teamTab" class="tab active">Participant</button>
+    <button id="facTab" class="tab">Facilitator</button>
+  </div>
+
+  <!-- PARTICIPANT VIEW -->
+  <section id="teamView" class="layout">
+    <!-- Left: assignment & helper -->
+    <aside class="panel">
+      <header><strong>Your Assignment</strong></header>
+      <main>
+        <div class="grid cols-2">
+          <div>
+            <label>Team</label>
+            <select id="pTeam"></select>
+          </div>
+          <div>
+            <label>Assigned difference</label>
+            <select id="pDiff"></select>
+          </div>
+        </div>
+        <div class="notice" style="margin-top:10px">
+          <div class="small"><strong>Tip:</strong> Add concise, outcome-oriented actions. Use the complexity to signal delivery effort. “Teams involved” helps us plan cross-functional work.</div>
+        </div>
+        <div class="row" style="margin-top:10px">
+          <span class="badge">Status: <span id="lockInfo">OPEN</span></span>
+          <span class="badge">Time left: <span id="timerMirror" class="timer">20:00</span></span>
+        </div>
+      </main>
+    </aside>
+
+    <!-- Right: add actions -->
+    <section class="panel">
+      <header><strong>Add Action</strong></header>
+      <main>
+        <div class="grid cols-3">
+          <div>
+            <label>Action title</label>
+            <input id="aTitle" placeholder="e.g., Stand up Copilot policy pack"/>
+          </div>
+          <div>
+            <label>Complexity</label>
+            <select id="aComplex">
+              <option>Low</option><option selected>Medium</option><option>High</option>
+            </select>
+          </div>
+          <div>
+            <label>Owner</label>
+            <input id="aOwner" placeholder="e.g., HR / IT"/>
+          </div>
+        </div>
+
+        <div style="margin-top:8px">
+          <label>Teams / Departments involved</label>
+          <div id="teamChips" class="chips"></div>
+        </div>
+
+        <div class="grid cols-2" style="margin-top:8px">
+          <div>
+            <label>What the work looks like</label>
+            <textarea id="aWork" placeholder="Steps, artifacts, environments, approvals…"></textarea>
+          </div>
+          <div>
+            <label>What the outcome will be</label>
+            <textarea id="aOutcome" placeholder="Business result + metric (e.g., 20% cycle-time reduction)"></textarea>
+          </div>
+        </div>
+
+        <div class="row" style="margin-top:10px">
+          <button class="btn" id="addAction">+ Add action</button>
+          <button class="btn-ghost" id="clearForm">Clear</button>
+        </div>
+
+        <div style="margin-top:14px">
+          <strong>Actions you’ve submitted</strong>
+          <table class="table" style="margin-top:6px">
+            <thead>
+              <tr><th>Title</th><th>Complexity</th><th>Teams</th><th>Outcome</th><th>Owner</th><th></th></tr>
+            </thead>
+            <tbody id="myActions"></tbody>
+          </table>
+        </div>
+      </main>
+    </section>
+  </section>
+
+  <!-- FACILITATOR VIEW -->
+  <section id="facView" class="layout" style="display:none">
+    <aside class="panel">
+      <header>
+        <strong>Top Differences</strong>
+        <div class="row">
+          <button class="btn-ghost small" id="seed">Seed demo</button>
+          <label class="btn-ghost small" style="cursor:pointer">Import
+            <input id="imp" type="file" accept=".json" style="display:none"/>
+          </label>
+          <button class="btn-ghost small" id="exp">Export</button>
+        </div>
+      </header>
+      <main>
+        <div id="diffList" class="list"></div>
+      </main>
+    </aside>
+
+    <section class="panel">
+      <header>
+        <div class="row">
+          <strong id="facCurrent">Select a difference</strong>
+          <span class="badge">Actions: <strong id="actCount">0</strong></span>
+        </div>
+        <div class="row">
+          <span class="timer" id="timer">20:00</span>
+          <button class="btn-ghost" id="tStart">Start</button>
+          <button class="btn-ghost" id="tPause">Pause</button>
+          <button class="btn-ghost" id="tReset">Reset</button>
+          <button class="btn-warn" id="toggleLock">Lock / Unlock</button>
+          <span class="badge">Status: <span id="lockState">OPEN</span></span>
+        </div>
+      </header>
+      <main>
+        <div id="actionsTable"></div>
+      </main>
+    </section>
+  </section>
+</main>
+
+<script>
+/* ----------------- Shared state & sync ----------------- */
+const CH = new BroadcastChannel('frontier-actions-v1');
+const PUB = (type,payload)=>CH.postMessage({type,payload});
+
+const TEAMS = ['Team Nova','Team Atlas','Team Quasar','Team Meridian','Team Horizon','Team Vertex'];
+const DEPTS = ['Sales','Service','Operations','IT','Data','HR','Finance','Legal','Marketing','Risk'];
+
+let locked=false;
+let timer=null, remaining=20*60;
+
+let differences=[]; // [{id,title,team?}]
+let actions=[];     // [{id,diffId,team, title, complexity, owner, depts[], work, outcome}]
+
+/* ----------------- DOM helpers ----------------- */
+const q=s=>document.querySelector(s), qa=s=>Array.from(document.querySelectorAll(s));
+const uid=()=>Math.random().toString(36).slice(2,10);
+const esc=s=>String(s||'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+
+/* ----------------- Seed demo data ----------------- */
+function seedDemo(){
+  differences = [
+    {id:uid(), title:'Every employee has a Copilot for routine tasks'},
+    {id:uid(), title:'Service becomes proactive — resolve issues before customers call'},
+    {id:uid(), title:'End-to-end order fulfilment automated via agent orchestration'},
+    {id:uid(), title:'Decision cycle time < 48 hours across ops'},
+    {id:uid(), title:'Knowledge hub answers in <30 seconds'},
+    {id:uid(), title:'AI Sales Companion lifts win-rate by 7–10%'},
+    {id:uid(), title:'Workflow observability & traceability built-in'},
+    {id:uid(), title:'Monthly AI Product Studio (12 prototypes/year)'}
+  ];
+  actions = [
+    exAction(differences[0].id,'Team Nova','Stand up Copilot policy pack','Medium','HR/IT',['HR','IT','Legal'],'Draft policy, usage guardrails, rollout plan','75% weekly active users'),
+    exAction(differences[1].id,'Team Atlas','Signals→triggers playbooks','High','CX',['Service','Data','IT'],'Telemetry → detection → scripted resolution','-25% inbound volume'),
+    exAction(differences[2].id,'Team Quasar','Event bus & orchestrator','High','IT',['IT','Operations','Data'],'Implement event broker; define exception paths','35% cycle time reduction')
+  ];
+}
+function exAction(diffId,team,title,complexity,owner,depts,work,outcome){
+  return {id:uid(), diffId, team, title, complexity, owner, depts, work, outcome};
+}
+
+/* ----------------- View toggles ----------------- */
+q('#teamTab').onclick=()=>{ q('#teamTab').classList.add('active'); q('#facTab').classList.remove('active'); q('#teamView').style.display='grid'; q('#facView').style.display='none'; renderParticipant(); }
+q('#facTab').onclick=()=>{ q('#facTab').classList.add('active'); q('#teamTab').classList.remove('active'); q('#teamView').style.display='none'; q('#facView').style.display='grid'; renderFacilitator(); }
+
+/* ----------------- Participant view ----------------- */
+function renderParticipant(){
+  // team dropdown
+  const tsel=q('#pTeam'); if(!tsel.dataset.ready){
+    tsel.innerHTML = `<option value="">Select team…</option>` + TEAMS.map(t=>`<option>${t}</option>`).join('');
+    tsel.dataset.ready='1'; tsel.value=TEAMS[0];
+  }
+  // diff dropdown
+  const dsel=q('#pDiff'); dsel.innerHTML = differences.map((d,i)=>`<option value="${d.id}" ${i===0?'selected':''}>${esc(d.title)}</option>`).join('');
+  // dept chips
+  const chips=q('#teamChips'); if(!chips.dataset.ready){
+    chips.innerHTML = DEPTS.map(d=>`<span class="chip" data-dept="${d}">${d}</span>`).join('');
+    chips.dataset.ready='1';
+    chips.querySelectorAll('.chip').forEach(ch=> ch.onclick=()=> ch.classList.toggle('active'));
+  }
+  // mirror timer/lock
+  q('#lockInfo').textContent = locked?'LOCKED':'OPEN';
+  q('#timerMirror').textContent = fmt(remaining);
+
+  // my actions table
+  drawMyActions();
+}
+function drawMyActions(){
+  const team = q('#pTeam').value;
+  const mine = actions.filter(a=>a.team===team);
+  const body = q('#myActions'); body.innerHTML='';
+  mine.forEach(a=>{
+    const tr=document.createElement('tr');
+    tr.innerHTML = `<td class="rowcard">
+      <div>${esc(a.title)}</div>
+      <div>${esc(a.complexity)}</div>
+      <div>${esc(a.depts.join(', '))}</div>
+      <div>${esc(a.outcome||'—')}</div>
+      <div>${esc(a.owner||'—')}</div>
+      <div><button class="btn-ghost" data-del="${a.id}">Remove</button></div>
+    </td>`;
+    body.appendChild(tr);
+  });
+  body.querySelectorAll('[data-del]').forEach(b=> b.onclick=()=>{ actions = actions.filter(x=>x.id!==b.dataset.del); PUB('actions:update',actions); drawMyActions(); renderFacilitator(); });
+}
+
+// Add action
+q('#addAction').onclick=()=>{
+  if(locked){ alert('Facilitator has locked editing.'); return; }
+  const team=q('#pTeam').value || '';
+  const diffId=q('#pDiff').value;
+  const title=q('#aTitle').value.trim();
+  const complexity=q('#aComplex').value;
+  const owner=q('#aOwner').value.trim();
+  const depts = qa('#teamChips .chip.active').map(ch=>ch.dataset.dept);
+  const work=q('#aWork').value.trim();
+  const outcome=q('#aOutcome').value.trim();
+  if(!team){ alert('Please select a team.'); return; }
+  if(!diffId || title.length<5){ alert('Please choose the assigned difference and provide an action title.'); return; }
+  const a={id:uid(), diffId, team, title, complexity, owner, depts, work, outcome};
+  actions.push(a); PUB('actions:add',a);
+  ['aTitle','aOwner','aWork','aOutcome'].forEach(id=> q('#'+id).value='');
+  qa('#teamChips .chip').forEach(ch=> ch.classList.remove('active'));
+  drawMyActions(); renderFacilitator();
+};
+q('#clearForm').onclick=()=>{ ['aTitle','aOwner','aWork','aOutcome'].forEach(id=> q('#'+id).value=''); qa('#teamChips .chip').forEach(ch=> ch.classList.remove('active')); };
+
+/* ----------------- Facilitator view ----------------- */
+function renderFacilitator(){
+  // left list of differences + counts
+  const list=q('#diffList'); list.innerHTML='';
+  differences.forEach(d=>{
+    const count = actions.filter(a=>a.diffId===d.id).length;
+    const teamsIn = [...new Set(actions.filter(a=>a.diffId===d.id).map(a=>a.team))];
+    const card=document.createElement('div'); card.className='diff'+(d.id===selectedId?' active':'');
+    card.innerHTML = `<div class="row" style="justify-content:space-between">
+        <strong>${esc(d.title)}</strong>
+        <span class="badge">Actions: ${count}</span>
+      </div>
+      <div class="small" style="margin-top:4px">Teams: ${teamsIn.length?teamsIn.join(', '):'—'}</div>`;
+    card.onclick=()=>{ selectedId=d.id; drawActionsDetail(); };
+    list.appendChild(card);
+  });
+  // select first if none
+  if(!selectedId && differences[0]) { selectedId=differences[0].id; }
+  q('#facCurrent').textContent = selectedId ? 'Discussing: “'+ differences.find(d=>d.id===selectedId).title +'”' : 'Select a difference';
+  q('#lockState').textContent = locked?'LOCKED':'OPEN';
+  q('#actCount').textContent = actions.filter(a=>a.diffId===selectedId).length;
+  q('#timer').textContent = fmt(remaining);
+  drawActionsDetail();
+}
+
+function drawActionsDetail(){
+  const box=q('#actionsTable'); box.innerHTML='';
+  const diff = differences.find(d=>d.id===selectedId);
+  if(!diff){ box.innerHTML='<div class="small">Select a difference to view actions.</div>'; return; }
+  const rows = actions.filter(a=>a.diffId===diff.id);
+  if(!rows.length){ box.innerHTML='<div class="notice">No actions yet. Ask teams to add concrete steps, owners and outcomes.</div>'; return; }
+
+  const table=document.createElement('table'); table.className='table';
+  table.innerHTML = `<thead>
+      <tr><th>Action</th><th>Complexity</th><th>Teams</th><th>Outcome</th><th>Owner</th><th>Team</th></tr>
+    </thead>
+    <tbody>${rows.map(r=>`
+      <tr><td class="rowcard">
+        <div>${esc(r.title)}</div>
+        <div>${esc(r.complexity)}</div>
+        <div>${esc(r.depts.join(', '))||'—'}</div>
+        <div>${esc(r.outcome||'—')}</div>
+        <div>${esc(r.owner||'—')}</div>
+        <div>${esc(r.team)}</div>
+      </td></tr>`).join('')}
+    </tbody>`;
+  box.appendChild(table);
+
+  q('#actCount').textContent = rows.length;
+}
+
+/* ----------------- Timer & lock ----------------- */
+function fmt(sec){ const m=Math.floor(sec/60), s=sec%60; return `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`; }
+function tick(){ remaining--; if(remaining<=0){ remaining=0; clearInterval(timer); timer=null; alert('Time!'); } q('#timer').textContent=fmt(remaining); q('#timerMirror').textContent=fmt(remaining); }
+q('#tStart').onclick=()=>{ if(timer) return; timer=setInterval(tick,1000); PUB('timer:start',remaining); };
+q('#tPause').onclick=()=>{ if(!timer) return; clearInterval(timer); timer=null; PUB('timer:pause',remaining); };
+q('#tReset').onclick=()=>{ clearInterval(timer); timer=null; remaining=20*60; q('#timer').textContent=fmt(remaining); q('#timerMirror').textContent=fmt(remaining); PUB('timer:reset',remaining); };
+q('#toggleLock').onclick=()=>{ locked=!locked; q('#lockState').textContent=locked?'LOCKED':'OPEN'; q('#lockInfo').textContent=q('#lockState').textContent; PUB('lock',locked); };
+
+/* ----------------- Import/Export/Seed ----------------- */
+q('#seed').onclick=()=>{ seedDemo(); selectedId=differences[0].id; PUB('seed',{differences,actions}); renderFacilitator(); renderParticipant(); };
+q('#exp').onclick=()=>{ const out=JSON.stringify({differences,actions},null,2); const a=document.createElement('a'); a.href=URL.createObjectURL(new Blob([out],{type:'application/json'})); a.download='differences_actions.json'; a.click(); URL.revokeObjectURL(a.href); };
+q('#imp').onchange=(e)=>{
+  const f=e.target.files[0]; if(!f) return;
+  const fr=new FileReader();
+  fr.onload=()=>{ try{
+    const obj=JSON.parse(fr.result); differences=obj.differences||[]; actions=obj.actions||[]; PUB('replace',{differences,actions}); renderFacilitator(); renderParticipant();
+  }catch(err){ alert('Invalid JSON'); } };
+  fr.readAsText(f);
+};
+
+/* ----------------- Channel listeners (sync) ----------------- */
+let selectedId=null;
+CH.onmessage=(e)=>{
+  const {type,payload}=e.data||{};
+  if(type==='seed' || type==='replace'){ differences=payload.differences; actions=payload.actions; renderFacilitator(); renderParticipant(); return; }
+  if(type==='actions:add'){ actions.push(payload); renderFacilitator(); return; }
+  if(type==='actions:update'){ actions=payload; renderFacilitator(); return; }
+  if(type==='lock'){ locked=payload; q('#lockState').textContent=locked?'LOCKED':'OPEN'; q('#lockInfo').textContent=q('#lockState').textContent; return; }
+  if(type==='timer:start'){ if(timer) return; timer=setInterval(tick,1000); return; }
+  if(type==='timer:pause'){ clearInterval(timer); timer=null; return; }
+  if(type==='timer:reset'){ clearInterval(timer); timer=null; remaining=payload; q('#timer').textContent=fmt(remaining); q('#timerMirror').textContent=fmt(remaining); return; }
+};
+
+/* ----------------- Init ----------------- */
+function init(){
+  seedDemo();
+  renderParticipant();
+  renderFacilitator();
+  // populate participant team dropdown default
+  q('#pTeam').value = TEAMS[0];
+}
+init();
+</script>
+</body>
+</html>
