@@ -5,7 +5,5 @@
   "scripts": {
     "build": "mkdir -p dist && cp *.html dist/ && cp staticwebapp.config.json dist/",
     "start": "echo 'Static files served directly'"
-  },
-  "devDependencies": {},
-  "dependencies": {}
+  }
 }
