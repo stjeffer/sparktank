@@ -1,3 +1,27 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* ---- Form controls inherit app typography (Safari/Chrome/Firefox) ---- */
+:root{
+  --ui-font: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI",
+             Roboto, "Helvetica Neue", Arial, "Inter", "Noto Sans",
+             "Apple Color Emoji","Segoe UI Emoji";
+}
+/* Make the whole app use the UI font */
+html, body { font-family: var(--ui-font); }
+
+/* Ensure inputs/selects use the same font & size as surrounding text */
+select, input, textarea, button {
+  font-family: inherit !important;
+  font-size: 13px !important;
+  line-height: 1.25 !important;
+  color: inherit;
+}
+
+/* Optional: normalize the native dropdown chrome a bit */
+select {
+  -webkit-appearance: none;
+  appearance: none;
+  background-color: #f9fafb; /* matches our light pills */
+}
