@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Sparkles, Download, Upload, Info, Heart, Share2, Twitter, Linkedin, Instagram, Link as LinkIcon } from "lucide-react";
+import { ShieldCheck, ClipboardList, CheckCircle2, AlertTriangle, Brain, GitBranch } from "lucide-react";
 
 /* ===== Multi-select helpers ===== */
 
@@ -367,6 +368,9 @@ const INITIAL = {
   showOwnershipColors: false,
   agentFlyoutFor: null,
   valueFlyout: false,
+    showProcessEvals: false,     // solution-level evals flyout
+  showAgentEvalsFor: null,     // nodeId for agent-level evals flyout
+
 
   autoMVA: true,
   manualMVAId: null,
@@ -778,7 +782,7 @@ function importJSON(e) {
       <input
         aria-label="Process name"
         title="Process name"
-        className="w-[560px] max-w-full rounded-full px-5 py-2.5 text-[15px]
+        className="w-[360px] max-w-full rounded-full px-5 py-2.5 text-[15px]
                    bg-white ring-1 ring-gray-200 shadow-[0_1px_0_rgba(0,0,0,.04)]
                    focus:outline-none focus:ring-2 focus:ring-blue-500
                    placeholder:text-gray-400 text-gray-800"
@@ -820,6 +824,13 @@ function importJSON(e) {
           <path d="M4 19h16M5 16l4-5 4 3 6-8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
         </svg>
       </IconButton>
+      <IconButton
+  title="Process Evals (RAI)"
+  onClick={() => setState(s => ({ ...s, showProcessEvals: true }))}
+  active={state.showProcessEvals}
+>
+  <ShieldCheck size={18} />
+</IconButton>
 
       <div className="w-px h-6 bg-gray-200 mx-1" />
 
@@ -1009,6 +1020,8 @@ function importJSON(e) {
       <ValuePlanFlyout state={state} setState={setState} />
       <ProcessInfoFlyout state={state} setState={setState} />
       <ShareModal open={showShare} onClose={() => setShowShare(false)} state={state} />
+      <ProcessEvalsFlyout state={state} setState={setState} />
+<AgentEvalsFlyout state={state} setState={setState} />  
     </div>
   );
 }
@@ -1828,6 +1841,191 @@ function duplicateRow(id) {
 </div>
 
 
+      </div>
+    </div>
+  );
+}
+
+/* =========================
+   Process (Solution-level) Evals Flyout
+   ========================= */
+function ProcessEvalsFlyout({ state, setState }) {
+  if (!state.showProcessEvals) return null;
+
+  // Mock model for solution-level evals
+  const evalSections = [
+    {
+      key: "rai",
+      icon: <ShieldCheck className="text-emerald-600" size={16} />,
+      title: "Responsible AI",
+      items: [
+        { q: "Does the solution clearly disclose AI usage to end users?", expected: "Visible disclosure on first interaction." },
+        { q: "Is personal data minimized and retained per policy?", expected: "PII masked, 30–90 day retention." },
+        { q: "Is there an escalation path for harm or safety issues?", expected: "Named owner & documented SOP." },
+      ]
+    },
+    {
+      key: "governance",
+      icon: <GitBranch className="text-indigo-600" size={16} />,
+      title: "Governance & Controls",
+      items: [
+        { q: "Are agent actions logged with traceability across systems?", expected: "Correlated IDs in logs." },
+        { q: "Is there approver-in-the-loop for high-risk actions?", expected: "Yes, with override audit." },
+      ]
+    },
+    {
+      key: "outcomes",
+      icon: <CheckCircle2 className="text-gray-700" size={16} />,
+      title: "Business Outcomes",
+      items: [
+        { q: "Is the intended value metric defined per stakeholder?", expected: "Time-to-productive ≤ 2 days." },
+        { q: "Is there a KPI dashboard wired to real data?", expected: "Automated weekly reporting." },
+      ]
+    },
+  ];
+
+  return (
+    <div className="fixed inset-0 z-40">
+      <div className="absolute left-0 right-0 top-12 bottom-0 bg-black/20" onClick={() => setState(s => ({ ...s, showProcessEvals: false }))} />
+      <div className="absolute top-12 right-0 bottom-0 w-[48rem] bg-white border-l shadow-xl p-5 overflow-auto" onClick={(e)=>e.stopPropagation()}>
+        <div className="flex items-center justify-between mb-4">
+          <div className="text-lg font-semibold">Solution Evals (Process & RAI)</div>
+          <button className="px-3 py-1 border rounded-xl" onClick={() => setState(s => ({ ...s, showProcessEvals: false }))}>Close</button>
+        </div>
+
+        <div className="grid grid-cols-1 gap-4">
+          {evalSections.map(sec => (
+            <div key={sec.key} className="border rounded-xl p-3">
+              <div className="flex items-center gap-2 mb-2">
+                {sec.icon}
+                <div className="font-medium">{sec.title}</div>
+              </div>
+              <div className="space-y-2">
+                {sec.items.map((it, idx) => (
+                  <div key={idx} className="flex items-start gap-3 text-sm">
+                    <div className="w-5 h-5 rounded-full bg-gray-100 border flex items-center justify-center text-[10px] text-gray-600">{idx+1}</div>
+                    <div className="flex-1">
+                      <div className="text-gray-800">{it.q}</div>
+                      <div className="text-[12px] text-gray-500 mt-0.5">Expected: {it.expected}</div>
+                    </div>
+                    <div className="shrink-0 flex items-center gap-2">
+                      <label className="text-[11px] text-gray-500">Status</label>
+                      <select className="border rounded-lg px-2 py-1 text-[12px] bg-white">
+                        <option>Not started</option>
+                        <option>In review</option>
+                        <option>Pass</option>
+                        <option>Fail</option>
+                      </select>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Subtle helper */}
+        <div className="mt-4 text-[12px] text-gray-500">
+          Tip: These are **mock** evals. In the paid tier, they’ll be AI-generated from your process metadata and agents.
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* =========================
+   Agent-level Evals Flyout
+   ========================= */
+function AgentEvalsFlyout({ state, setState }) {
+  const nodeId = state.showAgentEvalsFor;
+  if (!nodeId) return null;
+  const agentNode = state.nodes.find(n => n.id === nodeId && n.type === "agent");
+  if (!agentNode) return null;
+
+  // Mock categories tailored to agent behavior
+  const sections = [
+    {
+      key: "functional",
+      title: "Functional",
+      icon: <CheckCircle2 size={16} className="text-gray-700" />,
+      items: [
+        { q: "Given start date + role, does the agent create all onboarding tasks?", expected: "Creates HR, Payroll, IT tasks." },
+        { q: "If data incomplete, does it ask for clarification?", expected: "Prompts for missing fields politely." },
+      ],
+    },
+    {
+      key: "conversation",
+      title: "Conversation Quality",
+      icon: <Brain size={16} className="text-purple-600" />,
+      items: [
+        { q: "Does it acknowledge user context (e.g., ‘first week’)?", expected: "Yes, empathetic tone and concise." },
+        { q: "Does it cite sources for policy answers?", expected: "Returns links to HR policy pages." },
+      ],
+    },
+    {
+      key: "rai",
+      title: "RAI Checks",
+      icon: <ShieldCheck size={16} className="text-emerald-600" />,
+      items: [
+        { q: "Does the agent disclose that it’s automated?", expected: "Self-identifies in the first response." },
+        { q: "Are risky actions gated by approvals?", expected: "Approver-in-loop for license purchases." },
+      ],
+    },
+  ];
+
+  const close = () => setState(s => ({ ...s, showAgentEvalsFor: null }));
+
+  return (
+    <div className="fixed inset-0 z-40">
+      <div className="absolute left-0 right-0 top-12 bottom-0 bg-black/20" onClick={close} />
+      <div className="absolute top-12 right-0 bottom-0 w-[44rem] bg-white border-l shadow-xl p-5 overflow-auto" onClick={(e)=>e.stopPropagation()}>
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <div className="text-lg font-semibold">Agent Evals</div>
+            <div className="text-sm text-gray-500 -mt-0.5">Agent: <b>{agentNode.name}</b> • Role: <b>{agentNode.ai}</b></div>
+          </div>
+          <button className="px-3 py-1 border rounded-xl" onClick={close}>Close</button>
+        </div>
+
+        {sections.map(sec => (
+          <div key={sec.key} className="border rounded-xl p-3 mb-3">
+            <div className="flex items-center gap-2 mb-2">
+              {sec.icon}
+              <div className="font-medium">{sec.title}</div>
+            </div>
+            <div className="space-y-2">
+              {sec.items.map((it, i) => (
+                <div key={i} className="flex items-start gap-3 text-sm">
+                  <div className="w-5 h-5 rounded-full bg-gray-100 border flex items-center justify-center text-[10px] text-gray-600">{i+1}</div>
+                  <div className="flex-1">
+                    <div className="text-gray-800">{it.q}</div>
+                    <div className="text-[12px] text-gray-500 mt-0.5">Expected: {it.expected}</div>
+                  </div>
+                  <div className="shrink-0 flex items-center gap-2">
+                    <label className="text-[11px] text-gray-500">Status</label>
+                    <select className="border rounded-lg px-2 py-1 text-[12px] bg-white">
+                      <option>Not started</option>
+                      <option>In review</option>
+                      <option>Pass</option>
+                      <option>Fail</option>
+                    </select>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+
+        {/* “Generate” CTA placeholder */}
+        <div className="mt-3 flex items-center justify-end">
+          <button
+            className="px-3 py-1.5 rounded-full border bg-white hover:bg-gray-50 text-sm flex items-center gap-2"
+            title="(Mock) Generate evals from this agent’s description"
+            onClick={() => alert("Mock: would call AI to generate evals")}
+          >
+            <Sparkles size={14}/> Generate (AI)
+          </button>
+        </div>
       </div>
     </div>
   );
