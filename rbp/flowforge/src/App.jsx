@@ -1926,7 +1926,7 @@ function ProcessEvalsFlyout({ state, setState }) {
 
         {/* Subtle helper */}
         <div className="mt-4 text-[12px] text-gray-500">
-          Tip: These are **mock** evals. In the paid tier, they’ll be AI-generated from your process metadata and agents.
+          Tip: These are **mock** evals. In the live version, they’ll be AI-generated from your process metadata and agents.
         </div>
       </div>
     </div>
