@@ -5,5 +5,9 @@
   "scripts": {
     "build": "mkdir -p dist && cp *.html dist/ && cp staticwebapp.config.json dist/",
     "start": "echo 'Static files served directly'"
+  },
+  "dependencies": {
+    "@fluentui/react-components": "^9.72.4",
+    "@fluentui/react-icons": "^2.0.313"
   }
 }

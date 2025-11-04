@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Sparkles, Download, Upload, Info, Heart, Share2, Twitter, Linkedin, Instagram, Link as LinkIcon } from "lucide-react";
 import { ShieldCheck, ClipboardList, CheckCircle2, AlertTriangle, Brain, GitBranch } from "lucide-react";
+import IntakeScreen from "./IntakeScreen";
 
 /* ===== Multi-select helpers ===== */
 
@@ -368,10 +369,14 @@ const INITIAL = {
   showOwnershipColors: false,
   agentFlyoutFor: null,
   valueFlyout: false,
-    showProcessEvals: false,     // solution-level evals flyout
+  showProcessEvals: false,     // solution-level evals flyout
   showAgentEvalsFor: null,     // nodeId for agent-level evals flyout
-
-
+  readinessFlyout: false,
+  readiness: {
+    automationAppetite: 60, // comfort with automation (0–100)
+    aiTrust: 50,            // confidence in AI decisions (0–100)
+    changeVelocity: 40,     // rollout speed preference (0–100)
+  },
   autoMVA: true,
   manualMVAId: null,
 
@@ -677,6 +682,7 @@ export default function App() {
   const [selectedId, setSelectedId] = useState(null);
   const [selectedType, setSelectedType] = useState(null);
   const [sim, setSim] = useState(false);
+  const [appView, setAppView] = useState("intake"); // "intake" | "canvas"
   const [showShare, setShowShare] = useState(false);
   // Multi-select
 const [selectionIds, setSelectionIds] = useState([]); // array of node ids
@@ -862,9 +868,15 @@ function importJSON(e) {
 
   function exportJSON() {
     const data = JSON.stringify({
-      title: state.title, nodes: state.nodes, connections: state.connections,
-      valuePlan: state.valuePlan, autoMVA: state.autoMVA, manualMVAId: state.manualMVAId
-    }, null, 2);
+  title: state.title,
+  description: state.description,
+  readiness: state.readiness,
+  nodes: state.nodes,
+  connections: state.connections,
+  valuePlan: state.valuePlan,
+  autoMVA: state.autoMVA,
+  manualMVAId: state.manualMVAId,
+}, null, 2);
     const blob = new Blob([data], { type: "application/json" });
     const a = document.createElement("a"); a.href = URL.createObjectURL(blob);
     a.download = filenameFromTitle(state.title); a.click();
@@ -913,6 +925,20 @@ function importJSON(e) {
   }
 
   /* UI */
+  if (appView === "intake") {
+    return (
+      <IntakeScreen
+        onComplete={(processJson) => {
+          // merge generated AS-IS schema into Nagare state
+          setState((s) => ({
+            ...s,
+            ...processJson,
+          }));
+          setAppView("canvas");
+        }}
+      />
+    );
+  }
   return (
     <div className="w-full h-screen bg-gray-50 flex flex-col" onContextMenu={(e)=>{ if (draggingCanvas.current || spaceDown) e.preventDefault(); }}>
       {/* Top bar */}
@@ -984,6 +1010,25 @@ function importJSON(e) {
           <path d="M12 11v5m0-8h.01" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
         </svg>
       </IconButton>
+      <IconButton
+  title="Organizational and Process Readiness"
+  onClick={() => setState(s => ({ ...s, readinessFlyout: true }))}
+  active={state.readinessFlyout}
+>
+  <svg
+    width="18"
+    height="18"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <path d="M12 3v3M12 18v3M4.22 4.22l2.12 2.12M17.66 17.66l2.12 2.12M1 12h3M20 12h3M4.22 19.78l2.12-2.12M17.66 6.34l2.12-2.12" />
+    <circle cx="12" cy="12" r="5" />
+  </svg>
+</IconButton>
       <IconButton title="Value Plan" onClick={() => setState(s=>({...s, valueFlyout:true}))} active={state.valueFlyout}>
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
           <path d="M4 19h16M5 16l4-5 4 3 6-8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -1187,6 +1232,7 @@ function importJSON(e) {
       <ShareModal open={showShare} onClose={() => setShowShare(false)} state={state} />
       <ProcessEvalsFlyout state={state} setState={setState} />
 <AgentEvalsFlyout state={state} setState={setState} />  
+<ReadinessFlyout state={state} setState={setState} />
     </div>
   );
 }
@@ -2926,6 +2972,88 @@ function EvalSection({ label, rows, onAdd, onChange, onDelete, fieldsOrder }) {
             </div>
           </div>
         ))}
+      </div>
+    </div>
+  );
+}
+
+/* ---------- Readiness Flyout ---------- */
+function ReadinessFlyout({ state, setState }) {
+  if (!state.readinessFlyout) return null;
+  const close = () => setState(s => ({ ...s, readinessFlyout: false }));
+
+  const update = (key, value) =>
+    setState(s => ({
+      ...s,
+      readiness: { ...s.readiness, [key]: value },
+    }));
+
+  const sliders = [
+    {
+      key: "automationAppetite",
+      label: "Automation Appetite",
+      desc: "Comfort with hands-off automation and autonomous actions.",
+    },
+    {
+      key: "aiTrust",
+      label: "AI Trust & Risk Tolerance",
+      desc: "Confidence in AI decisions and tolerance for potential errors.",
+    },
+    {
+      key: "changeVelocity",
+      label: "Change Velocity",
+      desc: "How fast to roll out AI-powered changes across the org.",
+    },
+  ];
+
+  return (
+    <div className="fixed inset-0 z-40">
+      <div
+        className="absolute inset-0 bg-black/30"
+        onClick={close}
+      />
+      <div
+        className="absolute top-12 right-0 bottom-0 w-[32rem] bg-white border-l shadow-xl p-6 overflow-auto"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between mb-4">
+          <div className="text-lg font-semibold">Organizational Readiness</div>
+          <button
+            className="px-3 py-1 border rounded-xl hover:bg-gray-50"
+            onClick={close}
+          >
+            Close
+          </button>
+        </div>
+
+        <div className="space-y-6">
+          {sliders.map((s) => (
+            <div key={s.key}>
+              <div className="flex items-center justify-between mb-1">
+                <label className="font-medium text-gray-700 text-sm">{s.label}</label>
+                <span className="text-sm text-gray-500">{state.readiness[s.key]}</span>
+              </div>
+              <input
+                type="range"
+                min="0"
+                max="100"
+                value={state.readiness[s.key]}
+                onChange={(e) => update(s.key, Number(e.target.value))}
+                className="w-full accent-blue-600"
+              />
+              <div className="text-xs text-gray-500 mt-1">{s.desc}</div>
+            </div>
+          ))}
+        </div>
+
+        <div className="border-t mt-6 pt-4 text-sm text-gray-600">
+          <p className="mb-2 font-medium">How it's used</p>
+          <ul className="list-disc ml-5 space-y-1 text-gray-500 text-xs">
+            <li>Higher automation appetite → AI proposes more automation agents.</li>
+            <li>Lower AI trust → stricter governance and approvals.</li>
+            <li>Lower change velocity → value milestones shift later in the timeline.</li>
+          </ul>
+        </div>
       </div>
     </div>
   );
