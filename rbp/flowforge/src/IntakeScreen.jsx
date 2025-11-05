@@ -1,216 +1,819 @@
+// src/IntakeScreen.jsx
 import React, { useState } from "react";
 
 /**
- * Build the AS-IS process schema that Nagare’s canvas understands.
- * This takes the wizard answers and turns them into:
- *  - title, processDescription
- *  - nodes (one per task line)
- *  - simple left-to-right connections
- *  - narrative + systemContext + readiness sliders
+ * IntakeScreen
+ * Wizard to capture AS-IS process and hand off a canvas-ready JSON to Nagare.
+ *
+ * Props:
+ *  - onComplete(processJson): called when user finishes wizard
+ *  - onSkip(): go straight to canvas with existing state
  */
-function buildInitialSchema({
-  title,
-  shortDescription,
-  tasks,
-  roles,
-  tools,
-  decisions,
-  goals,
-  painPoints,
-  stakeholders,
-  aiIntent,
-  orgTrustInAI,
-  dataMaturity,
-  changeAppetite,
-}) {
-  // --- 1) Normalise free-text answers ---
-  const taskLines = (tasks || "")
-    .split(/\n+/)
-    .map((t) => t.trim())
-    .filter(Boolean);
+export default function IntakeScreen({ onComplete, onSkip }) {
+  const [step, setStep] = useState(1);
 
-  const roleList = (roles || "")
-    .split(/[,;\n]+/)
-    .map((r) => r.trim())
-    .filter(Boolean);
+  // STEP 1 – basic process info
+  const [processName, setProcessName] = useState("Customer refund handling");
+  const [processOwnerName, setProcessOwnerName] = useState("Customer Operations Lead");
+  const [processOwnerRole, setProcessOwnerRole] = useState("Head of Customer Experience");
+  const [processDescription, setProcessDescription] = useState(
+    "When a customer requests a refund, an agent reviews the case, checks eligibility in the billing system, " +
+      "seeks approvals for larger amounts, and then triggers the refund in finance tools."
+  );
+  const [narrativeCurrent, setNarrativeCurrent] = useState(
+    "Today, refunds are handled in email and the ticketing system. Agents manually jump between tools, " +
+      "copy information, and wait on Slack approvals for high-value refunds. This leads to delays and inconsistency."
+  );
+  const [objectives, setObjectives] = useState([
+    "Reduce refund turnaround time",
+    "Ensure policy-compliant decisions",
+  ]);
+  const [newObjective, setNewObjective] = useState("");
 
-  const stakeholderList = (stakeholders || "")
-    .split(/[,;\n]+/)
-    .map((s) => s.trim())
-    .filter(Boolean);
+  // STEP 2 – roles, tools, tasks
+  const [roles, setRoles] = useState([
+    "Customer Support Agent",
+    "Refund Approver",
+    "Finance Analyst",
+  ]);
+  const [newRole, setNewRole] = useState("");
 
-  const defaultOwner = roleList[0] || "Owner";
-  const defaultStakeholders =
-    stakeholderList.length > 0 ? stakeholderList : [defaultOwner];
+  const [tools, setTools] = useState(["Helpdesk (Zendesk)", "Billing system", "ERP"]);
+  const [newTool, setNewTool] = useState("");
 
-  // --- 2) Build nodes from task lines ---
-  const NODE_W = 320;
-  const startX = 60;
-  const startY = 220;
-  const gapX = NODE_W - 40; // horizontal spacing
+  const [tasks, setTasks] = useState([
+    {
+      id: "t1",
+      title: "Receive refund request",
+      description: "Customer submits a refund via email or ticketing system.",
+      roleIds: [0],
+      toolIds: [0],
+    },
+    {
+      id: "t2",
+      title: "Check eligibility",
+      description: "Agent reviews account and refund rules in billing system.",
+      roleIds: [0],
+      toolIds: [1],
+    },
+    {
+      id: "t3",
+      title: "Escalate for approval",
+      description: "For high-value refunds, agent requests approval from approver via Slack/email.",
+      roleIds: [0, 1],
+      toolIds: [],
+    },
+    {
+      id: "t4",
+      title: "Trigger refund in finance",
+      description: "Approved refunds are processed in ERP / finance systems.",
+      roleIds: [2],
+      toolIds: [2],
+    },
+  ]);
 
-  const nodes = taskLines.map((taskText, index) => {
-    const id = `n${index + 1}`;
-    const owner =
-      roleList.length > 0 ? roleList[index % roleList.length] : defaultOwner;
+  const [newTaskTitle, setNewTaskTitle] = useState("");
+  const [newTaskDesc, setNewTaskDesc] = useState("");
+  const [newTaskRoleIds, setNewTaskRoleIds] = useState([]); // indices into roles
+  const [newTaskToolIds, setNewTaskToolIds] = useState([]); // indices into tools
 
-    return {
-      id,
-      name: taskText.slice(0, 40) || `Step ${index + 1}`,
-      description: taskText,
-      x: startX + index * gapX,
-      y: startY,
-      owner,
-      type: "human", // AS-IS: human/manual workflow
-      ai: "none",
-      aiConfidence: 20,
-      complexity: 2,
-      valueFocus: "efficiency",
-      stakeholders: defaultStakeholders,
-      valueTags: [],
-      governanceOwner: owner,
-      governance: [],
-      lever: {
-        sees: "restricted",
-        acts: "human",
-        connect: "manual",
-        rules: "policy",
-        participates: "internal",
-      },
-      agent: null,
-      valueImpact: 0,
+  // STEP 3 – friction / challenges
+  const [frictions, setFrictions] = useState([
+    "Agents re-enter data across multiple systems",
+    "Approvals for large refunds are slow and informal",
+    "No single view of refund history per customer",
+  ]);
+  const [newFriction, setNewFriction] = useState("");
+
+  // STEP 4 – AI hopes & readiness
+  const [aiHopes, setAiHopes] = useState(
+    "I hope AI can triage refund requests, flag risky cases, and automate straightforward approvals while keeping humans in control for edge cases."
+  );
+
+  const [trustSlider, setTrustSlider] = useState(60);
+  const [dataSlider, setDataSlider] = useState(70);
+  const [appetiteSlider, setAppetiteSlider] = useState(55);
+
+  // --- helpers -----------------------------------------------------
+
+  function addObjective() {
+    const v = newObjective.trim();
+    if (!v) return;
+    setObjectives((curr) => [...curr, v]);
+    setNewObjective("");
+  }
+
+  function addRole() {
+    const v = newRole.trim();
+    if (!v) return;
+    setRoles((curr) => [...curr, v]);
+    setNewRole("");
+  }
+
+  function addTool() {
+    const v = newTool.trim();
+    if (!v) return;
+    setTools((curr) => [...curr, v]);
+    setNewTool("");
+  }
+
+  function toggleNewTaskRole(index) {
+    setNewTaskRoleIds((curr) =>
+      curr.includes(index) ? curr.filter((i) => i !== index) : [...curr, index]
+    );
+  }
+
+  function toggleNewTaskTool(index) {
+    setNewTaskToolIds((curr) =>
+      curr.includes(index) ? curr.filter((i) => i !== index) : [...curr, index]
+    );
+  }
+
+  function addTask(task) {
+    setTasks((curr) => [...curr, task]);
+  }
+
+  function addFriction() {
+    const v = newFriction.trim();
+    if (!v) return;
+    setFrictions((curr) => [...curr, v]);
+    setNewFriction("");
+  }
+
+  function handleNext() {
+    setStep((s) => Math.min(4, s + 1));
+  }
+
+  function handleBack() {
+    setStep((s) => Math.max(1, s - 1));
+  }
+
+  // --- mapping wizard -> canvas state ------------------------------
+
+  function buildProcessJson() {
+    const title = (processName || "").trim() || "Untitled process";
+
+    const description =
+      (narrativeCurrent || "").trim() ||
+      (processDescription || "").trim();
+
+    const ownerName = (processOwnerName || "").trim();
+    const ownerRole = (processOwnerRole || "").trim();
+
+    const objectivesClean = (objectives || [])
+      .map((o) => o.trim())
+      .filter(Boolean);
+
+    const readiness = {
+      trust: trustSlider ?? 50,
+      data: dataSlider ?? 50,
+      appetite: appetiteSlider ?? 50,
     };
-  });
 
-  // --- 3) Simple sequential connections: n1 → n2 → n3 ...
-  const connections = nodes.length
-    ? nodes.slice(0, -1).map((node, index) => ({
-        id: `c${index + 1}`,
-        from: node.id,
-        to: nodes[index + 1].id,
+    // Map wizard tasks -> canvas nodes
+    const nodes = (tasks || []).map((t, idx) => {
+      const roleNames = (t.roleIds || []).map((i) => roles[i]).filter(Boolean);
+      const toolNames = (t.toolIds || []).map((i) => tools[i]).filter(Boolean);
+
+      return {
+        id: t.id || `n${idx + 1}`,
+        name: t.title || `Step ${idx + 1}`,
+        description: t.description || "",
+        x: 80 + idx * 260,
+        y: 220,
+        owner: roleNames[0] || ownerName || "Owner",
+        type: "manual",
+        ai: "none",
+        aiConfidence: 0,
+        complexity: 2,
+        valueFocus: "efficiency",
+        stakeholders: roleNames,
+        valueTags: toolNames,
+        governanceOwner: ownerName || "Owner",
+        governance: [],
+        lever: {
+          sees: "restricted",
+          acts: "human",
+          connect: "manual",
+          rules: "policy",
+          participates: "internal",
+        },
+      };
+    });
+
+    // Linear connections between nodes
+    const connections = [];
+    for (let i = 0; i < nodes.length - 1; i++) {
+      const from = nodes[i].id;
+      const to = nodes[i + 1].id;
+      connections.push({
+        id: `c${i + 1}`,
+        from,
+        to,
         waitMinutes: 0,
         label: "",
-      }))
-    : [];
+      });
+    }
 
-  // --- 4) Readiness sliders (0–1) ---
-  const readiness = {
-    orgTrustInAI: (orgTrustInAI ?? 50) / 100,
-    dataMaturity: (dataMaturity ?? 50) / 100,
-    changeAppetite: (changeAppetite ?? 50) / 100,
-  };
+    return {
+      // Process info for ProcessInfoFlyout
+      title,
+      processDescription: description,
+      processOwnerName: ownerName,
+      processOwnerRole: ownerRole,
+      processObjectives: objectivesClean,
+      processFrictions: (frictions || []).map((f) => f.trim()).filter(Boolean),
+      aiHopes: aiHopes.trim(),
+      readiness,
 
-  // --- 5) Narrative & system context ---
-  const systemContext = {
-    tasks,
-    roles,
-    tools,
-    decisions,
-    goals,
-    principle:
-      "A system is a network of tasks, roles, tools, decisions and goals that together produce value.",
-  };
+      // Canvas structure
+      nodes,
+      connections,
 
-  const narrative = {
-    asIsSummary: shortDescription || "",
-    painPoints: painPoints || "",
-    stakeholdersSummary: stakeholders || "",
-    aiIntent: aiIntent || "explore",
-  };
+      // Canvas flags
+      mode: "build",
+      connectMode: false,
+      connectFrom: null,
+      showInspector: true,
+      valuePlan: [],
+      autoMVA: true,
+      manualMVAId: null,
+    };
+  }
 
-  // --- 6) Schema used by Nagare canvas ---
-  return {
-    title: title || "Untitled process",
-    processDescription: shortDescription || "",
+  function handleFinish() {
+    const processJson = buildProcessJson();
+    onComplete(processJson);
+  }
 
-    nodes,
-    connections,
-
-    valuePlan: [],
-    agentEvals: {},
-    processEvals: [],
-
-    narrative,
-    systemContext,
-    readiness,
-  };
-}
-
-/**
- * Fluent-style primary button
- */
-function PrimaryButton({ children, ...props }) {
-  return (
-    <button
-      {...props}
-      className={
-        "inline-flex items-center justify-center px-4 py-2 rounded-full " +
-        "text-sm font-semibold " +
-        "bg-[#0F6CBD] text-white " +
-        "shadow-sm hover:bg-[#115EA3] disabled:opacity-50 disabled:cursor-not-allowed " +
-        (props.className || "")
-      }
-    >
-      {children}
-    </button>
-  );
-}
-
-/**
- * Fluent-style subtle button
- */
-function SubtleButton({ children, ...props }) {
-  return (
-    <button
-      {...props}
-      className={
-        "inline-flex items-center justify-center px-3 py-1.5 rounded-full " +
-        "text-sm font-medium text-gray-700 " +
-        "hover:bg-gray-100 " +
-        (props.className || "")
-      }
-    >
-      {children}
-    </button>
-  );
-}
-
-/**
- * Fluent-style text field
- */
-function TextField({ label, helper, multiline, rows = 3, ...props }) {
-  const base =
-    "w-full rounded-lg border border-gray-200 bg-white " +
-    "px-3 py-2 text-sm text-gray-900 " +
-    "shadow-sm focus:outline-none focus:ring-2 focus:ring-[#0F6CBD] focus:border-transparent " +
-    "placeholder:text-gray-400";
+  // --- UI ----------------------------------------------------------
 
   return (
-    <div className="space-y-1.5">
-      {label && (
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-slate-100 flex flex-col">
+      {/* Top bar */}
+      <header className="flex items-center justify-between px-6 py-3 border-b bg-white/80 backdrop-blur">
         <div className="flex items-center gap-2">
-          <span className="text-xs font-medium text-gray-800">{label}</span>
+          <div className="h-7 w-7 rounded-full bg-sky-500 flex items-center justify-center text-white text-sm font-semibold">
+            N
+          </div>
+          <div className="flex flex-col">
+            <span className="text-xs font-semibold tracking-wide text-slate-900">
+              Nagare
+            </span>
+            <span className="text-[11px] text-slate-500">
+              Design your AI-powered system
+            </span>
+          </div>
         </div>
-      )}
-      {multiline ? (
-        <textarea className={base} rows={rows} {...props} />
-      ) : (
-        <input className={base} {...props} />
-      )}
-      {helper && <p className="text-[11px] text-gray-500">{helper}</p>}
+
+        <button
+          type="button"
+          onClick={onSkip}
+          className="text-[11px] px-3 py-1.5 rounded-full border border-slate-300 bg-white text-slate-700 hover:bg-slate-50"
+        >
+          Skip to canvas
+        </button>
+      </header>
+
+      {/* Content */}
+      <main className="flex-1 flex justify-center px-4 py-6">
+        <div className="w-full max-w-5xl bg-white rounded-2xl shadow-md border border-slate-200 flex flex-col overflow-hidden">
+          {/* Progress header */}
+          <div className="px-6 pt-4 pb-2 border-b border-slate-100 flex items-center justify-between">
+            <div>
+              <div className="text-xs font-semibold text-slate-900">
+                Step {step} of 4
+              </div>
+              <div className="text-[11px] text-slate-500">
+                Map today’s system so we can help you design a better one.
+              </div>
+            </div>
+            <div className="flex items-center gap-1 text-[11px] text-slate-500">
+              <span
+                className={
+                  step === 1 ? "font-semibold text-slate-900" : undefined
+                }
+              >
+                1. Process
+              </span>
+              <span>•</span>
+              <span
+                className={
+                  step === 2 ? "font-semibold text-slate-900" : undefined
+                }
+              >
+                2. System
+              </span>
+              <span>•</span>
+              <span
+                className={
+                  step === 3 ? "font-semibold text-slate-900" : undefined
+                }
+              >
+                3. Friction
+              </span>
+              <span>•</span>
+              <span
+                className={
+                  step === 4 ? "font-semibold text-slate-900" : undefined
+                }
+              >
+                4. AI fit
+              </span>
+            </div>
+          </div>
+
+          {/* Step body */}
+          <div className="flex-1 overflow-auto px-6 py-4 space-y-6 text-xs text-slate-800">
+            {/* STEP 1 */}
+            {step === 1 && (
+              <section className="space-y-4">
+                <div>
+                  <h2 className="text-sm font-semibold text-slate-900">
+                    1. Describe the process
+                  </h2>
+                  <p className="text-[11px] text-slate-500 mt-1">
+                    A system is a network of tasks, roles, tools, decisions and
+                    goals that together produce value. Let’s capture the
+                    essentials of the system you want to redesign.
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <label className="text-[11px] font-medium text-slate-700">
+                      Process name
+                    </label>
+                    <input
+                      type="text"
+                      className="w-full text-xs rounded-xl border border-slate-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-sky-500"
+                      value={processName}
+                      onChange={(e) => setProcessName(e.target.value)}
+                      placeholder="e.g. Customer refund handling"
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-[11px] font-medium text-slate-700">
+                      Process owner
+                    </label>
+                    <input
+                      type="text"
+                      className="w-full text-xs rounded-xl border border-slate-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-sky-500"
+                      value={processOwnerName}
+                      onChange={(e) => setProcessOwnerName(e.target.value)}
+                      placeholder="e.g. Customer Operations Lead"
+                    />
+                    <input
+                      type="text"
+                      className="mt-1 w-full text-xs rounded-xl border border-slate-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-sky-500"
+                      value={processOwnerRole}
+                      onChange={(e) => setProcessOwnerRole(e.target.value)}
+                      placeholder="Role / responsibility (optional)"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[11px] font-medium text-slate-700">
+                    Describe how the process works today
+                  </label>
+                  <textarea
+                    rows={3}
+                    className="w-full text-xs rounded-xl border border-slate-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-sky-500"
+                    value={processDescription}
+                    onChange={(e) => setProcessDescription(e.target.value)}
+                    placeholder="High-level summary of the current process flow."
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[11px] font-medium text-slate-700">
+                    Narrative of the current system
+                  </label>
+                  <textarea
+                    rows={4}
+                    className="w-full text-xs rounded-xl border border-slate-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-sky-500"
+                    value={narrativeCurrent}
+                    onChange={(e) => setNarrativeCurrent(e.target.value)}
+                    placeholder="What does this system feel like today? Where do people get stuck? How is value created?"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[11px] font-medium text-slate-700">
+                    Objectives for this system
+                  </label>
+                  <div className="flex flex-wrap gap-1 mb-2">
+                    {objectives.map((obj, i) => (
+                      <span
+                        key={i}
+                        className="px-2 py-0.5 rounded-full bg-slate-100 text-[11px] text-slate-700"
+                      >
+                        {obj}
+                      </span>
+                    ))}
+                  </div>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      className="flex-1 text-xs rounded-xl border border-slate-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-sky-500"
+                      placeholder="Add an objective"
+                      value={newObjective}
+                      onChange={(e) => setNewObjective(e.target.value)}
+                    />
+                    <button
+                      type="button"
+                      onClick={addObjective}
+                      className="text-[11px] px-3 py-1.5 rounded-full bg-slate-900 text-white hover:bg-slate-800"
+                    >
+                      Add
+                    </button>
+                  </div>
+                </div>
+              </section>
+            )}
+
+            {/* STEP 2 – system mapping */}
+            {step === 2 && (
+              <section className="space-y-6">
+                <div>
+                  <h2 className="text-sm font-semibold text-slate-900">
+                    2. Map roles, tools and tasks
+                  </h2>
+                  <p className="text-[11px] text-slate-500 mt-1">
+                    Who is involved, which tools they use, and what tasks they
+                    perform. Each task will become a step on the canvas.
+                  </p>
+                </div>
+
+                {/* ROLES */}
+                <div className="space-y-1">
+                  <label className="text-[11px] font-medium text-slate-700">
+                    Key roles / actors
+                  </label>
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    {roles.map((r, i) => (
+                      <span
+                        key={i}
+                        className="px-2 py-0.5 rounded-full bg-slate-100 text-[11px] text-slate-700"
+                      >
+                        {r}
+                      </span>
+                    ))}
+                  </div>
+                  <div className="flex gap-2 mt-2">
+                    <input
+                      type="text"
+                      className="flex-1 text-xs rounded-xl border border-slate-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-sky-500"
+                      placeholder="Add role (e.g. Support Agent)"
+                      value={newRole}
+                      onChange={(e) => setNewRole(e.target.value)}
+                    />
+                    <button
+                      type="button"
+                      onClick={addRole}
+                      className="text-[11px] px-3 py-1.5 rounded-full bg-slate-900 text-white hover:bg-slate-800"
+                    >
+                      Add
+                    </button>
+                  </div>
+                </div>
+
+                {/* TOOLS */}
+                <div className="space-y-1">
+                  <label className="text-[11px] font-medium text-slate-700">
+                    Tools / systems
+                  </label>
+                  <div className="flex flex-wrap gap-1 mt-1">
+                    {tools.map((t, i) => (
+                      <span
+                        key={i}
+                        className="px-2 py-0.5 rounded-full bg-slate-100 text-[11px] text-slate-700"
+                      >
+                        {t}
+                      </span>
+                    ))}
+                  </div>
+                  <div className="flex gap-2 mt-2">
+                    <input
+                      type="text"
+                      className="flex-1 text-xs rounded-xl border border-slate-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-sky-500"
+                      placeholder="Add tool (e.g. Jira, Salesforce, Email)"
+                      value={newTool}
+                      onChange={(e) => setNewTool(e.target.value)}
+                    />
+                    <button
+                      type="button"
+                      onClick={addTool}
+                      className="text-[11px] px-3 py-1.5 rounded-full bg-slate-900 text-white hover:bg-slate-800"
+                    >
+                      Add
+                    </button>
+                  </div>
+                </div>
+
+                {/* TASK BUILDER */}
+                <div className="space-y-3 mt-4">
+                  <label className="text-[11px] font-medium text-slate-700">
+                    Build tasks / steps
+                  </label>
+                  <p className="text-[11px] text-slate-500">
+                    For each task, select the roles and tools involved, then
+                    describe what happens. Each task becomes a step on the
+                    canvas.
+                  </p>
+
+                  {/* Role pills */}
+                  <div>
+                    <div className="text-[11px] text-slate-600 mb-1">
+                      Who is involved?
+                    </div>
+                    <div className="flex flex-wrap gap-1">
+                      {roles.map((r, i) => {
+                        const active = newTaskRoleIds.includes(i);
+                        return (
+                          <button
+                            key={i}
+                            type="button"
+                            onClick={() => toggleNewTaskRole(i)}
+                            className={`px-2 py-0.5 rounded-full border text-[11px] transition
+                              ${
+                                active
+                                  ? "bg-slate-900 border-slate-900 text-white"
+                                  : "bg-white border-slate-300 text-slate-700 hover:bg-slate-50"
+                              }`}
+                          >
+                            {r}
+                          </button>
+                        );
+                      })}
+                      {roles.length === 0 && (
+                        <span className="text-[11px] text-slate-400">
+                          Add roles above first.
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Tool pills */}
+                  <div>
+                    <div className="text-[11px] text-slate-600 mb-1">
+                      Which tools are used?
+                    </div>
+                    <div className="flex flex-wrap gap-1">
+                      {tools.map((t, i) => {
+                        const active = newTaskToolIds.includes(i);
+                        return (
+                          <button
+                            key={i}
+                            type="button"
+                            onClick={() => toggleNewTaskTool(i)}
+                            className={`px-2 py-0.5 rounded-full border text-[11px] transition
+                              ${
+                                active
+                                  ? "bg-slate-900 border-slate-900 text-white"
+                                  : "bg-white border-slate-300 text-slate-700 hover:bg-slate-50"
+                              }`}
+                          >
+                            {t}
+                          </button>
+                        );
+                      })}
+                      {tools.length === 0 && (
+                        <span className="text-[11px] text-slate-400">
+                          Add tools above first.
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Task text fields */}
+                  <div className="space-y-2">
+                    <input
+                      type="text"
+                      className="w-full text-xs border border-slate-300 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-sky-500"
+                      placeholder="Task name (e.g. Triage new ticket)"
+                      value={newTaskTitle}
+                      onChange={(e) => setNewTaskTitle(e.target.value)}
+                    />
+                    <textarea
+                      rows={2}
+                      className="w-full text-xs border border-slate-300 rounded-xl px-3 py-2 focus:outline-none focus:ring-2 focus:ring-sky-500"
+                      placeholder="What happens in this task? What triggers it? What is the outcome?"
+                      value={newTaskDesc}
+                      onChange={(e) => setNewTaskDesc(e.target.value)}
+                    />
+                    <div className="flex justify-end">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (!newTaskTitle.trim()) return;
+                          const task = {
+                            id: `t-${Date.now().toString(36)}`,
+                            title: newTaskTitle.trim(),
+                            description: newTaskDesc.trim(),
+                            roleIds: newTaskRoleIds,
+                            toolIds: newTaskToolIds,
+                          };
+                          addTask(task);
+                          setNewTaskTitle("");
+                          setNewTaskDesc("");
+                          setNewTaskRoleIds([]);
+                          setNewTaskToolIds([]);
+                        }}
+                        className="text-[11px] px-4 py-1.5 rounded-full bg-slate-900 text-white hover:bg-slate-800"
+                      >
+                        + Add task
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Task list */}
+                  <div className="space-y-2 max-h-56 overflow-auto mt-2">
+                    {tasks.map((t) => (
+                      <div
+                        key={t.id}
+                        className="border border-slate-200 rounded-xl bg-slate-50 px-3 py-2 text-xs"
+                      >
+                        <div className="font-semibold text-slate-900">
+                          {t.title}
+                        </div>
+                        {t.description && (
+                          <div className="text-slate-600 text-[11px] mt-0.5">
+                            {t.description}
+                          </div>
+                        )}
+                        {t.roleIds?.length > 0 && (
+                          <div className="mt-1 text-[11px] text-slate-500">
+                            Roles:{" "}
+                            {t.roleIds
+                              .map((i) => roles[i])
+                              .filter(Boolean)
+                              .join(", ")}
+                          </div>
+                        )}
+                        {t.toolIds?.length > 0 && (
+                          <div className="text-[11px] text-slate-500">
+                            Tools:{" "}
+                            {t.toolIds
+                              .map((i) => tools[i])
+                              .filter(Boolean)
+                              .join(", ")}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                    {!tasks.length && (
+                      <div className="text-[11px] text-slate-400 italic">
+                        No tasks yet. Select roles &amp; tools, describe the
+                        task, then click “+ Add task”.
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </section>
+            )}
+
+            {/* STEP 3 – friction */}
+            {step === 3 && (
+              <section className="space-y-4">
+                <div>
+                  <h2 className="text-sm font-semibold text-slate-900">
+                    3. Where does the system struggle?
+                  </h2>
+                  <p className="text-[11px] text-slate-500 mt-1">
+                    Capture the friction, bottlenecks, and risks in the current
+                    system. We’ll use this in AI analysis later.
+                  </p>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[11px] font-medium text-slate-700">
+                    Friction points
+                  </label>
+                  <div className="flex flex-wrap gap-1 mb-2">
+                    {frictions.map((f, i) => (
+                      <span
+                        key={i}
+                        className="px-2 py-0.5 rounded-full bg-rose-50 text-[11px] text-rose-700 border border-rose-100"
+                      >
+                        {f}
+                      </span>
+                    ))}
+                  </div>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      className="flex-1 text-xs rounded-xl border border-slate-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-sky-500"
+                      placeholder="Add a friction point"
+                      value={newFriction}
+                      onChange={(e) => setNewFriction(e.target.value)}
+                    />
+                    <button
+                      type="button"
+                      onClick={addFriction}
+                      className="text-[11px] px-3 py-1.5 rounded-full bg-slate-900 text-white hover:bg-slate-800"
+                    >
+                      Add
+                    </button>
+                  </div>
+                </div>
+              </section>
+            )}
+
+            {/* STEP 4 – AI fit & readiness */}
+            {step === 4 && (
+              <section className="space-y-4">
+                <div>
+                  <h2 className="text-sm font-semibold text-slate-900">
+                    4. What do you hope AI changes?
+                  </h2>
+                  <p className="text-[11px] text-slate-500 mt-1">
+                    Capture how you’d like this system to change with AI, and
+                    how ready your organisation feels.
+                  </p>
+                </div>
+
+                <div className="space-y-1">
+                  <label className="text-[11px] font-medium text-slate-700">
+                    Your hopes for AI in this system
+                  </label>
+                  <textarea
+                    rows={3}
+                    className="w-full text-xs rounded-xl border border-slate-300 px-3 py-2 focus:outline-none focus:ring-2 focus:ring-sky-500"
+                    value={aiHopes}
+                    onChange={(e) => setAiHopes(e.target.value)}
+                    placeholder="What would feel meaningfully better with AI?"
+                  />
+                </div>
+
+                {/* Readiness sliders */}
+                <div className="grid grid-cols-3 gap-4">
+                  <ReadinessSlider
+                    label="Trust in AI"
+                    value={trustSlider}
+                    onChange={setTrustSlider}
+                    helper="How comfortable are people relying on AI suggestions?"
+                  />
+                  <ReadinessSlider
+                    label="Data readiness"
+                    value={dataSlider}
+                    onChange={setDataSlider}
+                    helper="How good are your data and systems for AI?"
+                  />
+                  <ReadinessSlider
+                    label="Appetite for change"
+                    value={appetiteSlider}
+                    onChange={setAppetiteSlider}
+                    helper="How ready is the organisation to change this system?"
+                  />
+                </div>
+              </section>
+            )}
+          </div>
+
+          {/* Footer navigation */}
+          <div className="px-6 py-3 border-t border-slate-100 flex items-center justify-between bg-slate-50/80">
+            <button
+              type="button"
+              onClick={onSkip}
+              className="text-[11px] px-3 py-1.5 rounded-full border border-slate-300 bg-white text-slate-700 hover:bg-slate-100"
+            >
+              Skip to canvas
+            </button>
+
+            <div className="flex items-center gap-2">
+              {step > 1 && (
+                <button
+                  type="button"
+                  onClick={handleBack}
+                  className="text-[11px] px-3 py-1.5 rounded-full border border-slate-300 bg-white text-slate-700 hover:bg-slate-100"
+                >
+                  Back
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={step < 4 ? handleNext : handleFinish}
+                className="text-[11px] px-4 py-1.5 rounded-full bg-slate-900 text-white hover:bg-slate-800"
+              >
+                {step < 4 ? "Next" : "Finish & go to canvas"}
+              </button>
+            </div>
+          </div>
+        </div>
+      </main>
     </div>
   );
 }
 
-/**
- * Fluent-style slider with label + value
- */
-function SliderField({ label, value, onChange, helper }) {
+/** Small helper component for sliders */
+function ReadinessSlider({ label, value, onChange, helper }) {
   return (
-    <div className="space-y-1.5">
+    <div className="space-y-1">
       <div className="flex items-center justify-between">
-        <span className="text-xs font-medium text-gray-800">{label}</span>
-        <span className="text-xs text-gray-600">{value}%</span>
+        <span className="text-[11px] font-medium text-slate-700">{label}</span>
+        <span className="text-[11px] text-slate-500">{value}</span>
       </div>
       <input
         type="range"
@@ -218,320 +821,9 @@ function SliderField({ label, value, onChange, helper }) {
         max={100}
         value={value}
         onChange={(e) => onChange(Number(e.target.value))}
-        className="w-full accent-[#0F6CBD]"
+        className="w-full"
       />
-      {helper && <p className="text-[11px] text-gray-500">{helper}</p>}
-    </div>
-  );
-}
-
-/**
- * Step indicator (1–4) with Fluent look
- */
-function StepHeader({ step }) {
-  const steps = [
-    { id: 1, title: "Process overview" },
-    { id: 2, title: "Current system" },
-    { id: 3, title: "Friction & stakeholders" },
-    { id: 4, title: "AI readiness & intent" },
-  ];
-
-  return (
-    <div className="mb-6">
-      <div className="flex items-center gap-3">
-        {steps.map((s, idx) => {
-          const active = step === s.id;
-          const done = step > s.id;
-          return (
-            <React.Fragment key={s.id}>
-              <div className="flex items-center gap-2">
-                <div
-                  className={
-                    "w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold " +
-                    (active
-                      ? "bg-[#0F6CBD] text-white shadow-sm"
-                      : done
-                      ? "bg-[#D1E4F7] text-[#0F6CBD]"
-                      : "bg-gray-100 text-gray-500")
-                  }
-                >
-                  {s.id}
-                </div>
-                <span
-                  className={
-                    "text-xs font-medium " +
-                    (active
-                      ? "text-gray-900"
-                      : done
-                      ? "text-gray-700"
-                      : "text-gray-500")
-                  }
-                >
-                  {s.title}
-                </span>
-              </div>
-              {idx < steps.length - 1 && (
-                <div className="flex-1 h-px bg-gray-200" />
-              )}
-            </React.Fragment>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
-/**
- * Main wizard component
- */
-export default function IntakeScreen({ onComplete }) {
-  const [step, setStep] = useState(1);
-
-  const [form, setForm] = useState({
-    title: "",
-    shortDescription: "",
-    tasks: "",
-    roles: "",
-    tools: "",
-    decisions: "",
-    goals: "",
-    painPoints: "",
-    stakeholders: "",
-    aiIntent: "",
-    orgTrustInAI: 50,
-    dataMaturity: 50,
-    changeAppetite: 50,
-  });
-
-  function update(field, value) {
-    setForm((f) => ({ ...f, [field]: value }));
-  }
-
-  function next() {
-    if (step < 4) setStep((s) => s + 1);
-  }
-
-  function back() {
-    if (step > 1) setStep((s) => s - 1);
-  }
-
-  function handleFinish() {
-    const schema = buildInitialSchema(form);
-    onComplete(schema);
-  }
-
-  return (
-    <div className="w-full h-screen bg-gradient-to-b from-slate-50 to-slate-100 flex items-center justify-center px-4">
-      <div className="max-w-4xl w-full bg-white/80 backdrop-blur rounded-2xl shadow-lg border border-slate-200 p-6 md:p-8">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h1 className="text-xl font-semibold text-slate-900">
-              Map your current process
-            </h1>
-            <p className="text-sm text-slate-600 mt-1">
-              We’ll turn your answers into an AS-IS map on the Nagare canvas and
-              then help you re-imagine it with AI.
-            </p>
-          </div>
-          <div className="hidden md:flex flex-col items-end text-right">
-            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
-              Nagare
-            </span>
-            <span className="text-[11px] text-slate-400">
-              Flow intelligence for complex work
-            </span>
-          </div>
-        </div>
-
-        {/* Stepper */}
-        <StepHeader step={step} />
-
-        {/* Body */}
-        <div className="grid grid-cols-1 md:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)] gap-6">
-          {/* Left: main form card */}
-          <div className="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 space-y-4">
-            {step === 1 && (
-              <>
-                <TextField
-                  label="Process name"
-                  placeholder="e.g. New hire onboarding in EMEA"
-                  value={form.title}
-                  onChange={(e) => update("title", e.target.value)}
-                />
-                <TextField
-                  label="In one or two sentences, describe this process as it works today"
-                  multiline
-                  rows={4}
-                  placeholder="e.g. A manager initiates a new hire request, HR collects documents, payroll is set up and IT provisions access and equipment."
-                  value={form.shortDescription}
-                  onChange={(e) => update("shortDescription", e.target.value)}
-                />
-                <TextField
-                  label="What outcome should this process reliably produce?"
-                  helper="Think about what “good” looks like when this process runs well."
-                  multiline
-                  rows={3}
-                  placeholder="e.g. New hires are productive and compliant by day one, with minimal manual coordination and rework."
-                  value={form.goals}
-                  onChange={(e) => update("goals", e.target.value)}
-                />
-              </>
-            )}
-
-            {step === 2 && (
-              <>
-                <TextField
-                  label="Key roles and actors"
-                  helper="People or teams who touch this process (one per line or separated by commas)."
-                  multiline
-                  rows={3}
-                  placeholder={"e.g.\nHiring Manager\nHR Operations\nIT Support\nPayroll"}
-                  value={form.roles}
-                  onChange={(e) => update("roles", e.target.value)}
-                />
-                <TextField
-                  label="Tasks and hand-offs (AS-IS)"
-                  helper="List the main steps in order, one per line. We’ll turn these into nodes on the canvas."
-                  multiline
-                  rows={6}
-                  placeholder={
-                    "e.g.\nManager submits hiring request\nHR creates employee record\nPayroll sets up salary and tax details\nIT provisions accounts and equipment"
-                  }
-                  value={form.tasks}
-                  onChange={(e) => update("tasks", e.target.value)}
-                />
-                <TextField
-                  label="Tools and systems used"
-                  helper="CRMs, HRIS, spreadsheets, email, chat, approval tools, etc."
-                  multiline
-                  rows={3}
-                  placeholder="e.g. Workday, Jira, Outlook, Slack, Excel tracker"
-                  value={form.tools}
-                  onChange={(e) => update("tools", e.target.value)}
-                />
-              </>
-            )}
-
-            {step === 3 && (
-              <>
-                <TextField
-                  label="Key decisions and approvals"
-                  helper="Where does someone decide whether to proceed, escalate or stop?"
-                  multiline
-                  rows={4}
-                  placeholder="e.g. HR approves eligibility, Finance signs off on headcount and budget, Security approves access level."
-                  value={form.decisions}
-                  onChange={(e) => update("decisions", e.target.value)}
-                />
-                <TextField
-                  label="Pain points, delays, or failure modes"
-                  helper="Where does this process break down, slow down, or frustrate people today?"
-                  multiline
-                  rows={4}
-                  placeholder="e.g. IT receives requests late, manual data entry causes errors, approvals stuck in email."
-                  value={form.painPoints}
-                  onChange={(e) => update("painPoints", e.target.value)}
-                />
-                <TextField
-                  label="Stakeholders who care about this process"
-                  helper="List internal or external stakeholders (separated by commas)."
-                  multiline
-                  rows={3}
-                  placeholder="e.g. New hires, HRBP, Line managers, IT, Finance, Compliance"
-                  value={form.stakeholders}
-                  onChange={(e) => update("stakeholders", e.target.value)}
-                />
-              </>
-            )}
-
-            {step === 4 && (
-              <>
-                <TextField
-                  label="What do you hope AI could change about this system?"
-                  helper="For example: remove repetitive work, improve experience, reduce risk, or re-imagine how the system works."
-                  multiline
-                  rows={4}
-                  placeholder="e.g. Use agents to orchestrate hand-offs, proactively flag risks, and give managers a single place to track progress."
-                  value={form.aiIntent}
-                  onChange={(e) => update("aiIntent", e.target.value)}
-                />
-
-                <div className="grid md:grid-cols-3 gap-4 mt-2">
-                  <SliderField
-                    label="Trust in AI for this domain"
-                    value={form.orgTrustInAI}
-                    onChange={(v) => update("orgTrustInAI", v)}
-                    helper="How ready is your org to rely on AI here?"
-                  />
-                  <SliderField
-                    label="Data & system maturity"
-                    value={form.dataMaturity}
-                    onChange={(v) => update("dataMaturity", v)}
-                    helper="How structured and accessible is the data?"
-                  />
-                  <SliderField
-                    label="Appetite for change"
-                    value={form.changeAppetite}
-                    onChange={(v) => update("changeAppetite", v)}
-                    helper="How open are teams to re-designing the process?"
-                  />
-                </div>
-              </>
-            )}
-          </div>
-
-          {/* Right: fluent info panel */}
-          <div className="space-y-4">
-            <div className="bg-slate-900 text-slate-50 rounded-2xl p-5 shadow-sm">
-              <h2 className="text-sm font-semibold mb-2">Systems lens</h2>
-              <p className="text-xs text-slate-200 leading-relaxed">
-                A system is a network of{" "}
-                <span className="font-semibold">tasks</span>,{" "}
-                <span className="font-semibold">roles</span>,{" "}
-                <span className="font-semibold">tools</span>,{" "}
-                <span className="font-semibold">decisions</span> and{" "}
-                <span className="font-semibold">goals</span> that together
-                produce value.
-              </p>
-              <p className="text-xs text-slate-300 mt-3">
-                In this wizard you’re capturing just enough of that system so
-                Nagare can visualise the AS-IS flow and help you explore
-                AI-powered TO-BE patterns on the canvas.
-              </p>
-            </div>
-
-            <div className="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm space-y-2">
-              <h3 className="text-sm font-semibold text-slate-900">
-                You’re on step {step} of 4
-              </h3>
-              <p className="text-xs text-slate-600">
-                When you’re done, we’ll generate:
-              </p>
-              <ul className="text-xs text-slate-600 list-disc list-inside space-y-1">
-                <li>An AS-IS process map with one node per task.</li>
-                <li>Simple hand-offs between each step.</li>
-                <li>Context about roles, tools, decisions and pain points.</li>
-                <li>Readiness settings that guide AI-generated suggestions.</li>
-              </ul>
-            </div>
-          </div>
-        </div>
-
-        {/* Footer buttons */}
-        <div className="mt-6 flex items-center justify-between">
-          <SubtleButton onClick={back} disabled={step === 1}>
-            Back
-          </SubtleButton>
-          {step < 4 ? (
-            <PrimaryButton onClick={next}>Next</PrimaryButton>
-          ) : (
-            <PrimaryButton onClick={handleFinish}>
-              Generate AS-IS canvas
-            </PrimaryButton>
-          )}
-        </div>
-      </div>
+      <p className="text-[10px] text-slate-500">{helper}</p>
     </div>
   );
 }
