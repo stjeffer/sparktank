@@ -5,10 +5,12 @@
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <title>SparkTank – Idea Submission v2</title>
 <style>
-:root{--body-bg:#f3f2f1;--card-bg:#fff;--primary:#0078d4;--primary-dark:#005a9e;
---text-main:#201f1e;--text-subtle:#605e5c;--border-subtle:#edebe9;
---shadow-card:0 1.6px 3.6px rgba(0,0,0,.132),0 0.3px 0.9px rgba(0,0,0,.108);
---radius:8px;}
+:root{
+ --body-bg:#f3f2f1;--card-bg:#fff;--primary:#0078d4;--primary-dark:#005a9e;
+ --text-main:#201f1e;--text-subtle:#605e5c;--border-subtle:#edebe9;
+ --shadow-card:0 1.6px 3.6px rgba(0,0,0,.132),0 0.3px 0.9px rgba(0,0,0,.108);
+ --radius:8px;
+}
 *{box-sizing:border-box;}
 body{margin:0;font-family:"Segoe UI",-apple-system,BlinkMacSystemFont,sans-serif;
 background:var(--body-bg);color:var(--text-main);}
@@ -62,6 +64,7 @@ textarea,input,select{font-family:inherit;font-size:13px;padding:6px 10px;border
 #facilitatorView.active,#participantView.active{display:block;}
 </style>
 </head>
+
 <body>
 <div class="command-bar">
  <div style="display:flex;align-items:center;">
@@ -133,128 +136,287 @@ textarea,input,select{font-family:inherit;font-size:13px;padding:6px 10px;border
  </div>
 </div>
 
-<script>
-const state={timer:20*60,running:true,
- teams:[
-  {id:'t1',name:'Table 1 – Finance',color:'#0078d4',ideas:[]},
-  {id:'t2',name:'Table 2 – Support',color:'#107c10',ideas:[]},
-  {id:'t3',name:'Table 3 – Sales',color:'#ca5010',ideas:[]}
- ],
- selectedTeam:'t1',selectedType:null};
-
-// populate dropdown
-const teamSelect=document.getElementById('teamSelect');
-state.teams.forEach(t=>{const o=document.createElement('option');o.value=t.id;o.textContent=t.name;teamSelect.appendChild(o);});
-teamSelect.onchange=()=>state.selectedTeam=teamSelect.value;
-
-// timer
-const tDisp=document.getElementById('timerDisplay'),tDispP=document.getElementById('timerDisplayP');
-function fmt(s){const m=Math.floor(s/60),sec=s%60;return`${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;}
-function updTimer(){tDisp.textContent=fmt(state.timer);tDispP.textContent=fmt(state.timer);}
-setInterval(()=>{if(state.running&&state.timer>0){state.timer--;updTimer();}},1000);
-document.getElementById('pauseBtn').onclick=()=>{state.running=!state.running;document.getElementById('pauseBtn').textContent=state.running?'Pause':'Resume';};
-document.getElementById('resetBtn').onclick=()=>{state.timer=20*60;updTimer();};
-updTimer();
-
-// facilitator render
-const facTeams=document.getElementById('facTeams');
-function renderFacilitator(){
- facTeams.innerHTML='';
- state.teams.forEach(t=>{
-  const c=document.createElement('div');c.className='team-card';
-  c.innerHTML=`<div class="team-header"><div style="display:flex;align-items:center;gap:8px;">
-  <div class="team-avatar" style="background:${t.color}">${t.name.split(' ')[1]}</div>
-  <div><div class="team-name">${t.name}</div></div></div>
-  <span class="team-status">🧩 ${t.ideas.length} idea${t.ideas.length!==1?'s':''}</span></div>
-  <button class="btn" onclick="openModal('${t.id}')">View Ideas</button>`;
-  facTeams.appendChild(c);
- });
-}
-
-// modal
-const modal=document.getElementById('ideaModal');
-const ideaList=document.getElementById('ideaList');
-const ideaDetail=document.getElementById('ideaDetail');
-let activeTeam=null,activeIdea=null;
-function openModal(id){
- activeTeam=state.teams.find(t=>t.id===id);
- document.getElementById('modalTitle').textContent=activeTeam.name;
- renderList();modal.style.display='flex';
-}
-document.getElementById('closeModal').onclick=()=>modal.style.display='none';
-function renderList(){
- ideaList.innerHTML='';
- activeTeam.ideas.forEach(i=>{
-  const it=document.createElement('div');it.className='idea-item';
-  it.innerHTML=`<div class="idea-title">${i.submitter} – ${i.type==='better'?'Better':'New'} <span class="status-badge">${i.unlocked?'Unlocked':'Submitted'}</span></div>
-  <div class="idea-meta">${new Date(i.timestamp).toLocaleTimeString()}</div>`;
-  it.onclick=()=>{document.querySelectorAll('.idea-item').forEach(x=>x.classList.remove('active'));it.classList.add('active');activeIdea=i;renderDetail();};
-  ideaList.appendChild(it);
- });
- if(!activeTeam.ideas.length){ideaList.innerHTML='<div style="padding:10px;">No ideas yet.</div>';ideaDetail.innerHTML='';}
-}
-function renderDetail(){
- if(!activeIdea){ideaDetail.innerHTML='';return;}
- let h=`<p><strong>Submitter:</strong> ${activeIdea.submitter}</p>
- <p><strong>Type:</strong> ${activeIdea.type==='better'?'Build Something Better':'Build Better Things'}</p>`;
- activeIdea.questions.forEach((q,i)=>h+=`<p><strong>${i+1}. ${q}</strong><br>${activeIdea.answers[i]}</p>`);
- h+=`<p><strong>Status:</strong> ${activeIdea.unlocked?'Unlocked for editing':'Submitted'}</p>
- <button class="btn" id="unlockBtn">${activeIdea.unlocked?'Lock':'Unlock for edit'}</button>`;
- ideaDetail.innerHTML=h;
- document.getElementById('unlockBtn').onclick=()=>{activeIdea.unlocked=!activeIdea.unlocked;renderList();renderDetail();};
-}
-
-// participant
-const qArea=document.getElementById('questionsArea');
-const submitBtn=document.getElementById('submitIdeaBtn');
-const nameInput=document.getElementById('submitterName');
-const notice=document.getElementById('noticeArea');
-const choiceCards=document.querySelectorAll('.choice-card');
-choiceCards.forEach(c=>c.addEventListener('click',()=>{choiceCards.forEach(x=>x.classList.remove('selected'));c.classList.add('selected');state.selectedType=c.dataset.type;renderQs();}));
-function renderQs(){
- const t=state.selectedType;qArea.innerHTML='';if(!t)return;
- const qs=t==='better'?["What process or task do you want to improve?","Where are the biggest friction points today?","How could AI assist or automate this?","What impact would this improvement have?"]:
- ["What’s the strategic goal or opportunity?","Who benefits or is impacted?","How would AI enable this new capability?","What outcomes or success metrics would define value?"];
- qs.forEach((q,i)=>{const f=document.createElement('div');f.className='form-field';f.innerHTML=`<label>${i+1}. ${q}</label><textarea data-i="${i}"></textarea>`;qArea.appendChild(f);});
- qArea.querySelectorAll('textarea').forEach(t=>t.addEventListener('input',checkFilled));submitBtn.disabled=true;
-}
-function checkFilled(){const filled=[...qArea.querySelectorAll('textarea')].every(t=>t.value.trim()!=='')&&nameInput.value.trim()!=='';submitBtn.disabled=!filled;}
-nameInput.addEventListener('input',checkUnlock);
-teamSelect.addEventListener('change',checkUnlock);
-function checkUnlock(){
- const t=state.teams.find(x=>x.id===state.selectedTeam);
- const n=nameInput.value.trim();
- const idea=t.ideas.find(i=>i.submitter===n&&i.unlocked);
- if(idea){
-  notice.innerHTML='<div class="notice">Your idea has been unlocked for editing.</div>';
-  state.selectedType=idea.type;document.querySelectorAll('.choice-card').forEach(c=>c.classList.toggle('selected',c.dataset.type===state.selectedType));
-  renderQs();idea.answers.forEach((a,i)=>{qArea.querySelectorAll('textarea')[i].value=a;});
-  submitBtn.disabled=false;
- }else notice.innerHTML='';
-}
-submitBtn.onclick=()=>{
- const t=state.teams.find(x=>x.id===state.selectedTeam);
- const n=nameInput.value.trim();if(!n){alert('Enter your name');return;}
- const answers=[...qArea.querySelectorAll('textarea')].map(a=>a.value.trim());
- const qs=[...qArea.querySelectorAll('label')].map(l=>l.textContent);
- let idea=t.ideas.find(i=>i.submitter===n&&i.unlocked);
- if(idea){idea.answers=answers;idea.unlocked=false;}
- else{t.ideas.push({id:Date.now(),submitter:n,type:state.selectedType,questions:qs,answers,unlocked:false,timestamp:new Date().toISOString()});}
- renderFacilitator();notice.innerHTML='<div class="notice">✅ Idea submitted!</div>';qArea.innerHTML='';submitBtn.disabled=true;
+ <script>
+/* ---------- INITIAL STATE ---------- */
+const state = {
+  timer: 20 * 60,
+  running: true,
+  teams: [
+    { id: "t1", name: "Table 1 – Finance", color: "#0078d4", ideas: [] },
+    { id: "t2", name: "Table 2 – Support", color: "#107c10", ideas: [] },
+    { id: "t3", name: "Table 3 – Sales", color: "#ca5010", ideas: [] }
+  ],
+  selectedTeam: "t1",
+  selectedType: null
 };
 
-// role toggle
-document.querySelectorAll('.toggle-btn').forEach(b=>b.addEventListener('click',()=>{
- document.querySelectorAll('.toggle-btn').forEach(x=>x.classList.remove('active'));b.classList.add('active');
- const r=b.dataset.role;
- document.getElementById('facilitatorView').classList.toggle('active',r==='facilitator');
- document.getElementById('participantView').classList.toggle('active',r==='participant');
-   document.getElementById('roleLabel').textContent =
-    r === 'facilitator' ? 'Facilitator' : 'Participant';
-}));
+/* ---------- TIMER ---------- */
+const tDisp = document.getElementById("timerDisplay");
+const tDispP = document.getElementById("timerDisplayP");
+function fmt(s) {
+  const m = Math.floor(s / 60),
+    sec = s % 60;
+  return `${String(m).padStart(2, "0")}:${String(sec).padStart(2, "0")}`;
+}
+function updTimer() {
+  tDisp.textContent = fmt(state.timer);
+  tDispP.textContent = fmt(state.timer);
+}
+setInterval(() => {
+  if (state.running && state.timer > 0) {
+    state.timer--;
+    updTimer();
+  }
+}, 1000);
+document.getElementById("pauseBtn").onclick = () => {
+  state.running = !state.running;
+  document.getElementById("pauseBtn").textContent = state.running
+    ? "Pause"
+    : "Resume";
+};
+document.getElementById("resetBtn").onclick = () => {
+  state.timer = 20 * 60;
+  updTimer();
+};
+updTimer();
 
-// initialize dashboard
+/* ---------- TEAM DROPDOWN ---------- */
+const teamSelect = document.getElementById("teamSelect");
+state.teams.forEach((t) => {
+  const opt = document.createElement("option");
+  opt.value = t.id;
+  opt.textContent = t.name;
+  teamSelect.appendChild(opt);
+});
+teamSelect.onchange = () => (state.selectedTeam = teamSelect.value);
+
+/* ---------- FACILITATOR VIEW ---------- */
+const facTeams = document.getElementById("facTeams");
+function renderFacilitator() {
+  facTeams.innerHTML = "";
+  state.teams.forEach((t) => {
+    const c = document.createElement("div");
+    c.className = "team-card";
+    c.innerHTML = `
+      <div class="team-header">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div class="team-avatar" style="background:${t.color}">
+            ${t.name.split(" ")[1]}
+          </div>
+          <div><div class="team-name">${t.name}</div></div>
+        </div>
+        <span class="team-status">🧩 ${t.ideas.length} idea${
+      t.ideas.length !== 1 ? "s" : ""
+    }</span>
+      </div>
+      <button class="btn" onclick="openModal('${t.id}')">View Ideas</button>`;
+    facTeams.appendChild(c);
+  });
+}
 renderFacilitator();
+
+/* ---------- FACILITATOR MODAL ---------- */
+const modal = document.getElementById("ideaModal");
+const ideaList = document.getElementById("ideaList");
+const ideaDetail = document.getElementById("ideaDetail");
+let activeTeam = null,
+  activeIdea = null;
+
+function openModal(teamId) {
+  activeTeam = state.teams.find((t) => t.id === teamId);
+  document.getElementById("modalTitle").textContent = activeTeam.name;
+  renderList();
+  modal.style.display = "flex";
+}
+document.getElementById("closeModal").onclick = () =>
+  (modal.style.display = "none");
+
+function renderList() {
+  ideaList.innerHTML = "";
+  activeTeam.ideas.forEach((i) => {
+    const item = document.createElement("div");
+    item.className = "idea-item";
+    item.innerHTML = `
+      <div class="idea-title">
+        ${i.submitter} – ${i.type === "better" ? "Better" : "New"}
+        <span class="status-badge">${
+          i.unlocked ? "Unlocked" : "Submitted"
+        }</span>
+      </div>
+      <div class="idea-meta">${new Date(i.timestamp).toLocaleTimeString()}</div>`;
+    item.onclick = () => {
+      document
+        .querySelectorAll(".idea-item")
+        .forEach((x) => x.classList.remove("active"));
+      item.classList.add("active");
+      activeIdea = i;
+      renderDetail();
+    };
+    ideaList.appendChild(item);
+  });
+  if (!activeTeam.ideas.length) {
+    ideaList.innerHTML = '<div style="padding:10px;">No ideas yet.</div>';
+    ideaDetail.innerHTML = "";
+  }
+}
+
+function renderDetail() {
+  if (!activeIdea) {
+    ideaDetail.innerHTML = "";
+    return;
+  }
+  let h = `
+    <p><strong>Submitter:</strong> ${activeIdea.submitter}</p>
+    <p><strong>Type:</strong> ${
+      activeIdea.type === "better"
+        ? "Build Something Better"
+        : "Build Better Things"
+    }</p>`;
+  activeIdea.questions.forEach((q, i) => {
+    h += `<p><strong>${i + 1}. ${q}</strong><br>${activeIdea.answers[i]}</p>`;
+  });
+  h += `<p><strong>Status:</strong> ${
+    activeIdea.unlocked ? "Unlocked for editing" : "Submitted"
+  }</p>
+  <button class="btn" id="unlockBtn">${
+    activeIdea.unlocked ? "Lock" : "Unlock for edit"
+  }</button>`;
+  ideaDetail.innerHTML = h;
+  document.getElementById("unlockBtn").onclick = () => {
+    activeIdea.unlocked = !activeIdea.unlocked;
+    renderList();
+    renderDetail();
+  };
+}
+
+/* ---------- PARTICIPANT VIEW ---------- */
+const qArea = document.getElementById("questionsArea");
+const submitBtn = document.getElementById("submitIdeaBtn");
+const nameInput = document.getElementById("submitterName");
+const notice = document.getElementById("noticeArea");
+const choiceCards = document.querySelectorAll(".choice-card");
+
+choiceCards.forEach((c) =>
+  c.addEventListener("click", () => {
+    choiceCards.forEach((x) => x.classList.remove("selected"));
+    c.classList.add("selected");
+    state.selectedType = c.dataset.type;
+    renderQs();
+  })
+);
+
+function renderQs() {
+  const t = state.selectedType;
+  qArea.innerHTML = "";
+  if (!t) return;
+  const qs =
+    t === "better"
+      ? [
+          "What process or task do you want to improve?",
+          "Where are the biggest friction points today?",
+          "How could AI assist or automate this?",
+          "What impact would this improvement have?"
+        ]
+      : [
+          "What’s the strategic goal or opportunity?",
+          "Who benefits or is impacted?",
+          "How would AI enable this new capability?",
+          "What outcomes or success metrics would define value?"
+        ];
+  qs.forEach((q, i) => {
+    const f = document.createElement("div");
+    f.className = "form-field";
+    f.innerHTML = `<label>${i + 1}. ${q}</label><textarea data-i="${i}"></textarea>`;
+    qArea.appendChild(f);
+  });
+  qArea.querySelectorAll("textarea").forEach((t) =>
+    t.addEventListener("input", checkFilled)
+  );
+  submitBtn.disabled = true;
+}
+
+function checkFilled() {
+  const filled =
+    [...qArea.querySelectorAll("textarea")].every(
+      (t) => t.value.trim() !== ""
+    ) && nameInput.value.trim() !== "";
+  submitBtn.disabled = !filled;
+}
+
+nameInput.addEventListener("input", checkUnlock);
+teamSelect.addEventListener("change", checkUnlock);
+
+function checkUnlock() {
+  const t = state.teams.find((x) => x.id === state.selectedTeam);
+  const n = nameInput.value.trim();
+  const idea = t.ideas.find((i) => i.submitter === n && i.unlocked);
+  if (idea) {
+    notice.innerHTML =
+      '<div class="notice">Your idea has been unlocked for editing.</div>';
+    state.selectedType = idea.type;
+    document
+      .querySelectorAll(".choice-card")
+      .forEach((c) =>
+        c.classList.toggle("selected", c.dataset.type === state.selectedType)
+      );
+    renderQs();
+    idea.answers.forEach(
+      (a, i) => (qArea.querySelectorAll("textarea")[i].value = a)
+    );
+    submitBtn.disabled = false;
+  } else notice.innerHTML = "";
+}
+
+submitBtn.onclick = () => {
+  const t = state.teams.find((x) => x.id === state.selectedTeam);
+  const n = nameInput.value.trim();
+  if (!n) {
+    alert("Enter your name");
+    return;
+  }
+  const answers = [...qArea.querySelectorAll("textarea")].map((a) =>
+    a.value.trim()
+  );
+  const qs = [...qArea.querySelectorAll("label")].map((l) => l.textContent);
+  let idea = t.ideas.find((i) => i.submitter === n && i.unlocked);
+  if (idea) {
+    idea.answers = answers;
+    idea.unlocked = false;
+  } else {
+    t.ideas.push({
+      id: Date.now(),
+      submitter: n,
+      type: state.selectedType,
+      questions: qs,
+      answers,
+      unlocked: false,
+      timestamp: new Date().toISOString()
+    });
+  }
+  renderFacilitator();
+  notice.innerHTML = '<div class="notice">✅ Idea submitted!</div>';
+  qArea.innerHTML = "";
+  submitBtn.disabled = true;
+};
+
+/* ---------- ROLE TOGGLE ---------- */
+document.querySelectorAll(".toggle-btn").forEach((b) =>
+  b.addEventListener("click", () => {
+    document
+      .querySelectorAll(".toggle-btn")
+      .forEach((x) => x.classList.remove("active"));
+    b.classList.add("active");
+    const r = b.dataset.role;
+    document
+      .getElementById("facilitatorView")
+      .classList.toggle("active", r === "facilitator");
+    document
+      .getElementById("participantView")
+      .classList.toggle("active", r === "participant");
+    document.getElementById("roleLabel").textContent =
+      r === "facilitator" ? "Facilitator" : "Participant";
+  })
+);
 </script>
 </body>
 </html>
