@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>SparkTank – Idea Submission</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<style>
+  /* Fluent-style tokens */
+  :root {
+    --body-bg:#f3f2f1; --card-bg:#ffffff; --primary:#0078d4; --primary-dark:#005a9e;
+    --text-main:#201f1e; --text-subtle:#605e5c; --border-subtle:#edebe9;
+    --shadow-card:0 1.6px 3.6px rgba(0,0,0,.132),0 0.3px 0.9px rgba(0,0,0,.108);
+    --radius:8px;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:"Segoe UI",-apple-system,BlinkMacSystemFont,sans-serif;
+       background:var(--body-bg);color:var(--text-main);}
+  .command-bar{display:flex;justify-content:space-between;align-items:center;
+    padding:8px 24px;background:linear-gradient(90deg,#0078d4,#005a9e);
+    color:#fff;box-shadow:0 2px 4px rgba(0,0,0,.2);}
+  .app-logo{width:28px;height:28px;border-radius:6px;background:#fff;color:#0078d4;
+    display:flex;align-items:center;justify-content:center;font-weight:700;font-size:18px;margin-right:8px;}
+  .persona{display:flex;align-items:center;gap:8px;}
+  .persona-avatar{width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,.15);
+    display:flex;align-items:center;justify-content:center;font-weight:600;font-size:14px;}
+  .content{padding:16px 24px;max-width:1200px;margin:0 auto;}
+  .page-header{display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:12px;margin-bottom:14px;}
+  .page-title{font-size:24px;font-weight:600;}
+  .page-subtitle{font-size:13px;color:var(--text-subtle);}
+  .role-toggle{display:inline-flex;border-radius:999px;background:#fff;border:1px solid #c8c6c4;padding:2px;box-shadow:var(--shadow-card);}
+  .toggle-btn{border:none;background:transparent;padding:4px 14px;border-radius:999px;font-size:13px;cursor:pointer;color:var(--text-subtle);}
+  .toggle-btn.active{background:var(--primary);color:#fff;}
+  .timer-banner{background:#faf9f8;border:1px solid #e1dfdd;border-radius:var(--radius);
+    padding:8px 12px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;
+    font-weight:600;}
+  .btn{display:inline-flex;align-items:center;justify-content:center;padding:6px 14px;border-radius:4px;
+    border:1px solid transparent;font-size:13px;font-weight:500;cursor:pointer;background:#f3f2f1;color:#323130;}
+  .btn:hover{background:#e1dfdd;}
+  .btn-primary{background:var(--primary);color:#fff;}
+  .btn-primary:hover{background:var(--primary-dark);}
+  .btn-disabled{opacity:.5;pointer-events:none;}
+  .teams-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;}
+  .team-card{background:var(--card-bg);border-radius:var(--radius);box-shadow:var(--shadow-card);
+    border:1px solid var(--border-subtle);padding:10px;}
+  .team-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
+  .team-avatar{width:26px;height:26px;border-radius:6px;color:#fff;display:flex;align-items:center;
+    justify-content:center;font-weight:600;}
+  .team-name{font-size:13px;font-weight:600;}
+  .team-status{font-size:11px;padding:2px 6px;border-radius:999px;background:#f3f2f1;color:var(--text-subtle);}
+  .progress-bar{height:4px;border-radius:2px;background:#e1dfdd;margin:4px 0;}
+  .progress-inner{height:100%;border-radius:2px;background:var(--primary);}
+  .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.25);display:none;align-items:center;justify-content:center;z-index:10;}
+  .modal{background:#fff;border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.2);padding:16px 20px;
+    width:500px;max-width:90vw;max-height:90vh;overflow:auto;}
+  .modal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+  .modal-title{font-size:16px;font-weight:600;}
+  .form-field{display:flex;flex-direction:column;margin-bottom:10px;}
+  .form-field label{font-size:13px;font-weight:500;color:var(--text-subtle);}
+  .input,textarea,select{font-family:inherit;font-size:13px;padding:6px 10px;border-radius:4px;
+    border:1px solid #c8c6c4;background:#fff;}
+  textarea{resize:vertical;min-height:60px;}
+  .choice-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;}
+  .choice-card{background:#faf9f8;border:1px solid #e1dfdd;border-radius:8px;padding:10px;cursor:pointer;}
+  .choice-card.selected{border-color:var(--primary);box-shadow:0 0 0 1px var(--primary);}
+  .participant-form{background:var(--card-bg);border-radius:var(--radius);box-shadow:var(--shadow-card);
+    border:1px solid var(--border-subtle);padding:16px;}
+  .hint{font-size:11px;color:var(--text-subtle);}
+  #facilitatorView,#participantView{display:none;}
+  #facilitatorView.active,#participantView.active{display:block;}
+</style>
+</head>
+<body>
+<div class="command-bar">
+  <div style="display:flex;align-items:center;">
+    <div class="app-logo">ST</div>
+    <div>
+      <div style="font-size:20px;font-weight:600;">SparkTank Workshop</div>
+      <div style="font-size:12px;opacity:.9;">Idea Submission · Facilitator &amp; Participant</div>
+    </div>
+  </div>
+  <div class="persona">
+    <div class="persona-avatar">SJ</div>
+    <div id="roleLabel" style="font-size:13px;">Facilitator</div>
+  </div>
+</div>
+
+<main class="content">
+  <div class="page-header">
+    <div>
+      <div class="page-title">Idea Submission</div>
+      <div class="page-subtitle">Teams submit their AI use-case ideas within 20 minutes.</div>
+    </div>
+    <div class="role-toggle">
+      <button class="toggle-btn active" data-role="facilitator">Facilitator view</button>
+      <button class="toggle-btn" data-role="participant">Participant view</button>
+    </div>
+  </div>
+
+  <!-- FACILITATOR VIEW -->
+  <div id="facilitatorView" class="active">
+    <div class="timer-banner">
+      <div>⏱ <span id="timerDisplay">20:00</span> remaining</div>
+      <div>
+        <button class="btn" id="pauseBtn">Pause</button>
+        <button class="btn" id="resetBtn">Reset</button>
+      </div>
+    </div>
+    <div class="teams-grid" id="facTeams"></div>
+  </div>
+
+  <!-- PARTICIPANT VIEW -->
+  <div id="participantView">
+    <div class="timer-banner">⏱ <span id="timerDisplayP">20:00</span> remaining</div>
+    <div class="participant-form">
+      <div class="form-field">
+        <label>Team</label>
+        <select id="teamSelect"></select>
+      </div>
+
+      <div class="form-field">
+        <label>1. What type of use case are you submitting?</label>
+        <div class="choice-grid">
+          <div class="choice-card" data-type="better">🧩 Build Something Better<br><span class="hint">Augment or automate an existing process</span></div>
+          <div class="choice-card" data-type="new">🌍 Build Better Things<br><span class="hint">Create a new capability or product</span></div>
+        </div>
+      </div>
+
+      <div id="questionsArea"></div>
+
+      <button class="btn btn-primary" id="submitIdeaBtn" disabled>Submit Idea</button>
+    </div>
+  </div>
+</main>
+
+<!-- IDEA MODAL -->
+<div class="modal-backdrop" id="ideaModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modalTitle"></div>
+      <button class="btn" id="closeModal">✕</button>
+    </div>
+    <div id="modalContent"></div>
+  </div>
+</div>
+
+<script>
+const state = {
+  timer: 20*60, running:true,
+  teams:[
+    {id:'t1',name:'Table 1 – Finance',color:'#0078d4',idea:null},
+    {id:'t2',name:'Table 2 – Support',color:'#107c10',idea:null},
+    {id:'t3',name:'Table 3 – Sales',color:'#ca5010',idea:null}
+  ],
+  selectedTeam:'t1',selectedType:null,
+};
+const facTeams=document.getElementById('facTeams');
+const teamSelect=document.getElementById('teamSelect');
+const timerDisplay=document.getElementById('timerDisplay');
+const timerDisplayP=document.getElementById('timerDisplayP');
+const questionsArea=document.getElementById('questionsArea');
+const submitBtn=document.getElementById('submitIdeaBtn');
+
+state.teams.forEach(t=>{
+  const opt=document.createElement('option');opt.value=t.id;opt.textContent=t.name;teamSelect.appendChild(opt);
+});
+teamSelect.addEventListener('change',()=>{state.selectedTeam=teamSelect.value;renderParticipant();});
+
+// Timer
+function formatTime(s){const m=Math.floor(s/60),sec=s%60;return `${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;}
+function updateTimer(){timerDisplay.textContent=formatTime(state.timer);timerDisplayP.textContent=formatTime(state.timer);}
+let interval=setInterval(()=>{
+  if(state.running && state.timer>0){state.timer--;updateTimer();}
+},1000);
+document.getElementById('pauseBtn').onclick=()=>{state.running=!state.running;document.getElementById('pauseBtn').textContent=state.running?'Pause':'Resume';};
+document.getElementById('resetBtn').onclick=()=>{state.timer=20*60;updateTimer();};
+
+// Facilitator render
+function renderFacilitator(){
+  facTeams.innerHTML='';
+  state.teams.forEach(t=>{
+    const card=document.createElement('div');card.className='team-card';
+    const idea=t.idea;
+    const status=idea? (idea.submitted?'✅ Submitted':'✏️ In progress') : '🕓 Waiting';
+    const answered=idea?idea.answers.filter(a=>a.trim()!=='').length:0;
+    const progress=idea?answered/4*100:0;
+    card.innerHTML=`<div class="team-header">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div class="team-avatar" style="background:${t.color}">${t.name.split(' ')[1]}</div>
+          <div><div class="team-name">${t.name}</div></div>
+        </div>
+        <span class="team-status">${status}</span>
+      </div>
+      <div class="progress-bar"><div class="progress-inner" style="width:${progress}%;"></div></div>
+      <button class="btn" ${!idea||!idea.submitted?'disabled':''} onclick="viewIdea('${t.id}')">View Idea</button>`;
+    facTeams.appendChild(card);
+  });
+}
+function viewIdea(id){
+  const t=state.teams.find(x=>x.id===id);
+  const modal=document.getElementById('ideaModal');
+  document.getElementById('modalTitle').textContent=t.name;
+  const idea=t.idea;
+  let html='';
+  if(!idea){html='<p>No idea submitted.</p>';}
+  else{
+    html+=`<p><strong>Type:</strong> ${idea.type==='better'?'Build Something Better':'Build Better Things'}</p>`;
+    idea.questions.forEach((q,i)=>{
+      html+=`<p><strong>${i+1}. ${q}</strong><br>${idea.answers[i]||'<em>No answer</em>'}</p>`;
+    });
+  }
+  document.getElementById('modalContent').innerHTML=html;
+  modal.style.display='flex';
+}
+document.getElementById('closeModal').onclick=()=>document.getElementById('ideaModal').style.display='none';
+
+// Participant view
+const choiceCards=document.querySelectorAll('.choice-card');
+choiceCards.forEach(c=>{
+  c.addEventListener('click',()=>{
+    choiceCards.forEach(x=>x.classList.remove('selected'));
+    c.classList.add('selected');
+    state.selectedType=c.dataset.type;
+    renderQuestions();
+  });
+});
+function renderQuestions(){
+  const type=state.selectedType;questionsArea.innerHTML='';
+  if(!type)return;
+  const qBetter=[
+    "What process or task do you want to improve?",
+    "Where are the biggest friction points today?",
+    "How could AI assist or automate this?",
+    "What impact would this improvement have?"
+  ];
+  const qNew=[
+    "What’s the strategic goal or opportunity?",
+    "Who benefits or is impacted?",
+    "How would AI enable this new capability?",
+    "What outcomes or success metrics would define value?"
+  ];
+  const qs=type==='better'?qBetter:qNew;
+  qs.forEach((q,i)=>{
+    const ff=document.createElement('div');ff.className='form-field';
+    ff.innerHTML=`<label>${i+1}. ${q}</label><textarea data-index="${i}"></textarea>`;
+    questionsArea.appendChild(ff);
+  });
+  submitBtn.disabled=true;
+  questionsArea.querySelectorAll('textarea').forEach(t=>{
+    t.addEventListener('input',checkCompletion);
+  });
+}
+function checkCompletion(){
+  const answers=[...questionsArea.querySelectorAll('textarea')].map(t=>t.value.trim());
+  const allFilled=answers.every(a=>a!=='');
+  submitBtn.disabled=!allFilled;
+}
+submitBtn.onclick=()=>{
+  const answers=[...questionsArea.querySelectorAll('textarea')].map(t=>t.value.trim());
+  const qs=state.selectedType==='better'?[
+    "What process or task do you want to improve?",
+    "Where are the biggest friction points today?",
+    "How could AI assist or automate this?",
+    "What impact would this improvement have?"
+  ]:[
+    "What’s the strategic goal or opportunity?",
+    "Who benefits or is impacted?",
+    "How would AI enable this new capability?",
+    "What outcomes or success metrics would define value?"
+  ];
+  const team=state.teams.find(t=>t.id===state.selectedTeam);
+  team.idea={type:state.selectedType,questions:qs,answers,submitted:true};
+  renderFacilitator();
+  submitBtn.disabled=true;
+  questionsArea.innerHTML='<p><strong>✅ Idea submitted! Thank you.</strong></p>';
+};
+function renderParticipant(){/* refresh teamSelect display if needed */}
+renderFacilitator();updateTimer();
+</script>
+</body>
+</html>
