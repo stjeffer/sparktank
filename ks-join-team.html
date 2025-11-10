@@ -1,0 +1,833 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>SparkTank – Workshop Lobby</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      --body-bg: #f3f2f1;
+      --card-bg: #ffffff;
+      --primary: #0078d4;
+      --primary-dark: #005a9e;
+      --text-main: #201f1e;
+      --text-subtle: #605e5c;
+      --border-subtle: #edebe9;
+      --shadow-card: 0 1.6px 3.6px rgba(0,0,0,0.132),
+                     0 0.3px 0.9px rgba(0,0,0,0.108);
+      --radius: 8px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+      background: var(--body-bg);
+      color: var(--text-main);
+    }
+
+    .app-shell {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Command bar */
+    .command-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 24px;
+      background: linear-gradient(90deg, #0078d4, #005a9e);
+      color: #ffffff;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+
+    .command-bar-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .app-logo {
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      background: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      color: #0078d4;
+      font-size: 18px;
+    }
+
+    .command-title {
+      font-size: 20px;
+      font-weight: 600;
+    }
+
+    .command-subtitle {
+      font-size: 12px;
+      opacity: 0.9;
+    }
+
+    .persona {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .persona-avatar {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.15);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      font-size: 14px;
+    }
+
+    .persona-name {
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    .content {
+      padding: 16px 24px 24px;
+      max-width: 1200px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .page-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 14px;
+    }
+
+    .page-title {
+      font-size: 24px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .page-subtitle {
+      font-size: 13px;
+      color: var(--text-subtle);
+    }
+
+    /* Role toggle */
+    .role-toggle {
+      display: inline-flex;
+      border-radius: 999px;
+      background: #ffffff;
+      border: 1px solid #c8c6c4;
+      padding: 2px;
+      box-shadow: var(--shadow-card);
+    }
+
+    .toggle-btn {
+      border: none;
+      background: transparent;
+      padding: 4px 14px;
+      border-radius: 999px;
+      font-size: 13px;
+      cursor: pointer;
+      color: var(--text-subtle);
+    }
+
+    .toggle-btn.active {
+      background: var(--primary);
+      color: #ffffff;
+    }
+
+    .layout-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+      gap: 16px;
+    }
+
+    @media (max-width: 960px) {
+      .layout-grid {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
+
+    .section-card {
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-card);
+      border: 1px solid var(--border-subtle);
+      padding: 14px 18px 16px;
+      margin-bottom: 16px;
+    }
+
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      margin-bottom: 8px;
+    }
+
+    .section-title {
+      font-size: 14px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--text-subtle);
+    }
+
+    .section-caption {
+      font-size: 12px;
+      color: var(--text-subtle);
+    }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 4px;
+      border: 1px solid transparent;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      background: #f3f2f1;
+      color: #323130;
+      transition: background 0.1s ease, transform 0.05s ease, border-color 0.1s ease;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: #ffffff;
+    }
+
+    .btn-primary:hover { background: var(--primary-dark); }
+    .btn:hover { background: #e1dfdd; }
+    .btn:active { transform: scale(0.98); }
+
+    .btn-disabled {
+      opacity: 0.5;
+      cursor: default;
+      pointer-events: none;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: #f3f2f1;
+      color: var(--text-subtle);
+    }
+
+    .hint {
+      font-size: 11px;
+      color: var(--text-subtle);
+    }
+
+    /* Teams grid (both views share) */
+    .teams-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 10px;
+    }
+
+    .team-card {
+      border-radius: 8px;
+      border: 1px solid #e1dfdd;
+      background: #faf9f8;
+      padding: 10px 10px 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .team-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .team-avatar {
+      width: 26px;
+      height: 26px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #ffffff;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .team-name {
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .team-meta {
+      font-size: 11px;
+      color: var(--text-subtle);
+    }
+
+    .team-status-pill {
+      font-size: 11px;
+      padding: 2px 6px;
+      border-radius: 999px;
+      background: #edebe9;
+      color: var(--text-subtle);
+    }
+
+    .team-members {
+      font-size: 12px;
+    }
+
+    .empty-state {
+      font-size: 12px;
+      color: var(--text-subtle);
+      font-style: italic;
+      padding: 6px 4px;
+    }
+
+    .divider {
+      border-top: 1px solid #edebe9;
+      margin: 8px 0;
+    }
+
+    /* Facilitator sidebars */
+    .side-list {
+      list-style: none;
+      padding-left: 0;
+      margin: 0;
+      font-size: 12px;
+    }
+
+    .side-list li {
+      padding: 4px 0;
+      border-bottom: 1px solid #edebe9;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .side-label {
+      color: var(--text-subtle);
+    }
+
+    .mini-select {
+      font-size: 11px;
+      padding: 3px 6px;
+      border-radius: 4px;
+      border: 1px solid #c8c6c4;
+      background: #ffffff;
+    }
+
+    .mini-input {
+      font-size: 12px;
+      padding: 4px 8px;
+      border-radius: 4px;
+      border: 1px solid #c8c6c4;
+      width: 100%;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1.3fr 1.3fr;
+      gap: 6px;
+      margin-top: 6px;
+    }
+
+    .footer-row {
+      display: flex;
+      justify-content: flex-end;
+      margin-top: 12px;
+      gap: 8px;
+    }
+
+    /* Participant view layout */
+    .participant-layout {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+
+    .participant-header {
+      margin-bottom: 12px;
+    }
+
+    .participant-row {
+      display: grid;
+      grid-template-columns: minmax(0, 2fr) minmax(0, 1.5fr);
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+
+    .label {
+      font-size: 12px;
+      color: var(--text-subtle);
+      margin-bottom: 2px;
+    }
+
+    select, input {
+      font-family: inherit;
+    }
+
+    .select, .input {
+      width: 100%;
+      font-size: 13px;
+      padding: 6px 10px;
+      border-radius: 4px;
+      border: 1px solid #c8c6c4;
+      background: #ffffff;
+      outline: none;
+    }
+
+    .select:focus, .input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 1px var(--primary);
+    }
+
+    .current-team-pill {
+      font-size: 11px;
+      padding: 2px 6px;
+      border-radius: 999px;
+      background: #f3f2f1;
+      color: var(--text-subtle);
+    }
+
+    /* Role containers */
+    #facilitatorView, #participantView {
+      display: none;
+    }
+    #facilitatorView.active, #participantView.active {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+<div class="app-shell">
+  <!-- Top bar -->
+  <header class="command-bar">
+    <div class="command-bar-left">
+      <div class="app-logo">ST</div>
+      <div>
+        <div class="command-title">SparkTank Workshop</div>
+        <div class="command-subtitle">Lobby · Teams &amp; join flow</div>
+      </div>
+    </div>
+    <div class="persona">
+      <div class="persona-avatar">SJ</div>
+      <div class="persona-name" id="roleLabel">Facilitator</div>
+    </div>
+  </header>
+
+  <main class="content">
+    <div class="page-header">
+      <div>
+        <div class="page-title">Workshop lobby</div>
+        <div class="page-subtitle">
+          Teams are ready. Participants join a table; you see everything update in real time.
+        </div>
+      </div>
+      <div class="role-toggle">
+        <button class="toggle-btn active" data-role="facilitator">Facilitator view</button>
+        <button class="toggle-btn" data-role="participant">Participant view</button>
+      </div>
+    </div>
+
+    <!-- FACILITATOR VIEW -->
+    <div id="facilitatorView" class="active">
+      <div class="layout-grid">
+        <section class="section-card">
+          <div class="section-header">
+            <div class="section-title">Teams</div>
+            <div class="section-caption">
+              Each card represents a table or breakout group.
+            </div>
+          </div>
+          <div class="teams-grid" id="facTeamsGrid"></div>
+        </section>
+
+        <div>
+          <section class="section-card">
+            <div class="section-header">
+              <div class="section-title">Participants</div>
+              <span class="badge">
+                <span id="participantCount">0</span> total
+              </span>
+            </div>
+            <div class="section-caption" style="margin-bottom:6px;">
+              Drag-and-drop in a real app; here we assign with dropdowns.
+            </div>
+
+            <div class="hint" style="margin-bottom:4px;">Not yet joined a team</div>
+            <ul class="side-list" id="unassignedList"></ul>
+            <div class="divider"></div>
+
+            <div class="hint">Quick add participant</div>
+            <div class="form-row">
+              <input id="newParticipantName" class="mini-input" type="text" placeholder="Name" />
+              <input id="newParticipantRole" class="mini-input" type="text" placeholder="Job title (optional)" />
+            </div>
+            <div class="footer-row">
+              <button class="btn" id="btnAddParticipant">Add to lobby</button>
+            </div>
+          </section>
+
+          <section class="section-card">
+            <div class="section-header">
+              <div class="section-title">Readiness</div>
+            </div>
+            <div class="section-caption" style="margin-bottom:6px;">
+              All teams need at least one participant before you start SparkTank.
+            </div>
+            <div class="hint" id="readinessText"></div>
+            <div class="footer-row">
+              <button class="btn btn-primary btn-disabled" id="btnStart">
+                Start workshop
+              </button>
+            </div>
+          </section>
+        </div>
+      </div>
+    </div>
+
+    <!-- PARTICIPANT VIEW -->
+    <div id="participantView">
+      <div class="participant-layout">
+        <section class="section-card participant-header">
+          <div class="section-header">
+            <div class="section-title">Welcome to SparkTank</div>
+            <span class="badge" id="participantStatusBadge">Not joined</span>
+          </div>
+          <div class="participant-row">
+            <div>
+              <div class="label">Who are you?</div>
+              <select class="select" id="participantSelect"></select>
+              <div class="hint">
+                In a real workshop this would be your signed-in identity. Here we pick from the attendee list.
+              </div>
+            </div>
+            <div>
+              <div class="label">Or add yourself</div>
+              <input id="selfNameInput" class="input" type="text" placeholder="Type your name and press Enter" />
+              <div class="hint">Useful for walk-up registrations in an in-person room.</div>
+            </div>
+          </div>
+          <div style="margin-top:6px;">
+            <span class="label">Your current team</span><br />
+            <span class="current-team-pill" id="currentTeamLabel">No team yet</span>
+          </div>
+        </section>
+
+        <section class="section-card">
+          <div class="section-header">
+            <div class="section-title">Choose a team</div>
+            <div class="section-caption">
+              Join the table that matches your function or interest.
+            </div>
+          </div>
+          <div class="teams-grid" id="partTeamsGrid"></div>
+        </section>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+  // Shared state for both views
+  const state = {
+    teams: [
+      { id: 't1', name: 'Table 1 – Finance', color: '#0078d4' },
+      { id: 't2', name: 'Table 2 – Customer Support', color: '#107c10' },
+      { id: 't3', name: 'Table 3 – Sales & Marketing', color: '#ca5010' }
+    ],
+    participants: [
+      { id: 'p1', name: 'Alex Rivera', role: 'CIO', teamId: 't1' },
+      { id: 'p2', name: 'Jamie Chen', role: 'Process Owner', teamId: '' },
+      { id: 'p3', name: 'Sam Patel', role: 'Compliance Lead', teamId: '' },
+      { id: 'p4', name: 'Priya Singh', role: 'HR Director', teamId: 't2' }
+    ],
+    currentParticipantId: 'p2' // default selected in participant view
+  };
+
+  // Helpers
+  function getTeamMembers(teamId) {
+    return state.participants.filter(p => p.teamId === teamId);
+  }
+
+  function getTeamStatus(team) {
+    const members = getTeamMembers(team.id).length;
+    if (members === 0) return 'Waiting';
+    if (members >= 6) return 'Full';
+    return 'Ready';
+  }
+
+  // DOM refs
+  const facTeamsGrid = document.getElementById('facTeamsGrid');
+  const partTeamsGrid = document.getElementById('partTeamsGrid');
+  const unassignedList = document.getElementById('unassignedList');
+  const participantCountEl = document.getElementById('participantCount');
+  const readinessText = document.getElementById('readinessText');
+  const btnStart = document.getElementById('btnStart');
+  const participantSelect = document.getElementById('participantSelect');
+  const currentTeamLabel = document.getElementById('currentTeamLabel');
+  const participantStatusBadge = document.getElementById('participantStatusBadge');
+  const roleLabel = document.getElementById('roleLabel');
+
+  // ---------- Rendering ----------
+  function renderFacilitatorTeams() {
+    facTeamsGrid.innerHTML = '';
+    state.teams.forEach(team => {
+      const members = getTeamMembers(team.id);
+      const status = getTeamStatus(team);
+
+      const card = document.createElement('div');
+      card.className = 'team-card';
+      card.innerHTML = `
+        <div class="team-card-header">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div class="team-avatar" style="background:${team.color}">${team.name.split(' ')[1] || 'T'}</div>
+            <div>
+              <div class="team-name">${team.name}</div>
+              <div class="team-meta">${members.length} participant${members.length !== 1 ? 's' : ''}</div>
+            </div>
+          </div>
+          <span class="team-status-pill">${status}</span>
+        </div>
+        <div class="team-members">
+          ${members.length
+            ? members.map(m => m.name).slice(0, 4).join(', ') + (members.length > 4 ? '…' : '')
+            : '<span class="hint">No one joined yet</span>'}
+        </div>
+      `;
+      facTeamsGrid.appendChild(card);
+    });
+  }
+
+  function renderUnassignedList() {
+    unassignedList.innerHTML = '';
+    const unassigned = state.participants.filter(p => !p.teamId);
+    if (!unassigned.length) {
+      const li = document.createElement('li');
+      li.innerHTML = '<span class="empty-state">Everyone is in a team.</span>';
+      unassignedList.appendChild(li);
+      return;
+    }
+
+    unassigned.forEach(p => {
+      const li = document.createElement('li');
+      const labelSpan = document.createElement('span');
+      labelSpan.textContent = p.name;
+      labelSpan.className = 'side-label';
+
+      const select = document.createElement('select');
+      select.className = 'mini-select';
+      select.innerHTML = `
+        <option value="">Assign to…</option>
+        ${state.teams.map(t => `<option value="${t.id}">${t.name}</option>`).join('')}
+      `;
+      select.addEventListener('change', () => {
+        if (!select.value) return;
+        assignParticipantToTeam(p.id, select.value);
+      });
+
+      li.appendChild(labelSpan);
+      li.appendChild(select);
+      unassignedList.appendChild(li);
+    });
+  }
+
+  function renderReadiness() {
+    const teamsWithMembers = state.teams.filter(t => getTeamMembers(t.id).length > 0).length;
+    const totalTeams = state.teams.length;
+
+    participantCountEl.textContent = state.participants.length.toString();
+
+    if (teamsWithMembers === 0) {
+      readinessText.textContent = 'No teams have participants yet.';
+      btnStart.classList.add('btn-disabled');
+    } else if (teamsWithMembers < totalTeams) {
+      readinessText.textContent = `${teamsWithMembers} of ${totalTeams} teams have at least one participant.`;
+      btnStart.classList.add('btn-disabled');
+    } else {
+      readinessText.textContent = 'All teams have at least one participant. You are ready to start.';
+      btnStart.classList.remove('btn-disabled');
+    }
+  }
+
+  function renderParticipantSelector() {
+    participantSelect.innerHTML = '';
+    state.participants.forEach(p => {
+      const opt = document.createElement('option');
+      opt.value = p.id;
+      opt.textContent = p.name;
+      participantSelect.appendChild(opt);
+    });
+
+    if (!state.currentParticipantId && state.participants.length) {
+      state.currentParticipantId = state.participants[0].id;
+    }
+    if (state.currentParticipantId) {
+      participantSelect.value = state.currentParticipantId;
+    }
+    updateParticipantStatus();
+  }
+
+  function renderParticipantTeams() {
+    partTeamsGrid.innerHTML = '';
+    const current = state.participants.find(p => p.id === state.currentParticipantId);
+
+    state.teams.forEach(team => {
+      const members = getTeamMembers(team.id);
+      const isJoined = current && current.teamId === team.id;
+
+      const card = document.createElement('div');
+      card.className = 'team-card';
+      card.innerHTML = `
+        <div class="team-card-header">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div class="team-avatar" style="background:${team.color}">${team.name.split(' ')[1] || 'T'}</div>
+            <div>
+              <div class="team-name">${team.name}</div>
+              <div class="team-meta">${members.length} participant${members.length !== 1 ? 's' : ''}</div>
+            </div>
+          </div>
+          <span class="team-status-pill">${getTeamStatus(team)}</span>
+        </div>
+        <div class="team-members">
+          ${members.length
+            ? members.map(m => m.name).slice(0, 3).join(', ') + (members.length > 3 ? '…' : '')
+            : '<span class="hint">No one joined yet</span>'}
+        </div>
+      `;
+
+      const btn = document.createElement('button');
+      btn.className = 'btn';
+      btn.style.marginTop = '4px';
+      btn.textContent = isJoined ? 'Joined ✓' : 'Join this team';
+      if (isJoined) {
+        btn.classList.add('btn-primary');
+        btn.disabled = true;
+      } else {
+        btn.addEventListener('click', () => joinTeam(team.id));
+      }
+      card.appendChild(btn);
+
+      partTeamsGrid.appendChild(card);
+    });
+  }
+
+  function updateParticipantStatus() {
+    const current = state.participants.find(p => p.id === state.currentParticipantId);
+    if (!current) {
+      currentTeamLabel.textContent = 'No participant selected';
+      participantStatusBadge.textContent = 'Not joined';
+      return;
+    }
+    if (!current.teamId) {
+      currentTeamLabel.textContent = 'No team yet';
+      participantStatusBadge.textContent = 'Not joined';
+    } else {
+      const team = state.teams.find(t => t.id === current.teamId);
+      currentTeamLabel.textContent = team ? team.name : 'Unknown team';
+      participantStatusBadge.textContent = 'Joined';
+    }
+  }
+
+  function renderAll() {
+    renderFacilitatorTeams();
+    renderUnassignedList();
+    renderReadiness();
+    renderParticipantSelector();
+    renderParticipantTeams();
+  }
+
+  // ---------- State updates ----------
+  function assignParticipantToTeam(participantId, teamId) {
+    const participant = state.participants.find(p => p.id === participantId);
+    if (!participant) return;
+    participant.teamId = teamId;
+    renderAll();
+  }
+
+  function joinTeam(teamId) {
+    if (!state.currentParticipantId) return;
+    assignParticipantToTeam(state.currentParticipantId, teamId);
+  }
+
+  // ---------- Events ----------
+  document.getElementById('btnAddParticipant').addEventListener('click', () => {
+    const nameInput = document.getElementById('newParticipantName');
+    const roleInput = document.getElementById('newParticipantRole');
+    const name = nameInput.value.trim();
+    const role = roleInput.value.trim();
+    if (!name) {
+      alert('Enter a participant name.');
+      return;
+    }
+    const id = 'p' + (state.participants.length + 1);
+    state.participants.push({ id, name, role, teamId: '' });
+    nameInput.value = '';
+    roleInput.value = '';
+    renderAll();
+  });
+
+  participantSelect.addEventListener('change', () => {
+    state.currentParticipantId = participantSelect.value;
+    updateParticipantStatus();
+    renderParticipantTeams();
+  });
+
+  document.getElementById('selfNameInput').addEventListener('keyup', e => {
+    if (e.key !== 'Enter') return;
+    const name = e.target.value.trim();
+    if (!name) return;
+    const id = 'p' + (state.participants.length + 1);
+    state.participants.push({ id, name, role: '', teamId: '' });
+    state.currentParticipantId = id;
+    e.target.value = '';
+    renderAll();
+  });
+
+  document.getElementById('btnStart').addEventListener('click', () => {
+    if (btnStart.classList.contains('btn-disabled')) return;
+    alert('Workshop would start now – next screen is the Use Case Submission activity.');
+  });
+
+  // Role toggle
+  document.querySelectorAll('.toggle-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+
+      const role = btn.getAttribute('data-role');
+      if (role === 'facilitator') {
+        document.getElementById('facilitatorView').classList.add('active');
+        document.getElementById('participantView').classList.remove('active');
+        roleLabel.textContent = 'Facilitator';
+      } else {
+        document.getElementById('participantView').classList.add('active');
+        document.getElementById('facilitatorView').classList.remove('active');
+        roleLabel.textContent = 'Participant';
+      }
+    });
+  });
+
+  // Initial render
+  renderAll();
+</script>
+</body>
+</html>
