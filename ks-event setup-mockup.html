@@ -1,0 +1,1085 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>SparkTank – Event Setup</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    :root {
+      --body-bg: #f3f2f1;
+      --card-bg: #ffffff;
+      --primary: #0078d4;
+      --primary-dark: #005a9e;
+      --accent-green: #107c10;
+      --accent-orange: #ca5010;
+      --border-subtle: #edebe9;
+      --text-main: #201f1e;
+      --text-subtle: #605e5c;
+      --shadow-card: 0 1.6px 3.6px rgba(0,0,0,0.132),
+                     0 0.3px 0.9px rgba(0,0,0,0.108);
+      --radius: 8px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+      background: var(--body-bg);
+      color: var(--text-main);
+    }
+
+    .app-shell {
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+    }
+
+    /* Top command bar */
+    .command-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 24px;
+      background: linear-gradient(90deg, #0078d4, #005a9e);
+      color: #ffffff;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+
+    .command-bar-left {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .app-logo {
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      background: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      color: #0078d4;
+      font-size: 18px;
+    }
+
+    .command-title {
+      font-size: 20px;
+      font-weight: 600;
+    }
+
+    .command-bar-right {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      font-size: 13px;
+    }
+
+    .pill {
+      padding: 3px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.7);
+      font-size: 12px;
+      opacity: 0.9;
+    }
+
+    .persona {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .persona-avatar {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.15);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .persona-name {
+      font-size: 13px;
+      font-weight: 500;
+    }
+
+    /* Main content */
+    .content {
+      padding: 16px 24px 24px;
+      max-width: 1200px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .page-title {
+      font-size: 24px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .page-subtitle {
+      font-size: 13px;
+      color: var(--text-subtle);
+      margin-bottom: 16px;
+    }
+
+    .layout-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+      gap: 16px;
+    }
+
+    @media (max-width: 960px) {
+      .layout-grid {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
+
+    .section-card {
+      background: var(--card-bg);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-card);
+      padding: 16px 20px 18px;
+      margin-bottom: 16px;
+      border: 1px solid var(--border-subtle);
+    }
+
+    .section-header {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+
+    .section-title {
+      font-size: 14px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      color: var(--text-subtle);
+    }
+
+    .section-caption {
+      font-size: 12px;
+      color: var(--text-subtle);
+    }
+
+    /* Form styles */
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1.6fr 1.2fr;
+      gap: 12px 16px;
+    }
+
+    .form-field {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      font-size: 13px;
+    }
+
+    .form-field label {
+      font-weight: 500;
+      color: var(--text-subtle);
+    }
+
+    .input,
+    select,
+    textarea {
+      font-family: inherit;
+      font-size: 13px;
+      padding: 6px 10px;
+      border-radius: 4px;
+      border: 1px solid #c8c6c4;
+      background: #ffffff;
+      outline: none;
+      transition: border-color 0.1s ease, box-shadow 0.1s ease;
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 60px;
+    }
+
+    .input:focus,
+    select:focus,
+    textarea:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 1px var(--primary);
+    }
+
+    .hint {
+      font-size: 11px;
+      color: var(--text-subtle);
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: #f3f2f1;
+      color: var(--text-subtle);
+    }
+
+    /* Buttons */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 6px 14px;
+      border-radius: 4px;
+      border: 1px solid transparent;
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      background: #f3f2f1;
+      color: #323130;
+      transition: background 0.1s ease, border-color 0.1s ease, transform 0.05s ease;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: #ffffff;
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-dark);
+    }
+
+    .btn:hover {
+      background: #e1dfdd;
+    }
+
+    .btn-ghost {
+      background: transparent;
+      border-color: #c8c6c4;
+    }
+
+    .btn-ghost:hover {
+      background: #f3f2f1;
+    }
+
+    .btn-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      padding: 0;
+    }
+
+    .btn:active {
+      transform: scale(0.98);
+    }
+
+    /* Participants table */
+    .participants-toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      gap: 8px;
+    }
+
+    .participants-toolbar-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .participants-toolbar-right {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .search-input {
+      max-width: 220px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+
+    thead {
+      background: #f3f2f1;
+    }
+
+    th, td {
+      padding: 6px 8px;
+      text-align: left;
+      border-bottom: 1px solid #edebe9;
+    }
+
+    th {
+      font-weight: 600;
+      color: var(--text-subtle);
+    }
+
+    tbody tr:hover {
+      background: #f8f8f8;
+    }
+
+    .empty-state {
+      padding: 10px 4px;
+      font-size: 12px;
+      color: var(--text-subtle);
+      font-style: italic;
+    }
+
+    /* Quick add strip */
+    .quick-add-row {
+      margin-top: 10px;
+      border-radius: 6px;
+      border: 1px dashed #c8c6c4;
+      padding: 8px;
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr)) 90px;
+      gap: 6px;
+      align-items: center;
+      background: #faf9f8;
+    }
+
+    .quick-add-row .input,
+    .quick-add-row select {
+      font-size: 12px;
+      padding: 4px 8px;
+    }
+
+    /* Teams section */
+    .teams-header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .teams-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 10px;
+      margin-bottom: 6px;
+    }
+
+    .team-card {
+      border-radius: 8px;
+      border: 1px solid #e1dfdd;
+      background: #faf9f8;
+      padding: 10px 10px 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .team-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 4px;
+    }
+
+    .team-avatar {
+      width: 26px;
+      height: 26px;
+      border-radius: 6px;
+      background: #0078d4;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #ffffff;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .team-name {
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .team-meta {
+      font-size: 11px;
+      color: var(--text-subtle);
+    }
+
+    .summary-card {
+      border-radius: 8px;
+      padding: 10px 12px;
+      border: 1px solid #e1dfdd;
+      background: #faf9f8;
+      font-size: 12px;
+      margin-top: 6px;
+    }
+
+    .summary-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 4px;
+    }
+
+    .summary-row:last-child {
+      margin-bottom: 0;
+    }
+
+    .summary-label {
+      color: var(--text-subtle);
+    }
+
+    .summary-value {
+      font-weight: 600;
+    }
+
+    .summary-chip {
+      padding: 2px 6px;
+      border-radius: 999px;
+      font-size: 11px;
+      background: #edebe9;
+    }
+
+    /* Footer actions */
+    .footer-actions {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 8px;
+    }
+
+    .footer-actions-right {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
+    /* Modal */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.25);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+
+    .modal {
+      width: 420px;
+      max-width: 94vw;
+      background: #ffffff;
+      border-radius: 8px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+      padding: 16px 18px 14px;
+      border: 1px solid #edebe9;
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .modal-title {
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    .modal-body {
+      font-size: 13px;
+      max-height: 50vh;
+      overflow-y: auto;
+      padding-right: 4px;
+    }
+
+    .modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .chip-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin: 6px 0 4px;
+    }
+
+    .color-chip {
+      width: 20px;
+      height: 20px;
+      border-radius: 4px;
+      border: 1px solid #c8c6c4;
+      cursor: pointer;
+      box-shadow: 0 0 0 1px transparent;
+    }
+
+    .color-chip.selected {
+      box-shadow: 0 0 0 2px #323130;
+    }
+
+    .divider {
+      border-top: 1px solid #edebe9;
+      margin: 10px 0;
+    }
+
+    .checkbox-list {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      margin-top: 4px;
+      max-height: 180px;
+      overflow-y: auto;
+    }
+
+    .checkbox-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+    }
+
+    .checkbox-item label {
+      font-weight: 400;
+      color: var(--text-main);
+    }
+
+    .pill-status {
+      font-size: 11px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: #f3f2f1;
+      color: var(--text-subtle);
+    }
+  </style>
+</head>
+<body>
+<div class="app-shell">
+  <!-- Command bar -->
+  <header class="command-bar">
+    <div class="command-bar-left">
+      <div class="app-logo">ST</div>
+      <div>
+        <div class="command-title">SparkTank Workshop</div>
+        <div style="font-size:12px; opacity:0.9;">Event setup · Facilitator view</div>
+      </div>
+    </div>
+    <div class="command-bar-right">
+      <div class="pill">
+        <span>Draft</span>
+      </div>
+      <div class="persona">
+        <div class="persona-avatar">SJ</div>
+        <div class="persona-name">Facilitator</div>
+      </div>
+    </div>
+  </header>
+
+  <main class="content">
+    <div class="page-title">Create event</div>
+    <div class="page-subtitle">
+      Define the workshop details, load participants, and organize teams before you start SparkTank.
+    </div>
+
+    <div class="layout-grid">
+
+      <!-- Left column: Event details + participants -->
+      <div>
+
+        <!-- Event details -->
+        <section class="section-card">
+          <div class="section-header">
+            <div class="section-title">Event details</div>
+            <span class="badge">
+              <span>Step 1 of 2</span>
+            </span>
+          </div>
+          <div class="form-grid">
+            <div class="form-field">
+              <label for="eventName">Event name</label>
+              <input id="eventName" class="input" type="text" placeholder="e.g. Contoso AI Strategy SparkTank" />
+            </div>
+            <div class="form-field">
+              <label for="eventDate">Date &amp; time</label>
+              <input id="eventDate" class="input" type="datetime-local" />
+            </div>
+
+            <div class="form-field">
+              <label for="modality">Modality</label>
+              <select id="modality">
+                <option value="one-to-one">1:1</option>
+                <option value="one-to-many">1:N</option>
+                <option value="in-person" selected>In-person group</option>
+              </select>
+              <span class="hint">How you’ll be running this workshop.</span>
+            </div>
+
+            <div class="form-field">
+              <label for="locationType">Location type</label>
+              <select id="locationType">
+                <option value="virtual">Virtual</option>
+                <option value="in-person" selected>In-person</option>
+              </select>
+              <span class="hint">Controls whether teams are created ahead of time or at the venue.</span>
+            </div>
+
+            <div class="form-field">
+              <label for="location">Location / meeting link</label>
+              <input id="location" class="input" type="text" placeholder="e.g. Building 34, room 2.05 or Teams link" />
+            </div>
+
+            <div class="form-field">
+              <label for="tpid">Customer / TPID</label>
+              <input id="tpid" class="input" type="text" placeholder="e.g. Contoso (TPID 123456789)" />
+            </div>
+
+            <div class="form-field" style="grid-column:1 / -1;">
+              <label for="description">Event description</label>
+              <textarea id="description" placeholder="Briefly describe the purpose and audience for this SparkTank session."></textarea>
+            </div>
+          </div>
+        </section>
+
+        <!-- Participants -->
+        <section class="section-card">
+          <div class="section-header">
+            <div class="section-title">Participants</div>
+            <div class="section-caption">Import from a list or add manually.</div>
+          </div>
+
+          <div class="participants-toolbar">
+            <div class="participants-toolbar-left">
+              <button class="btn btn-ghost" id="btnImportCsv">
+                📥 Import CSV
+              </button>
+              <button class="btn btn-ghost" id="btnSyncDirectory">
+                🔄 Sync directory
+              </button>
+            </div>
+            <div class="participants-toolbar-right">
+              <input class="input search-input" id="searchInput" placeholder="Search participants" />
+              <span class="pill-status">
+                <span id="participantCount">0</span> participants
+              </span>
+            </div>
+          </div>
+
+          <div class="table-wrapper">
+            <table>
+              <thead>
+              <tr>
+                <th>Name</th>
+                <th>Job title</th>
+                <th>Organization / TPID</th>
+                <th>Team</th>
+              </tr>
+              </thead>
+              <tbody id="participantsBody">
+              <tr class="empty-row">
+                <td colspan="4" class="empty-state">
+                  No participants yet. Use the quick add row below to start building your list.
+                </td>
+              </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Quick add row -->
+          <div class="quick-add-row">
+            <input id="qaName" class="input" type="text" placeholder="Name" />
+            <input id="qaTitle" class="input" type="text" placeholder="Job title" />
+            <input id="qaOrg" class="input" type="text" placeholder="Organization / TPID" />
+            <select id="qaTeam">
+              <option value="">No team yet</option>
+            </select>
+            <button class="btn btn-primary" id="btnAddParticipant">Add</button>
+          </div>
+          <div class="hint" style="margin-top:4px;">
+            Tip: you can assign teams now or leave participants unassigned and group them at the venue.
+          </div>
+        </section>
+      </div>
+
+      <!-- Right column: Teams + summary -->
+      <div>
+
+        <!-- Teams section -->
+        <section class="section-card">
+          <div class="section-header">
+            <div class="section-title">Teams</div>
+            <span class="section-caption">
+              Define tables / breakout groups for SparkTank.
+            </span>
+          </div>
+          <div class="teams-header-row">
+            <div class="hint">
+              For in-person sessions, you can also let participants create their own teams when they arrive.
+            </div>
+            <button class="btn btn-primary" id="btnNewTeam">
+              ＋ New team
+            </button>
+          </div>
+
+          <div class="teams-grid" id="teamsGrid">
+            <!-- Team cards go here -->
+          </div>
+
+          <div class="summary-card">
+            <div class="summary-row">
+              <div class="summary-label">Teams</div>
+              <div class="summary-value"><span id="teamCount">0</span></div>
+            </div>
+            <div class="summary-row">
+              <div class="summary-label">Participants assigned</div>
+              <div class="summary-value">
+                <span id="assignedCount">0</span>
+              </div>
+            </div>
+            <div class="summary-row">
+              <div class="summary-label">Unassigned participants</div>
+              <div class="summary-value">
+                <span id="unassignedCount">0</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Event readiness summary -->
+        <section class="section-card">
+          <div class="section-header">
+            <div class="section-title">Readiness check</div>
+          </div>
+          <div class="summary-card">
+            <div class="summary-row">
+              <div class="summary-label">Configuration</div>
+              <div class="summary-value">
+                <span class="summary-chip" id="modeChip">In-person group · tables</span>
+              </div>
+            </div>
+            <div class="summary-row">
+              <div class="summary-label">SparkTank status</div>
+              <div class="summary-value">
+                <span class="summary-chip" id="statusChip">Waiting for event details</span>
+              </div>
+            </div>
+          </div>
+          <div class="divider"></div>
+          <div class="hint">
+            When everything looks good, continue to the lobby. Participants will see the team join screen; you’ll see the facilitator dashboard.
+          </div>
+          <div class="footer-actions">
+            <button class="btn btn-ghost">Discard</button>
+            <div class="footer-actions-right">
+              <button class="btn">Save draft</button>
+              <button class="btn btn-primary" id="btnContinue">Continue to lobby</button>
+            </div>
+          </div>
+        </section>
+
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- New team modal -->
+<div class="modal-backdrop" id="teamModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Create team</div>
+      <button class="btn btn-icon btn-ghost" id="btnCloseModal">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-field" style="margin-bottom:8px;">
+        <label for="teamNameInput">Team / table name</label>
+        <input id="teamNameInput" class="input" type="text" placeholder="e.g. Table 1 – Finance" />
+      </div>
+      <div class="form-field">
+        <label>Team color</label>
+        <div class="chip-row" id="colorPicker">
+          <div class="color-chip selected" data-color="#0078d4" style="background:#0078d4;"></div>
+          <div class="color-chip" data-color="#107c10" style="background:#107c10;"></div>
+          <div class="color-chip" data-color="#ca5010" style="background:#ca5010;"></div>
+          <div class="color-chip" data-color="#8764b8" style="background:#8764b8;"></div>
+          <div class="color-chip" data-color="#038387" style="background:#038387;"></div>
+        </div>
+      </div>
+      <div class="divider"></div>
+      <div class="form-field">
+        <label>Assign participants (optional)</label>
+        <span class="hint">You can update assignments later from the main screen.</span>
+        <div class="checkbox-list" id="participantCheckboxList">
+          <!-- Filled dynamically -->
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" id="btnCancelTeam">Cancel</button>
+      <button class="btn btn-primary" id="btnCreateTeam">Create team</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Simple in-memory state
+  const state = {
+    participants: [],
+    teams: [],
+    selectedColor: '#0078d4'
+  };
+
+  const participantsBody = document.getElementById('participantsBody');
+  const participantCount = document.getElementById('participantCount');
+  const assignedCountEl = document.getElementById('assignedCount');
+  const unassignedCountEl = document.getElementById('unassignedCount');
+  const teamCountEl = document.getElementById('teamCount');
+  const qaTeamSelect = document.getElementById('qaTeam');
+  const teamsGrid = document.getElementById('teamsGrid');
+  const statusChip = document.getElementById('statusChip');
+  const modeChip = document.getElementById('modeChip');
+  const modalitySelect = document.getElementById('modality');
+  const locationTypeSelect = document.getElementById('locationType');
+  const searchInput = document.getElementById('searchInput');
+
+  function updateModeChip() {
+    const modality = modalitySelect.options[modalitySelect.selectedIndex].textContent;
+    const locType = locationTypeSelect.options[locationTypeSelect.selectedIndex].textContent;
+    modeChip.textContent = `${modality} · ${locType.toLowerCase()}`;
+  }
+
+  modalitySelect.addEventListener('change', updateModeChip);
+  locationTypeSelect.addEventListener('change', updateModeChip);
+
+  function updateStatusChip() {
+    if (state.participants.length === 0) {
+      statusChip.textContent = 'Add at least one participant';
+    } else if (state.teams.length === 0) {
+      statusChip.textContent = 'Create teams or plan to group participants on the day';
+    } else {
+      statusChip.textContent = 'Ready to move to lobby';
+    }
+  }
+
+  function renderParticipantsTable() {
+    const term = searchInput.value.trim().toLowerCase();
+    participantsBody.innerHTML = '';
+
+    const filtered = state.participants.filter(p =>
+      !term ||
+      p.name.toLowerCase().includes(term) ||
+      p.title.toLowerCase().includes(term) ||
+      p.org.toLowerCase().includes(term)
+    );
+
+    if (filtered.length === 0) {
+      const row = document.createElement('tr');
+      row.className = 'empty-row';
+      row.innerHTML = '<td colspan="4" class="empty-state">No participants match this view.</td>';
+      participantsBody.appendChild(row);
+    } else {
+      filtered.forEach(p => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${p.name}</td>
+          <td>${p.title}</td>
+          <td>${p.org}</td>
+          <td>${p.teamName || '<span style="color:#605e5c;font-style:italic;">Unassigned</span>'}</td>
+        `;
+        participantsBody.appendChild(tr);
+      });
+    }
+
+    participantCount.textContent = state.participants.length.toString();
+
+    const assigned = state.participants.filter(p => p.teamId).length;
+    assignedCountEl.textContent = assigned.toString();
+    unassignedCountEl.textContent = (state.participants.length - assigned).toString();
+  }
+
+  function refreshTeamSelectOptions() {
+    qaTeamSelect.innerHTML = '<option value="">No team yet</option>';
+    state.teams.forEach(t => {
+      const opt = document.createElement('option');
+      opt.value = t.id;
+      opt.textContent = t.name;
+      qaTeamSelect.appendChild(opt);
+    });
+  }
+
+  function renderTeams() {
+    teamsGrid.innerHTML = '';
+    if (state.teams.length === 0) {
+      const empty = document.createElement('div');
+      empty.className = 'empty-state';
+      empty.textContent = 'No teams yet. Use “New team” to create tables or virtual groups.';
+      teamsGrid.appendChild(empty);
+    } else {
+      state.teams.forEach(team => {
+        const members = state.participants.filter(p => p.teamId === team.id);
+        const card = document.createElement('div');
+        card.className = 'team-card';
+        card.innerHTML = `
+          <div class="team-card-header">
+            <div style="display:flex;align-items:center;gap:8px;">
+              <div class="team-avatar" style="background:${team.color};">${team.initials}</div>
+              <div>
+                <div class="team-name">${team.name}</div>
+                <div class="team-meta">${members.length} participant${members.length !== 1 ? 's' : ''}</div>
+              </div>
+            </div>
+          </div>
+          <div class="team-meta">
+            ${members.slice(0,3).map(m => m.name).join(', ')}${members.length > 3 ? '…' : ''}
+          </div>
+        `;
+        teamsGrid.appendChild(card);
+      });
+    }
+
+    teamCountEl.textContent = state.teams.length.toString();
+    updateStatusChip();
+  }
+
+  // Quick add participant
+  document.getElementById('btnAddParticipant').addEventListener('click', () => {
+    const name = document.getElementById('qaName').value.trim();
+    const title = document.getElementById('qaTitle').value.trim();
+    const org = document.getElementById('qaOrg').value.trim();
+    const teamId = qaTeamSelect.value;
+
+    if (!name) {
+      alert('Enter a participant name.');
+      return;
+    }
+
+    const team = state.teams.find(t => t.id === teamId);
+
+    state.participants.push({
+      id: 'p_' + (state.participants.length + 1),
+      name,
+      title,
+      org,
+      teamId: team ? team.id : '',
+      teamName: team ? team.name : ''
+    });
+
+    document.getElementById('qaName').value = '';
+    document.getElementById('qaTitle').value = '';
+    document.getElementById('qaOrg').value = '';
+
+    renderParticipantsTable();
+    renderTeams();
+  });
+
+  searchInput.addEventListener('input', renderParticipantsTable);
+
+  // Modal behaviour
+  const teamModal = document.getElementById('teamModal');
+
+  function openTeamModal() {
+    buildParticipantCheckboxList();
+    teamModal.style.display = 'flex';
+    document.getElementById('teamNameInput').value = '';
+    document.getElementById('teamNameInput').focus();
+  }
+
+  function closeTeamModal() {
+    teamModal.style.display = 'none';
+  }
+
+  document.getElementById('btnNewTeam').addEventListener('click', openTeamModal);
+  document.getElementById('btnCloseModal').addEventListener('click', closeTeamModal);
+  document.getElementById('btnCancelTeam').addEventListener('click', closeTeamModal);
+  teamModal.addEventListener('click', (e) => {
+    if (e.target === teamModal) closeTeamModal();
+  });
+
+  // Color picker
+  document.getElementById('colorPicker').addEventListener('click', (e) => {
+    const chip = e.target.closest('.color-chip');
+    if (!chip) return;
+    document.querySelectorAll('.color-chip').forEach(c => c.classList.remove('selected'));
+    chip.classList.add('selected');
+    state.selectedColor = chip.getAttribute('data-color');
+  });
+
+  // Participant checkbox list inside modal
+  function buildParticipantCheckboxList() {
+    const container = document.getElementById('participantCheckboxList');
+    container.innerHTML = '';
+    if (state.participants.length === 0) {
+      const info = document.createElement('div');
+      info.className = 'hint';
+      info.textContent = 'No participants yet. You can assign them to this team later.';
+      container.appendChild(info);
+      return;
+    }
+
+    state.participants.forEach(p => {
+      const row = document.createElement('div');
+      row.className = 'checkbox-item';
+      const id = 'chk_' + p.id;
+      row.innerHTML = `
+        <input type="checkbox" id="${id}" data-participant-id="${p.id}" ${p.teamId ? 'disabled' : ''}/>
+        <label for="${id}">${p.name} <span style="color:#605e5c;">· ${p.title || 'No title'}</span></label>
+      `;
+      container.appendChild(row);
+    });
+  }
+
+  // Create team
+  document.getElementById('btnCreateTeam').addEventListener('click', () => {
+    const name = document.getElementById('teamNameInput').value.trim();
+    if (!name) {
+      alert('Enter a team name.');
+      return;
+    }
+
+    const id = 't_' + (state.teams.length + 1);
+    const initials = name.split(' ').map(w => w[0]).join('').slice(0,3).toUpperCase();
+    const color = state.selectedColor;
+
+    const team = { id, name, color, initials };
+    state.teams.push(team);
+
+    // Assign selected participants
+    const checks = document.querySelectorAll('#participantCheckboxList input[type="checkbox"]:checked');
+    checks.forEach(chk => {
+      const pid = chk.getAttribute('data-participant-id');
+      const p = state.participants.find(x => x.id === pid);
+      if (p) {
+        p.teamId = id;
+        p.teamName = name;
+      }
+    });
+
+    refreshTeamSelectOptions();
+    renderParticipantsTable();
+    renderTeams();
+    closeTeamModal();
+  });
+
+  // Continue button – just a placeholder for now
+  document.getElementById('btnContinue').addEventListener('click', () => {
+    alert('In the real app this would take you to the lobby (team join screen).');
+  });
+
+  // Initial render
+  updateModeChip();
+  updateStatusChip();
+  renderParticipantsTable();
+  renderTeams();
+  refreshTeamSelectOptions();
+</script>
+</body>
+</html>
