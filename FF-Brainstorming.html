@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Frontier Firm – Group Discussions</title>
+<style>
+  :root {
+    --bg: #f4f7fb;
+    --ink: #111827;
+    --muted: #64748b;
+    --card: #ffffff;
+    --border: #e5e7eb;
+    --brand: #2563eb;
+    --brand-soft: #eff6ff;
+    --r: 18px;
+    --shadow: 0 14px 30px rgba(15, 23, 42, 0.12);
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    background: radial-gradient(circle at top left,#e0ecff 0,#f4f7fb 40%,#f9fafb 100%);
+    color: var(--ink);
+  }
+  header {
+    padding: 18px 24px 10px;
+  }
+  h1 {
+    margin: 0;
+    font-size: 24px;
+  }
+  .subtitle {
+    font-size: 14px;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+  main {
+    padding: 0 24px 24px;
+  }
+  .top-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 12px;
+  }
+  .tabs {
+    display: inline-flex;
+    gap: 6px;
+    padding: 3px;
+    background: #e5edff;
+    border-radius: 999px;
+  }
+  .tab {
+    border: none;
+    background: transparent;
+    padding: 6px 14px;
+    font-size: 13px;
+    border-radius: 999px;
+    cursor: pointer;
+    color: #1f2937;
+  }
+  .tab.active {
+    background: #ffffff;
+    box-shadow: 0 0 0 1px rgba(37,99,235,.35);
+    color: #0b3ea3;
+  }
+  .timer-pill {
+    background: #111827;
+    color: #f9fafb;
+    padding: 6px 14px;
+    border-radius: 999px;
+    font-size: 13px;
+  }
+  .grid-3 {
+    margin-top: 16px;
+    display: grid;
+    grid-template-columns: 1.1fr 1.1fr 1.1fr;
+    gap: 16px;
+  }
+  .panel {
+    background: var(--card);
+    border-radius: var(--r);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow);
+    padding: 14px 14px 16px;
+    display: flex;
+    flex-direction: column;
+  }
+  .group-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 6px;
+    margin-bottom: 6px;
+  }
+  .group-name {
+    font-weight: 600;
+    font-size: 15px;
+  }
+  .group-tag {
+    font-size: 11px;
+    padding: 3px 8px;
+    border-radius: 999px;
+    background: #f1f5f9;
+    color: #475569;
+  }
+  .group-desc {
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 10px;
+  }
+  .question-card {
+    border-radius: 14px;
+    padding: 10px 12px;
+    background: #f9fafb;
+    border: 1px solid #e2e8f0;
+    margin-bottom: 10px;
+    font-size: 13px;
+  }
+  .question-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    color: #6b7280;
+    margin-bottom: 4px;
+  }
+  .question-text span {
+    font-weight: 600;
+  }
+  .idea-list {
+    flex: 1;
+    display: grid;
+    gap: 8px;
+    margin-top: 2px;
+    margin-bottom: 8px;
+  }
+  .idea-card {
+    border-radius: 10px;
+    padding: 8px 9px;
+    background: #eef2ff;
+    border: 1px solid #e0e7ff;
+    font-size: 13px;
+  }
+  .idea-meta {
+    margin-top: 4px;
+    font-size: 11px;
+    color: #4b5563;
+    display: flex;
+    justify-content: space-between;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .pill {
+    padding: 2px 8px;
+    border-radius: 999px;
+    border: 1px solid #d4d4ff;
+    background: #ffffff;
+    font-size: 11px;
+  }
+  .add-box {
+    border-radius: 12px;
+    border: 1px dashed #cbd5e1;
+    padding: 8px 10px 10px;
+    background: #f8fafc;
+  }
+  .add-box label {
+    display: block;
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 4px;
+  }
+  textarea, input, select {
+    width: 100%;
+    font-family: inherit;
+    font-size: 13px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    padding: 7px 8px;
+    resize: vertical;
+  }
+  textarea:focus, input:focus, select:focus {
+    outline: none;
+    border-color: #c4d5ff;
+    box-shadow: 0 0 0 2px rgba(37,99,235,.15);
+  }
+  textarea {
+    min-height: 52px;
+  }
+  .add-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 6px;
+  }
+  .btn {
+    border-radius: 999px;
+    border: none;
+    padding: 6px 12px;
+    font-size: 12px;
+    cursor: pointer;
+  }
+  .btn-primary {
+    background: linear-gradient(120deg,#2563eb,#7c3aed);
+    color: white;
+  }
+  .btn-ghost {
+    background: white;
+    color: #111827;
+    border: 1px solid #d1d5db;
+  }
+
+  /* Stage 2 specifics */
+  .cluster-pill {
+    border-radius: 999px;
+    padding: 2px 8px;
+    font-size: 11px;
+    border: 1px solid #bfdbfe;
+    background: #eff6ff;
+    color: #1d4ed8;
+  }
+  .priority-pill {
+    border-radius: 999px;
+    padding: 2px 8px;
+    font-size: 11px;
+    border: 1px solid #fed7aa;
+    background: #fff7ed;
+    color: #9a3412;
+  }
+  .stage2-layout {
+    margin-top: 18px;
+    display: grid;
+    grid-template-columns: 1.2fr 1.2fr 1.2fr 0.9fr;
+    gap: 16px;
+  }
+  .summary-panel {
+    background: var(--card);
+    border-radius: var(--r);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow);
+    padding: 14px 14px 16px;
+  }
+  .summary-panel h3 {
+    margin: 0 0 8px;
+    font-size: 15px;
+  }
+  .summary-section {
+    margin-top: 10px;
+    font-size: 12px;
+  }
+  .summary-section strong {
+    display: block;
+    margin-bottom: 4px;
+  }
+  .summary-list {
+    padding-left: 16px;
+    margin: 0;
+  }
+  .summary-list li {
+    margin-bottom: 4px;
+  }
+
+  .hidden { display: none; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Group discussion – imagining the future organization</h1>
+  <div class="subtitle">
+    Three groups explore how AI changes customers, innovation and employees – first by generating ideas, then clustering and prioritising them into a frontier action plan.
+  </div>
+</header>
+
+<main>
+  <div class="top-bar">
+    <div class="tabs">
+      <button id="tab1" class="tab active">Stage 1 – Brainstorm ideas</button>
+      <button id="tab2" class="tab">Stage 2 – Cluster & prioritise</button>
+    </div>
+    <div class="timer-pill">
+      ⏱ 20 minutes per stage (facilitator can adapt)
+    </div>
+  </div>
+
+  <!-- Stage 1: Brainstorm -->
+  <section id="stage1">
+    <div class="grid-3">
+      <!-- CUSTOMER GROUP -->
+      <div class="panel">
+        <div class="group-header">
+          <div>
+            <div class="group-name">Customer group</div>
+            <div class="group-tag">Customer relationships</div>
+          </div>
+        </div>
+        <div class="group-desc">
+          Explore how AI can deepen relationships with customers by creating adaptive, personalised and proactive experiences.
+        </div>
+        <div class="question-card">
+          <div class="question-label">Brainstorm question</div>
+          <div class="question-text">
+            Where does our engagement feel <span>reactive, impersonal or inconsistent</span> – and what could AI help us do differently?
+          </div>
+        </div>
+        <div class="idea-list" id="custIdeas">
+          <div class="idea-card">
+            Inbound support is mostly firefighting – AI triages intent and predicts high-risk cases before they escalate.
+            <div class="idea-meta">
+              <span>Example idea</span>
+              <span class="pill">Signal-based outreach</span>
+            </div>
+          </div>
+          <div class="idea-card">
+            Customers get generic campaigns – AI builds next-best action journeys tailored to behaviour, value and lifecycle.
+            <div class="idea-meta">
+              <span>Example idea</span>
+              <span class="pill">Adaptive journeys</span>
+            </div>
+          </div>
+        </div>
+        <div class="add-box">
+          <label>Add a new idea for the customer group</label>
+          <textarea id="custInput" placeholder="E.g., renewal conversations only happen at expiry – AI prompts account teams with proactive, tailored check-ins…"></textarea>
+          <div class="add-row">
+            <span class="subtitle" style="font-size:11px;">Each idea should be concrete and observable in 12 months.</span>
+            <button class="btn btn-primary" onclick="addIdea('cust')">+ Add idea</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- INNOVATION GROUP -->
+      <div class="panel">
+        <div class="group-header">
+          <div>
+            <div class="group-name">Innovation group</div>
+            <div class="group-tag">Experimentation & value</div>
+          </div>
+        </div>
+        <div class="group-desc">
+          Discover how to accelerate experimentation and value creation by embedding AI into the ways ideas form, evolve and scale.
+        </div>
+        <div class="question-card">
+          <div class="question-label">Brainstorm question</div>
+          <div class="question-text">
+            It’s one year from now. <span>What’s different about how we work, serve customers and innovate</span> with AI?
+          </div>
+        </div>
+        <div class="idea-list" id="innovIdeas">
+          <div class="idea-card">
+            Every quarter we run an AI “product studio” – small teams prototype, test and either scale or retire ideas quickly.
+            <div class="idea-meta">
+              <span>Example idea</span>
+              <span class="pill">AI Product Studio</span>
+            </div>
+          </div>
+          <div class="idea-card">
+            New ideas are shaped with AI co-design – copilots draft journeys, KPIs and technical options for teams to debate.
+            <div class="idea-meta">
+              <span>Example idea</span>
+              <span class="pill">AI-assisted design</span>
+            </div>
+          </div>
+        </div>
+        <div class="add-box">
+          <label>Add a new idea for the innovation group</label>
+          <textarea id="innovInput" placeholder="E.g., ideas move from concept to live experiment in under 30 days, supported by AI tooling…"></textarea>
+          <div class="add-row">
+            <span class="subtitle" style="font-size:11px;">Focus on how ideas start, evolve and get tested.</span>
+            <button class="btn btn-primary" onclick="addIdea('innov')">+ Add idea</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- EMPLOYEE GROUP -->
+      <div class="panel">
+        <div class="group-header">
+          <div>
+            <div class="group-name">Employee group</div>
+            <div class="group-tag">Work & culture</div>
+          </div>
+        </div>
+        <div class="group-desc">
+          Reimagine how AI transforms work itself – empowering employees, enhancing decisions and removing everyday friction.
+        </div>
+        <div class="question-card">
+          <div class="question-label">Brainstorm question</div>
+          <div class="question-text">
+            It’s one year from now. <span>How do our people grow and feel part of something bigger</span> because of AI?
+          </div>
+        </div>
+        <div class="idea-list" id="empIdeas">
+          <div class="idea-card">
+            Every employee has a personal Copilot that supports learning plans, career moves and feedback on real work.
+            <div class="idea-meta">
+              <span>Example idea</span>
+              <span class="pill">Growth copilots</span>
+            </div>
+          </div>
+          <div class="idea-card">
+            Teams use AI to remove low-value admin, freeing time for coaching, problem-solving and connecting with customers.
+            <div class="idea-meta">
+              <span>Example idea</span>
+              <span class="pill">Friction-free work</span>
+            </div>
+          </div>
+        </div>
+        <div class="add-box">
+          <label>Add a new idea for the employee group</label>
+          <textarea id="empInput" placeholder="E.g., AI nudges managers on coaching moments, recognition and wellbeing signals…"></textarea>
+          <div class="add-row">
+            <span class="subtitle" style="font-size:11px;">Think about skills, autonomy and belonging.</span>
+            <button class="btn btn-primary" onclick="addIdea('emp')">+ Add idea</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Stage 2: Cluster & Prioritise -->
+  <section id="stage2" class="hidden">
+    <div class="stage2-layout">
+      <!-- CUSTOMER CLUSTERS -->
+      <div class="panel">
+        <div class="group-header">
+          <div>
+            <div class="group-name">Customer group</div>
+            <div class="group-tag">Clustering & prioritising</div>
+          </div>
+        </div>
+        <div class="group-desc">
+          Of all the moments we could transform, which would build the strongest loyalty or trust?
+        </div>
+        <div class="idea-list">
+          <div class="idea-card">
+            Predictive outreach for at-risk customers; AI flags churn signals and prompts proactive actions.
+            <div class="idea-meta">
+              <span class="cluster-pill">Cluster: Proactive care</span>
+              <span class="priority-pill">Priority: P1</span>
+            </div>
+          </div>
+          <div class="idea-card">
+            AI-guided service journeys with consistent answers across chat, phone and field.
+            <div class="idea-meta">
+              <span class="cluster-pill">Cluster: Consistency</span>
+              <span class="priority-pill">Priority: P2</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- INNOVATION CLUSTERS -->
+      <div class="panel">
+        <div class="group-header">
+          <div>
+            <div class="group-name">Innovation group</div>
+            <div class="group-tag">Clustering & prioritising</div>
+          </div>
+        </div>
+        <div class="group-desc">
+          Which actions could deliver quick learning and visible proof of change – and which lay foundations for long-term transformation?
+        </div>
+        <div class="idea-list">
+          <div class="idea-card">
+            Launch an AI Product Studio with 3 sprints per year, each surfacing 3–4 experiments.
+            <div class="idea-meta">
+              <span class="cluster-pill">Cluster: Experimentation engine</span>
+              <span class="priority-pill">Priority: P1</span>
+            </div>
+          </div>
+          <div class="idea-card">
+            Build a shared pattern library for successful AI use cases and architectures.
+            <div class="idea-meta">
+              <span class="cluster-pill">Cluster: Reusable patterns</span>
+              <span class="priority-pill">Priority: P2</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- EMPLOYEE CLUSTERS -->
+      <div class="panel">
+        <div class="group-header">
+          <div>
+            <div class="group-name">Employee group</div>
+            <div class="group-tag">Clustering & prioritising</div>
+          </div>
+        </div>
+        <div class="group-desc">
+          If we could only bring a few of these stories to life, which would create the biggest difference for our people and culture?
+        </div>
+        <div class="idea-list">
+          <div class="idea-card">
+            Organisation-wide rollout of AI-assisted onboarding and learning journeys.
+            <div class="idea-meta">
+              <span class="cluster-pill">Cluster: Growth & skills</span>
+              <span class="priority-pill">Priority: P1</span>
+            </div>
+          </div>
+          <div class="idea-card">
+            AI-supported workload balancing and wellbeing insights for managers.
+            <div class="idea-meta">
+              <span class="cluster-pill">Cluster: Wellbeing & sustainability</span>
+              <span class="priority-pill">Priority: P2</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- SUMMARY / FACILITATOR VIEW -->
+      <div class="summary-panel">
+        <h3>Facilitator snapshot</h3>
+        <div class="subtitle" style="margin-top:2px;">
+          Use this to recap the strongest themes and identify 3–5 cross-group priorities to carry into the Frontier Action Plan.
+        </div>
+
+        <div class="summary-section">
+          <strong>Customer – top themes</strong>
+          <ul class="summary-list">
+            <li>P1: Proactive care for at-risk customers</li>
+            <li>P2: Consistent answers across all channels</li>
+          </ul>
+        </div>
+
+        <div class="summary-section">
+          <strong>Innovation – top themes</strong>
+          <ul class="summary-list">
+            <li>P1: Dedicated AI Product Studio cadence</li>
+            <li>P2: Library of reusable AI patterns</li>
+          </ul>
+        </div>
+
+        <div class="summary-section">
+          <strong>Employee – top themes</strong>
+          <ul class="summary-list">
+            <li>P1: AI-assisted learning and growth journeys</li>
+            <li>P2: Workload & wellbeing intelligence for managers</li>
+          </ul>
+        </div>
+
+        <div class="summary-section">
+          <strong>Next step</strong>
+          <p style="margin:0;">
+            Convert these priority themes into 3–5 initiatives for the Frontier Action Plan – each with owners, timelines and success metrics.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<script>
+  const s1 = document.getElementById('stage1');
+  const s2 = document.getElementById('stage2');
+  const t1 = document.getElementById('tab1');
+  const t2 = document.getElementById('tab2');
+
+  t1.addEventListener('click', () => {
+    t1.classList.add('active');
+    t2.classList.remove('active');
+    s1.classList.remove('hidden');
+    s2.classList.add('hidden');
+  });
+
+  t2.addEventListener('click', () => {
+    t2.classList.add('active');
+    t1.classList.remove('active');
+    s2.classList.remove('hidden');
+    s1.classList.add('hidden');
+  });
+
+  // simple in-browser adding of ideas (for demo only)
+  function addIdea(group) {
+    const map = {
+      cust: {input: 'custInput', list: 'custIdeas'},
+      innov: {input: 'innovInput', list: 'innovIdeas'},
+      emp: {input: 'empInput', list: 'empIdeas'}
+    };
+    const cfg = map[group];
+    const txt = document.getElementById(cfg.input).value.trim();
+    if (!txt) return;
+    const list = document.getElementById(cfg.list);
+    const div = document.createElement('div');
+    div.className = 'idea-card';
+    div.innerHTML = `
+      ${txt}
+      <div class="idea-meta">
+        <span>New idea</span>
+        <span class="pill">To be clustered</span>
+      </div>`;
+    list.appendChild(div);
+    document.getElementById(cfg.input).value = '';
+  }
+</script>
+
+</body>
+</html>
