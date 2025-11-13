@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>SparkTank – Pitching & Voting</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      --body-bg:#f3f2f1;--card-bg:#ffffff;--primary:#0078d4;--primary-dark:#005a9e;
+      --text-main:#201f1e;--text-subtle:#605e5c;--border-subtle:#edebe9;
+      --shadow-card:0 1.6px 3.6px rgba(0,0,0,.132),0 0.3px 0.9px rgba(0,0,0,.108);
+      --radius:8px;
+    }
+    *{box-sizing:border-box;}
+    body{margin:0;font-family:"Segoe UI",-apple-system,BlinkMacSystemFont,sans-serif;
+         background:var(--body-bg);color:var(--text-main);}
+    .command-bar{display:flex;justify-content:space-between;align-items:center;
+      padding:8px 24px;background:linear-gradient(90deg,#0078d4,#005a9e);
+      color:#fff;box-shadow:0 2px 4px rgba(0,0,0,.2);}
+    .app-logo{width:28px;height:28px;border-radius:6px;background:#fff;color:#0078d4;
+      display:flex;align-items:center;justify-content:center;font-weight:700;font-size:18px;margin-right:8px;}
+    .persona{display:flex;align-items:center;gap:8px;}
+    .persona-avatar{width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,.15);
+      display:flex;align-items:center;justify-content:center;font-weight:600;font-size:14px;}
+    .content{padding:16px 24px;max-width:1200px;margin:0 auto;}
+    .page-header{display:flex;justify-content:space-between;align-items:flex-end;
+      flex-wrap:wrap;gap:12px;margin-bottom:14px;}
+    .page-title{font-size:24px;font-weight:600;}
+    .page-subtitle{font-size:13px;color:var(--text-subtle);}
+    .role-toggle{display:inline-flex;border-radius:999px;background:#fff;border:1px solid #c8c6c4;
+      padding:2px;box-shadow:var(--shadow-card);}
+    .toggle-btn{border:none;background:transparent;padding:4px 14px;border-radius:999px;
+      font-size:13px;cursor:pointer;color:var(--text-subtle);}
+    .toggle-btn.active{background:var(--primary);color:#fff;}
+    .timer-banner{background:#faf9f8;border:1px solid #e1dfdd;border-radius:var(--radius);
+      padding:8px 12px;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;
+      font-weight:600;}
+    .btn{display:inline-flex;align-items:center;justify-content:center;padding:6px 14px;
+      border-radius:4px;border:1px solid transparent;font-size:13px;font-weight:500;
+      cursor:pointer;background:#f3f2f1;color:#323130;}
+    .btn:hover{background:#e1dfdd;}
+    .btn-primary{background:var(--primary);color:#fff;}
+    .btn-primary:hover{background:var(--primary-dark);}
+    .btn-disabled{opacity:.5;pointer-events:none;}
+    .teams-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;}
+    .team-card{background:var(--card-bg);border-radius:var(--radius);box-shadow:var(--shadow-card);
+      border:1px solid var(--border-subtle);padding:10px;}
+    .team-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
+    .team-avatar{width:26px;height:26px;border-radius:6px;color:#fff;display:flex;align-items:center;
+      justify-content:center;font-weight:600;}
+    .team-name{font-size:13px;font-weight:600;}
+    .team-status{font-size:11px;padding:2px 6px;border-radius:999px;background:#f3f2f1;color:var(--text-subtle);}
+    .idea-row{display:flex;justify-content:space-between;align-items:flex-start;
+      padding:4px 0;border-top:1px solid #edebe9;font-size:12px;}
+    .idea-row:first-of-type{border-top:none;}
+    .idea-title{font-weight:600;}
+    .idea-meta{font-size:11px;color:var(--text-subtle);}
+    .winner-pill{font-size:11px;padding:2px 6px;border-radius:999px;background:#fde7e9;color:#a80000;margin-left:6px;}
+    .vote-badge{font-size:11px;padding:2px 6px;border-radius:999px;background:#f3f2f1;color:#605e5c;}
+    #facilitatorView,#participantView{display:none;}
+    #facilitatorView.active,#participantView.active{display:block;}
+
+    .participant-form{background:var(--card-bg);border-radius:var(--radius);box-shadow:var(--shadow-card);
+      border:1px solid var(--border-subtle);padding:16px;max-width:900px;margin:0 auto;}
+    .form-field{display:flex;flex-direction:column;margin-bottom:10px;}
+    .form-field label{font-size:13px;font-weight:500;color:var(--text-subtle);}
+    select,input{font-family:inherit;font-size:13px;padding:6px 10px;border-radius:4px;
+      border:1px solid #c8c6c4;background:#fff;}
+    .hint{font-size:11px;color:var(--text-subtle);}
+    .idea-list{margin-top:8px;border-top:1px solid #edebe9;}
+    .p-idea-row{display:flex;justify-content:space-between;align-items:flex-start;
+      padding:6px 0;border-bottom:1px solid #edebe9;font-size:12px;}
+    .p-idea-info{max-width:75%;}
+    .p-idea-title{font-weight:600;}
+    .votes-remaining{font-size:12px;color:var(--text-subtle);margin-bottom:6px;}
+    .notice{background:#e8f3fc;border:1px solid #b3d6f5;color:#004578;padding:8px;
+      border-radius:6px;font-size:12px;margin-bottom:10px;}
+  </style>
+</head>
+<body>
+<div class="command-bar">
+  <div style="display:flex;align-items:center;">
+    <div class="app-logo">ST</div>
+    <div>
+      <div style="font-size:20px;font-weight:600;">SparkTank Workshop</div>
+      <div style="font-size:12px;opacity:.9;">Pitching &amp; Voting</div>
+    </div>
+  </div>
+  <div class="persona">
+    <div class="persona-avatar">SJ</div>
+    <div id="roleLabel" style="font-size:13px;">Facilitator</div>
+  </div>
+</div>
+
+<main class="content">
+  <div class="page-header">
+    <div>
+      <div class="page-title">Pitching &amp; Voting</div>
+      <div class="page-subtitle">
+        Each participant pitches their idea, then votes on the strongest one or two in their team.
+      </div>
+    </div>
+    <div class="role-toggle">
+      <button class="toggle-btn active" data-role="facilitator">Facilitator view</button>
+      <button class="toggle-btn" data-role="participant">Participant view</button>
+    </div>
+  </div>
+
+  <!-- FACILITATOR VIEW -->
+  <div id="facilitatorView" class="active">
+    <div class="timer-banner">
+      <div>⏱ <span id="timerDisplay">20:00</span> remaining</div>
+      <div>
+        <button class="btn" id="pauseBtn">Pause</button>
+        <button class="btn" id="resetBtn">Reset</button>
+        <button class="btn btn-primary" id="revealBtn">Reveal winners</button>
+      </div>
+    </div>
+    <div class="teams-grid" id="facTeamsGrid"></div>
+  </div>
+
+  <!-- PARTICIPANT VIEW -->
+  <div id="participantView">
+    <div class="timer-banner">
+      ⏱ <span id="timerDisplayP">20:00</span> remaining
+    </div>
+    <div class="participant-form">
+      <div class="notice">
+        You have <strong><span id="maxVotesLabel">2</span> votes</strong> to allocate to the ideas in your team.
+      </div>
+      <div class="form-field">
+        <label>Your name</label>
+        <input id="participantName" placeholder="Enter your name (for context only)" />
+      </div>
+      <div class="form-field">
+        <label>Your team</label>
+        <select id="participantTeamSelect"></select>
+        <span class="hint">In a real workshop this would be set automatically based on your team join.</span>
+      </div>
+      <div class="votes-remaining">
+        Votes remaining: <strong><span id="votesRemaining">2</span></strong>
+      </div>
+      <div class="idea-list" id="participantIdeas"></div>
+      <button class="btn btn-primary" id="submitVotesBtn" disabled>Submit my votes</button>
+    </div>
+  </div>
+</main>
+
+<script>
+  // ----- Shared state -----
+  const state = {
+    timer: 20 * 60,
+    running: true,
+    maxVotesPerParticipant: 2,
+    winnersRevealed: false,
+    teams: [
+      {
+        id: "t1",
+        name: "Table 1 – Finance",
+        color: "#0078d4",
+        ideas: [
+          { id: "i1", title: "Automated invoice matching", submitter: "Alex", summary: "Use AI to match invoices to POs and detect anomalies.", votes: 3 },
+          { id: "i2", title: "Forecast assistant", submitter: "Jamie", summary: "Natural language interface for budget and forecast questions.", votes: 1 }
+        ]
+      },
+      {
+        id: "t2",
+        name: "Table 2 – Support",
+        color: "#107c10",
+        ideas: [
+          { id: "i3", title: "Agent assist for tier 1", submitter: "Priya", summary: "Surfacing suggested replies and knowledge in live chats.", votes: 2 },
+          { id: "i4", title: "Case summarisation", submitter: "Sam", summary: "Generate summaries for escalations and handovers.", votes: 0 }
+        ]
+      },
+      {
+        id: "t3",
+        name: "Table 3 – Sales", color: "#ca5010",
+        ideas: [
+          { id: "i5", title: "Opportunity copilot", submitter: "Jordan", summary: "Summarise accounts and next best actions from CRM.", votes: 4 },
+          { id: "i6", title: "Meeting prep briefings", submitter: "Taylor", summary: "Create AI briefs ahead of customer meetings.", votes: 1 }
+        ]
+      }
+    ],
+    participant: {
+      teamId: "t1",
+      votesCast: {}, // ideaId -> true
+      submitted: false
+    }
+  };
+
+  // ----- Timer -----
+  const timerDisplay = document.getElementById("timerDisplay");
+  const timerDisplayP = document.getElementById("timerDisplayP");
+
+  function fmt(secs) {
+    const m = Math.floor(secs / 60);
+    const s = secs % 60;
+    return `${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`;
+  }
+  function updateTimer() {
+    timerDisplay.textContent = fmt(state.timer);
+    timerDisplayP.textContent = fmt(state.timer);
+  }
+  updateTimer();
+  setInterval(() => {
+    if (state.running && state.timer > 0) {
+      state.timer--;
+      updateTimer();
+    }
+  }, 1000);
+
+  document.getElementById("pauseBtn").onclick = () => {
+    state.running = !state.running;
+    document.getElementById("pauseBtn").textContent = state.running ? "Pause" : "Resume";
+  };
+  document.getElementById("resetBtn").onclick = () => {
+    state.timer = 20 * 60;
+    updateTimer();
+  };
+  document.getElementById("revealBtn").onclick = () => {
+    state.winnersRevealed = !state.winnersRevealed;
+    document.getElementById("revealBtn").textContent = state.winnersRevealed ? "Hide winners" : "Reveal winners";
+    renderFacilitatorTeams();
+  };
+
+  // ----- Facilitator view -----
+  const facTeamsGrid = document.getElementById("facTeamsGrid");
+
+  function getWinningIdea(team) {
+    if (!team.ideas.length) return null;
+    return team.ideas.reduce((top, idea) => idea.votes > top.votes ? idea : top, team.ideas[0]);
+  }
+
+  function renderFacilitatorTeams() {
+    facTeamsGrid.innerHTML = "";
+    state.teams.forEach(team => {
+      const card = document.createElement("div");
+      card.className = "team-card";
+
+      const winning = getWinningIdea(team);
+
+      let ideasHtml = "";
+      team.ideas.forEach(idea => {
+        const isWinner = state.winnersRevealed && winning && winning.id === idea.id;
+        ideasHtml += `
+          <div class="idea-row">
+            <div>
+              <div class="idea-title">
+                ${idea.title}
+                ${isWinner ? '<span class="winner-pill">Winner ⭐</span>' : ""}
+              </div>
+              <div class="idea-meta">by ${idea.submitter}</div>
+              <div class="idea-meta">${idea.summary}</div>
+            </div>
+            <div>
+              <span class="vote-badge">${idea.votes} vote${idea.votes!==1?"s":""}</span>
+            </div>
+          </div>
+        `;
+      });
+
+      card.innerHTML = `
+        <div class="team-header">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div class="team-avatar" style="background:${team.color}">
+              ${team.name.split(" ")[1]}
+            </div>
+            <div>
+              <div class="team-name">${team.name}</div>
+              <div class="team-status">${team.ideas.length} idea${team.ideas.length!==1?"s":""} pitched</div>
+            </div>
+          </div>
+          ${
+            state.winnersRevealed && winning
+              ? `<span class="team-status">Winning idea: ${winning.title}</span>`
+              : ""
+          }
+        </div>
+        ${team.ideas.length ? ideasHtml : '<div class="idea-meta">No ideas submitted yet.</div>'}
+      `;
+      facTeamsGrid.appendChild(card);
+    });
+  }
+
+  // ----- Participant view -----
+  const maxVotesLabel = document.getElementById("maxVotesLabel");
+  const votesRemainingSpan = document.getElementById("votesRemaining");
+  const participantTeamSelect = document.getElementById("participantTeamSelect");
+  const participantIdeas = document.getElementById("participantIdeas");
+  const submitVotesBtn = document.getElementById("submitVotesBtn");
+
+  maxVotesLabel.textContent = state.maxVotesPerParticipant;
+
+  // populate team dropdown
+  state.teams.forEach(team => {
+    const opt = document.createElement("option");
+    opt.value = team.id;
+    opt.textContent = team.name;
+    participantTeamSelect.appendChild(opt);
+  });
+  participantTeamSelect.value = state.participant.teamId;
+
+  participantTeamSelect.onchange = () => {
+    state.participant.teamId = participantTeamSelect.value;
+    state.participant.votesCast = {};
+    state.participant.submitted = false;
+    renderParticipantIdeas();
+    updateVotesRemaining();
+  };
+
+  function updateVotesRemaining() {
+    const used = Object.keys(state.participant.votesCast).length;
+    const remaining = state.maxVotesPerParticipant - used;
+    votesRemainingSpan.textContent = remaining;
+    submitVotesBtn.disabled = used === 0 || state.participant.submitted;
+  }
+
+  function renderParticipantIdeas() {
+    const team = state.teams.find(t => t.id === state.participant.teamId);
+    participantIdeas.innerHTML = "";
+
+    if (!team || !team.ideas.length) {
+      participantIdeas.innerHTML = '<div class="hint" style="padding:8px 0;">No ideas available for this team yet.</div>';
+      return;
+    }
+
+    team.ideas.forEach(idea => {
+      const row = document.createElement("div");
+      row.className = "p-idea-row";
+
+      const checked = !!state.participant.votesCast[idea.id];
+
+      row.innerHTML = `
+        <div class="p-idea-info">
+          <div class="p-idea-title">${idea.title}</div>
+          <div class="idea-meta">by ${idea.submitter}</div>
+          <div class="idea-meta">${idea.summary}</div>
+        </div>
+        <div>
+          <input type="checkbox" data-idea-id="${idea.id}" ${checked ? "checked" : ""} />
+        </div>
+      `;
+
+      const checkbox = row.querySelector("input[type='checkbox']");
+      checkbox.addEventListener("change", () => {
+        const id = checkbox.getAttribute("data-idea-id");
+        if (checkbox.checked) {
+          // If already at max votes, prevent extra selections
+          if (Object.keys(state.participant.votesCast).length >= state.maxVotesPerParticipant) {
+            checkbox.checked = false;
+            return;
+          }
+          state.participant.votesCast[id] = true;
+        } else {
+          delete state.participant.votesCast[id];
+        }
+        updateVotesRemaining();
+      });
+
+      participantIdeas.appendChild(row);
+    });
+
+    updateVotesRemaining();
+  }
+
+  submitVotesBtn.onclick = () => {
+    if (state.participant.submitted) return;
+    const team = state.teams.find(t => t.id === state.participant.teamId);
+    if (!team) return;
+
+    const votedIds = Object.keys(state.participant.votesCast);
+    votedIds.forEach(id => {
+      const idea = team.ideas.find(i => i.id === id);
+      if (idea) idea.votes += 1;
+    });
+
+    state.participant.submitted = true;
+    submitVotesBtn.disabled = true;
+    // In a real system we'd show a toast; for now, just update views
+    renderFacilitatorTeams();
+    renderParticipantIdeas();
+  };
+
+  // ----- Role toggle -----
+  document.querySelectorAll(".toggle-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll(".toggle-btn").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+
+      const role = btn.getAttribute("data-role");
+      document.getElementById("facilitatorView").classList.toggle("active", role === "facilitator");
+      document.getElementById("participantView").classList.toggle("active", role === "participant");
+      document.getElementById("roleLabel").textContent = role === "facilitator" ? "Facilitator" : "Participant";
+    });
+  });
+
+  // Initial renders
+  renderFacilitatorTeams();
+  renderParticipantIdeas();
+</script>
+</body>
+</html>
