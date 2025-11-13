@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<title>SparkTank – Post-SparkTank Summary</title>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<style>
+:root {
+  --body-bg:#f3f2f1; --card-bg:#fff; --primary:#0078d4; --primary-dark:#005a9e;
+  --text-main:#201f1e; --text-subtle:#605e5c; --border-subtle:#edebe9;
+  --radius:8px; --shadow-card:0 1.6px 3.6px rgba(0,0,0,.132),0 0.3px 0.9px rgba(0,0,0,.108);
+}
+body { margin:0; font-family:"Segoe UI",sans-serif; background:var(--body-bg); color:var(--text-main); }
+.command-bar {
+  display:flex; justify-content:space-between; align-items:center;
+  padding:8px 24px; background:linear-gradient(90deg,var(--primary),var(--primary-dark));
+  color:#fff; box-shadow:0 2px 4px rgba(0,0,0,.2);
+}
+.app-logo {width:28px;height:28px;border-radius:6px;background:#fff;color:var(--primary);
+  display:flex;align-items:center;justify-content:center;font-weight:700;font-size:18px;margin-right:8px;}
+.persona{display:flex;align-items:center;gap:8px;}
+.persona-avatar{width:28px;height:28px;border-radius:50%;background:rgba(255,255,255,.2);
+  display:flex;align-items:center;justify-content:center;font-weight:600;font-size:14px;}
+
+.content{padding:20px 24px;max-width:1200px;margin:0 auto;}
+.page-header{display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;margin-bottom:14px;}
+.page-title{font-size:24px;font-weight:600;}
+.page-subtitle{font-size:13px;color:var(--text-subtle);}
+.role-toggle{display:inline-flex;border-radius:999px;background:#fff;border:1px solid #c8c6c4;
+  padding:2px;box-shadow:var(--shadow-card);}
+.toggle-btn{border:none;background:transparent;padding:4px 14px;border-radius:999px;
+  font-size:13px;cursor:pointer;color:var(--text-subtle);}
+.toggle-btn.active{background:var(--primary);color:#fff;}
+
+.summary-card {
+  background:var(--card-bg); border-radius:var(--radius); border:1px solid var(--border-subtle);
+  box-shadow:var(--shadow-card); padding:20px; margin-bottom:20px;
+}
+.summary-title {font-size:18px;font-weight:600;margin-bottom:6px;}
+.section-title {font-size:14px;font-weight:600;margin-top:14px;margin-bottom:4px;}
+.section-content {font-size:13px;line-height:1.4;color:var(--text-main);}
+.btn {display:inline-flex;padding:6px 14px;border-radius:4px;border:1px solid transparent;
+      background:#f3f2f1;cursor:pointer;font-size:13px;margin-top:10px;}
+.btn:hover {background:#e1dfdd;}
+.btn-primary{background:var(--primary);color:#fff;}
+.btn-primary:hover{background:var(--primary-dark);}
+
+.ai-summary-box {
+  background:#faf9f8;border:1px solid #e1dfdd;border-radius:var(--radius);
+  padding:16px;margin-top:10px;font-size:13px;
+}
+
+/* visibility toggle */
+#facilitatorView,#participantView {display:none;}
+#facilitatorView.active,#participantView.active {display:block;}
+</style>
+</head>
+
+<body>
+<div class="command-bar">
+  <div style="display:flex;align-items:center;">
+    <div class="app-logo">ST</div>
+    <div>
+      <div style="font-size:20px;font-weight:600;">SparkTank Summary</div>
+      <div style="font-size:12px;opacity:.85;">Post-SparkTank Wrap-Up</div>
+    </div>
+  </div>
+  <div class="persona">
+    <div class="persona-avatar">SJ</div>
+    <div id="roleLabel" style="font-size:13px;">Facilitator</div>
+  </div>
+</div>
+
+<main class="content">
+
+  <div class="page-header">
+    <div>
+      <div class="page-title">Post-SparkTank Summary</div>
+      <div class="page-subtitle">
+        Review the winning idea package and send AI summaries to participants.
+      </div>
+    </div>
+
+    <div class="role-toggle">
+      <button class="toggle-btn active" data-role="facilitator">Facilitator view</button>
+      <button class="toggle-btn" data-role="participant">Participant view</button>
+    </div>
+  </div>
+
+  <!-- FACILITATOR VIEW -->
+  <div id="facilitatorView" class="active">
+
+    <!-- Winning Use Case Summary -->
+    <div class="summary-card" id="winnerCard">
+      <div class="summary-title">🏆 Winning Use Case – Table 1: Finance</div>
+
+      <div class="section-title">Use Case Summary</div>
+      <div class="section-content" id="winnerSummary">
+        AI-powered Automated Invoice Matching to streamline financial operations using LLM-assisted pattern recognition and anomaly detection.
+      </div>
+
+      <div class="section-title">Objectives</div>
+      <div class="section-content">
+        • Reduce manual matching effort<br>
+        • Improve reconciliation accuracy<br>
+        • Detect mismatches earlier to improve compliance
+      </div>
+
+      <div class="section-title">Stakeholders</div>
+      <div class="section-content">
+        • Finance Operations<br>
+        • Accounts Payable<br>
+        • Internal Audit<br>
+        • Vendor Management Teams
+      </div>
+
+      <div class="section-title">Challenges & Mitigations</div>
+      <div class="section-content">
+        • Data quality issues → Introduce validation & confidence scoring<br>
+        • Exceptions handling → Define AI fallback workflows<br>
+        • Change adoption → Provide training & co-pilot assistance
+      </div>
+
+      <div class="section-title">Expected Value Outcomes</div>
+      <div class="section-content">
+        • 40% reduction in matching time<br>
+        • 25% fewer payment errors<br>
+        • Faster month-end close by 1–2 days
+      </div>
+
+      <button class="btn btn-primary" id="emailWinnerBtn">📤 Email summary to winner</button>
+    </div>
+
+    <!-- AI Summary of Remaining Ideas -->
+    <div class="summary-card">
+      <div class="summary-title">✨ AI Summary of Other Ideas</div>
+      <div id="aiSummaryContainer" class="ai-summary-box">
+        Click "Generate AI Summary" to compile insights from all non-winning ideas.
+      </div>
+      <button class="btn" id="generateSummaryBtn">✨ Generate AI Summary</button>
+    </div>
+  </div>
+
+  <!-- PARTICIPANT VIEW -->
+  <div id="participantView">
+
+    <div class="summary-card">
+      <div class="summary-title">🏆 Winning Idea from Your Team</div>
+      <div class="section-content">
+        AI-powered Automated Invoice Matching for Finance Operations<br><br>
+        <strong>Why this idea won:</strong><br>
+        • Clear business value<br>
+        • Strong alignment to financial priorities<br>
+        • High feasibility & measurable outcomes
+      </div>
+    </div>
+
+    <div class="summary-card">
+      <div class="summary-title">✨ Summary of Other Ideas from the Workshop</div>
+      <div id="participantAISummary" class="ai-summary-box">
+        Press the button below to see a digest of all ideas contributed by your team and others.
+      </div>
+      <button class="btn" id="participantGenerateSummaryBtn">✨ Show AI Digest</button>
+    </div>
+
+  </div>
+
+</main>
+
+<script>
+// Switch Views
+document.querySelectorAll(".toggle-btn").forEach(btn=>{
+  btn.addEventListener("click",()=>{
+    document.querySelectorAll(".toggle-btn").forEach(x=>x.classList.remove("active"));
+    btn.classList.add("active");
+    let role = btn.dataset.role;
+    document.getElementById("facilitatorView").classList.toggle("active", role==="facilitator");
+    document.getElementById("participantView").classList.toggle("active", role==="participant");
+    document.getElementById("roleLabel").textContent = role==="facilitator" ? "Facilitator" : "Participant";
+  });
+});
+
+// Mock AI summary generation
+const aiSummaryText = `
+During SparkTank, several creative and high-value ideas were submitted:
+• "Forecast Assistant" – predicting budget variances with conversational AI  
+• "Meeting Prep Copilot" – generating dynamic pre-meeting briefs  
+• "Tier-1 Agent Assist" – surfacing relevant knowledge for support agents  
+• "Case Summarisation Copilot" – automating escalation handovers  
+
+Across ideas, strong themes emerged:
+• Reducing repetitive manual effort  
+• Summarisation and knowledge access  
+• Improving decision-making through insight generation  
+• Increasing consistency through automated workflows  
+
+These concepts collectively demonstrate an organisation ready for AI-enabled transformation.
+`;
+
+document.getElementById("generateSummaryBtn").onclick = () => {
+  document.getElementById("aiSummaryContainer").textContent = aiSummaryText;
+};
+
+document.getElementById("participantGenerateSummaryBtn").onclick = () => {
+  document.getElementById("participantAISummary").textContent = aiSummaryText;
+};
+
+// Placeholder email action
+document.getElementById("emailWinnerBtn").onclick = () => {
+  alert("This would email the winner with their use case package.");
+};
+</script>
+
+</body>
+</html>
